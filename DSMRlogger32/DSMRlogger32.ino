@@ -8,7 +8,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.1 (21-12-2022)"
+#define _FW_VERSION "v5.0.3 (29-12-2022)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -20,7 +20,7 @@
 **  Arduino-IDE settings for DSMR-logger Revision 5 (ESP32):
 **
 **    - Board             : "ESP32 Wrover Module" [ESP32-WROVER-E]
-**    - Upload Speed      : "230400" (max. with FTDI programmer)
+**    - Upload Speed      : "115200" - "230400" (max. with FTDI programmer)
 **    // Flash Size       : "4MB (32Mb)"
 **    - Flash Mode        : "DIO" ("QIO" is too fast for some chips!!)
 **    - Partition Scheme  : "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
@@ -56,7 +56,7 @@
 //  #define _SHOW_PASSWRDS             // well .. show the PSK key and MQTT password, what else?
 //  #define _HAS_NO_SLIMMEMETER        // define for testing only!
 
-//---- one of these
+//---- you have to choose one of these: { _SPIFFS | _LIITLEFS }
 //#define _LITTLEFS
 #define _SPIFFS
 
@@ -211,7 +211,8 @@ void setup()
   setupPsram();
   
   pinMode(LED_BUILTIN,    OUTPUT);
-  pinMode(_FLASH_BUTTON,  INPUT);
+  pinMode(_DTR_ENABLE,    OUTPUT);
+  //pinMode(_FLASH_BUTTON,  INPUT);
   pinMode(_PIN_HEARTBEAT, OUTPUT);
   pinMode(_PIN_WD_RESET,  OUTPUT);
   
@@ -569,7 +570,7 @@ void setup()
   updatedRINGfiles = false;
   
   delay(100);
-  slimmeMeter.enable(true);
+  slimmeMeter.enable(true); 
 
 } // setup()
 
@@ -599,7 +600,7 @@ void doTaskTelegram()
     handleTestdata();
 #else
     //-- enable DTR to read a telegram from the Slimme Meter
-    slimmeMeter.enable(true);
+    slimmeMeter.enable(true); 
     slimmeMeter.loop();
     handleSlimmemeter();
 #endif
@@ -685,7 +686,7 @@ void loop ()
     delay(1000);
     if (WiFi.status() != WL_CONNECTED)
     {
-      if ((lostWiFiCount % 10) == 0)
+      if (lostWiFiConnection && (lostWiFiCount % 10) == 0)
       {
         DebugTln("Wifi still not connected!");
         writeToSysLog("Wifi still not connected!");

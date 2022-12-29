@@ -2,7 +2,7 @@
 ** ATtiny85 Watch Dog for an ESP8266/ESP32
 ** 
 ** Copyright 2022, 2023 Willem Aandewiel
-** Version 3.0  23-11-2022
+** Version 3.0  29-12-2022
 ** 
 ** 
 ** tested with: Arduino IDE version 1.8.19
@@ -33,11 +33,11 @@
 **  ==============
 **  State        | NEOPIXEL                | Remark
 **  -------------+-------------------------+--------------------------------------
-**  Power On     | BLUE                    | Fade On 3 sec, fade Off 3 sec 
+**  Power On     | BLUE                    | Fade On ~6 sec, fade Off 6 sec 
 **               |                         | (duration: _STARTUP_TIME seconds) 
 **               |                         | Next: "Normal Operation"
 **  -------------+-------------------------+--------------------------------------
-**  Normal       | GREEN HeartBeat         | Fade On ~ 1.5sec, fade Off ~ 1.5 sec
+**  Normal       | GREEN HeartBeat         | Fade On ~5 sec, fade Off ~5 sec
 **  Operation    |      while heartbeats   | 
 **               |      received           | Next: "Normal Operation"
 **               |                         |  
@@ -53,7 +53,7 @@
 **               |   for _LAST_WARNING     |
 **               |   seconds               | Next: "Second Alarm"
 **  -------------+-------------------------+--------------------------------------
-**  Second Alarm | RED Heartbeat           | Fade On ~ 1.5sec, fade Off ~ 1.5 sec
+**  Second Alarm | RED Heartbeat           | Fade On ~1 sec, fade Off ~1 sec
 **               |                         |  
 **               | if Heartbeat received   | Next: "Normal Operation"                        |  
 **               |                         |  
@@ -87,10 +87,10 @@
 
 #include "neoPixStuff.h"
 
-#define _STARTUP_TIME     25000 // 25 seconden
-#define _MAX_NO_HARTBEAT  20000 //60000       // 60 seconds
-#define _LAST_WARNING     15000 //40000 
-#define _FIRST_WARNING    10000 //20000 
+#define _STARTUP_TIME     30000 //-- 30 seconden
+#define _MAX_NO_HARTBEAT  90000 //-- 90 seconds
+#define _LAST_WARNING     75000 //-- 15 seconds before reset
+#define _FIRST_WARNING    60000 //-- 30 seconds before reset
 #define _LAST_CHANGE       5000
 
 volatile  bool receivedInterrupt = false;
@@ -148,7 +148,7 @@ void setup()
     waitTimer = millis();
     while((millis() - waitTimer) < _STARTUP_TIME)
     {
-      neoPixHeartBeat(0, 6000, neoPixBlue, neoPixFade);
+      neoPixHeartBeat(0, 12000, neoPixBlue, neoPixFade);
     }
     neoPixOff(0);
 
@@ -167,24 +167,27 @@ void loop()
   loopTimer = (millis() - lastHartbeatTimer);
 
   if (loopTimer > 50)  neoPixOff(1);
-  
+
+  //---- watch out! Watchdog kicking in soon!
   if ((loopTimer > _LAST_WARNING) && (loopTimer < _MAX_NO_HARTBEAT))
   {
     neoPixHeartBeat(0, 500, neoPixRed); 
   }
   
+  //---- Alarm! Watchdog no feed!
   else if ((loopTimer > _FIRST_WARNING) && (loopTimer < _MAX_NO_HARTBEAT))
   {
     neoPixHeartBeat(0, 2000, neoPixRed);
   }
 
+  //---- OK! Watchdog had feed, normal operation!
   else if (loopTimer < _MAX_NO_HARTBEAT)
   {
-    neoPixHeartBeat(0, 2000, neoPixGreen);
+    neoPixHeartBeat(0, 10000, neoPixGreen);
     if (handleInterrupt()) return;
   }
-       //-- no heartbeats for too long!
-       //-- initiate reset sequence ..
+  //-- no heartbeats for too long!
+  //-- initiate reset sequence ..
   else if (loopTimer > _MAX_NO_HARTBEAT)
   {
     waitTimer = millis();

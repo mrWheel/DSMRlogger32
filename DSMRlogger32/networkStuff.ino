@@ -41,6 +41,7 @@ static bool        isConnected = false;
 void configModeCallback (WiFiManager *myWiFiManager)
 {
   resetWatchdog(); //-- buy some time ..
+  neoPixOn(0, neoPixBlue);
   
   DebugTln(F("Entered config mode\r"));
   DebugTln(WiFi.softAPIP().toString());

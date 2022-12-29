@@ -162,7 +162,7 @@ void processSlimmemeter()
       telegramErrors++;
       DebugTf("Parse error\r\n%s\r\n\r\n", tlgrmError.c_str());
       //--- set DTR to get a new telegram as soon as possible
-      slimmeMeter.enable(true);
+      slimmeMeter.enable(true); 
       //slimmeMeter.loop();
     }
 

@@ -182,7 +182,7 @@ void readSmSettings(bool show)
 
   if (!show) return;
 
-  Debugln(F("\r\n==== Settings ===================================================\r"));
+  Debugln(F("\r\n==== Smart Meter settings ========================================\r"));
   Debugf("   Pre DSMR 40 (0=No, 1=Yes) : %s\r\n",     setting->PreDSMR40 ? "Yes":"No");
   Debugf("   Energy Delivered Tarief 1 : %9.7f\r\n",  setting->EDT1);
   Debugf("   Energy Delivered Tarief 2 : %9.7f\r\n",  setting->EDT2);
@@ -379,6 +379,7 @@ void readSysSettings(bool show)
   //--- probably need a reboot before that to happen :-(
   MDNS.begin(sysSetting->Hostname);    // start advertising with new(?) sysSetting->Hostname
 
+  if (sysSetting->NeoBrightness ==  0) sysSetting->NeoBrightness =  50;
   if (sysSetting->NeoBrightness <  10) sysSetting->NeoBrightness =  10;
   if (sysSetting->NeoBrightness > 250) sysSetting->NeoBrightness = 250;
   neoPixels.setBrightness(sysSetting->NeoBrightness);  
@@ -400,7 +401,7 @@ void readSysSettings(bool show)
 //=======================================================================
 void showSysSettings()
 {
-    Debugln("\r\n==== System ====================================================\r");
+    Debugln("\r\n==== System settings ============================================\r");
     Debugf("                    Hostname : %s\r\n",     sysSetting->Hostname);
     Debugf("                  Index Page : %s\r\n",     sysSetting->IndexPage);
     Debugf("  Daily Reboot (0=No, 1=Yes) : %s\r\n",     sysSetting->DailyReboot ? "Yes":"No");

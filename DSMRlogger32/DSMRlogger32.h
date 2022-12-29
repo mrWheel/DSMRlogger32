@@ -91,16 +91,16 @@ Timezone    tzEurope;
 //------ [dsmr2Lib-master@0.1] (commit 5e7f07d (16-02-2022 12:40)?)
 #include <dsmr2.h>
 #define _DEFAULT_HOSTNAME  "DSMR-ESP32"
-//esp32 #define DTR_ENABLE           12
 
 //-- Slimme Meter UART1 pins
-#define SMRX                 18 
-#define SMTX                 -1
+#define SMRX                    18 
+#define SMTX                    -1
 
 #define _PULSE_TIME           5000
-#define LED_BUILTIN             15    //-- esp32
-#define _PIN_WD_RESET            5    //-- GPIO00
+#define _PIN_WD_RESET            0    //-- GPIO00
 #define _PIN_HEARTBEAT           4
+#define _DTR_ENABLE              5
+#define LED_BUILTIN             15    //-- esp32
 #define _TLGRM_LEN           10000    //-- probably a bit to long
 #define _JSONBUFF_LEN        60000    //-- needed for 190 Hour History
 #define _GMSG_LEN              512
@@ -341,7 +341,8 @@ const char *TzLocation = "Europe/Amsterdam";
 
 const char *flashMode[]    { "QIO", "QOUT", "DIO", "DOUT", "Unknown" };
 
-P1Reader    slimmeMeter(&SMserial, 0);
+//-- ESP32 core does no longer accept -1 as a GPIO pin
+P1Reader    slimmeMeter(&SMserial, _DTR_ENABLE);
 
 //===========================GLOBAL VAR'S======================================
 WiFiClient  wifiClient;

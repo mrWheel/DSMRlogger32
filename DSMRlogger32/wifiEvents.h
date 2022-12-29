@@ -4,9 +4,10 @@
 ** 
 */
 
-bool lostWiFiConnection   = true;
-bool firstConnectionLost  = true;
-static int  lostWiFiCount = -1;
+bool        lostWiFiConnection  = true;
+bool        firstConnectionLost = true;
+uint32_t    disconnectWiFiStart = 0;
+static int  lostWiFiCount       = -1;
 //----------------------------------------------------------------------------
 void WiFiEvent(WiFiEvent_t event)
 {
@@ -36,6 +37,7 @@ void WiFiEvent(WiFiEvent_t event)
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             lostWiFiCount++;
+            if (disconnectWiFiStart == 0) { disconnectWiFiStart = millis(); }
             if ((lostWiFiCount % 10) == 0)
             {
               Debugln("Disconnected from WiFi access point");
@@ -51,9 +53,12 @@ void WiFiEvent(WiFiEvent_t event)
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             Debug("Obtained IP address: ");
             Debugln(WiFi.localIP());
-            writeToSysLog("Obtained IP address [%s]", WiFi.localIP().toString().c_str());                         
+            writeToSysLog("Obtained IP address [%s]; reconnect took [%.1f] seconds"
+                                              , WiFi.localIP().toString().c_str()
+                                              , (float)((millis() - disconnectWiFiStart) / 1000.0));                         
             lostWiFiConnection  = false;
             firstConnectionLost = true;
+            disconnectWiFiStart = 0;
             lostWiFiCount       = -1;
             break;
         case ARDUINO_EVENT_WIFI_STA_LOST_IP:

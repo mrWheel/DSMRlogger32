@@ -1,7 +1,7 @@
 # DSMRlogger32
 Firmware for Rev. 5 of the DSMR-logger (Slimme Meter uitlezer)
 
-# THIS IS WORK IN PROGRESS AND NOT FIT FOR PRODUCTION
+# THIS IS THE FIRST RELEASE CANDIDATE
 
 This firmware is based on the **DSMRloggerAPI** (v3.0.4) firmware for the ESP8266 Micro Processor.
 

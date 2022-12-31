@@ -1,7 +1,7 @@
 //---------------------------------------------------------
 // Yet Another Parameterized Projectbox generator
 //
-//  This is a box for a DSMRloggerESP32 v5.x PCB
+//  This is a box for a DSMRlogger32 v5.x PCB
 //
 //  Version 1.0 (06-12-2022)
 //
@@ -14,6 +14,7 @@
 
 //-- these parms need to be declared before including the YAPPgenerator
 //
+//-- these dimensions are for a 1.3" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
 oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
@@ -80,7 +81,7 @@ if (false)
 printBaseShell        = true;
 printLidShell         = true;
 printSwitchExtenders  = true;
-printOledStand        = false;
+printOledStand        = true;
 printSwitchCap        = true;
 
 // Edit these parameters for your own board dimensions
@@ -554,7 +555,7 @@ if (printSwitchCap)
                           //      +------+ v --------------------
                           //        >--<------ stingRib
     //--- cap 1 ---
-    translate([-15,80,0])
+    translate([-15,110,0])
     {
       difference()
       {

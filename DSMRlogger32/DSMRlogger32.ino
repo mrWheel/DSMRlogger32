@@ -1,14 +1,8 @@
 /*
 ***************************************************************************
-**  Sketch uses 1114649 bytes (85%) of program storage space. 
-**                                  Maximum is 1310720 bytes.
-**  Global variables use 47332 bytes (14%) of dynamic memory, 
-**  leaving 280348 bytes for local variables. 
-**                                  Maximum is 327680 bytes.
-***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.3 (29-12-2022)"
+#define _FW_VERSION "v5.0.3 (30-12-2022)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **

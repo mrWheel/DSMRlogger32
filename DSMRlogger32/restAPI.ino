@@ -446,8 +446,8 @@ void sendDeviceInfo()
 void sendDeviceTime()
 {
   memset(jsonBuff, 0, _JSONBUFF_LEN);
-  char theTime[20]    = {0};
-  char theTimeRev[20] = {0};
+  char theTime[22]    = {0};
+  char theTimeRev[22] = {0};
 
   snprintf(theTime, sizeof(theTime), "%02d-%02d-%04d %02d:%02d:%02d"
                                                     , tzEurope.day()
@@ -457,7 +457,7 @@ void sendDeviceTime()
                                                     , tzEurope.minute()
                                                     , tzEurope.second());
 
-  snprintf(theTimeRev, sizeof(theTimeRev), "%02d-%02d-%04d %02d:%02d:%02d"
+  snprintf(theTimeRev, sizeof(theTimeRev), "%04d-%02d-%02d %02d:%02d:%02d"
                                                     , tzEurope.year()
                                                     , tzEurope.month()
                                                     , tzEurope.day()

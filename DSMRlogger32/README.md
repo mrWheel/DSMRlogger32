@@ -16,7 +16,7 @@ Documentation can be found [here](https://mrwheel-docs.gitbook.io/dsmrloggerapi/
         <br>Mindergas functionaliteit is weggehaald, want hoort niet thuis in deze firmware.
         Je kunt eenvoudig met een los esp8266 bordje de gegevens uit deze DSMR-logger halen en
         naar 'mindergas' sturen.
-        <br>De API is aangepast en tvoer ervan zal verschillen van die in de 
+        <br>De API is aangepast en uitvoer ervan zal verschillen van die in de 
         DSMRloggerAPI firmware (Rev. 3).
     </td>
   </tr>

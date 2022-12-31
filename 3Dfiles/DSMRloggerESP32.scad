@@ -6,9 +6,6 @@
 //  Version 1.0 (06-12-2022)
 //
 // This design is parameterized based on the size of a PCB.
-//
-// Uses strikelord.ttf from https://www.dafont.com/
-// installed with "Font Book.app" on MAC
 //---------------------------------------------------------
 
 

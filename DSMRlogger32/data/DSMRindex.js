@@ -1384,23 +1384,23 @@
     document.getElementById("APIdocTab").style.display = "block";
     addAPIdoc("v2/dev/info",      "Device info in JSON format", true);
     addAPIdoc("v2/dev/time",      "Device time (epoch) in JSON format", true);
-    addAPIdoc("v2/dev/settings",  "Device settings in JSON format", true);
-    addAPIdoc("v2/dev/settings{jsonObj}", "[POST] update Device settings in JSON format\
-        <br>test with:\
-        <pre>curl -X POST -H \"Content-Type: application/json\" --data '{\"name\":\"mqtt_broker\",\"value\":\"hassio.local\"}' \
-http://DSMR-API.local/api/v2/dev/settings</pre>", false);
 
-    addAPIdoc("v2/dev/system",  "System settings in JSON format", true);
-    addAPIdoc("v2/dev/system{jsonObj}", "[POST] update System settings in JSON format\
+    addAPIdoc("v2/dev/settings",  "System settings in JSON format", true);
+    addAPIdoc("v2/dev/settings{jsonObj}", "[POST] update System Settings in JSON format\
         <br>test with:\
         <pre>curl -X POST -H \"Content-Type: application/json\" --data '{\"name\":\"mqtt_broker\",\"value\":\"hassio.local\"}' \
-http://DSMR-API.local/api/v2/dev/system</pre>", false);
+http://DSMR-ESP32.local/api/v2/dev/settings</pre>", false);
     
     addAPIdoc("v2/sm/info",       "Smart Meter info in JSON format", true);
     addAPIdoc("v2/sm/actual",     "Smart Meter Actual data in JSON format", true);
-    addAPIdoc("v2/sm/fields",     "Smart Meter all fields data in JSON format\
-        <br>JSON format: {\"fields\":[{\"name\":\"&lt;fieldName&gt;\",\"value\":&lt;value&gt;,\"unit\":\"&lt;unit&gt;\"}]} ", true);
+    addAPIdoc("v2/sm/fields",     "Smart Meter all fields data in JSON format", true);
     addAPIdoc("v2/sm/fields/{fieldName}", "Smart Meter one field data in JSON format", false);
+
+    addAPIdoc("v2/sm/settings",  "Slimme Meter Settings in JSON format", true);
+    addAPIdoc("v2/sme/settings{jsonObj}", "[POST] update Slimme Meter Settings in JSON format\
+        <br>test with:\
+        <pre>curl -X POST -H \"Content-Type: application/json\" --data '{\"name\":\"ed_tariff2\",\"value\":\"1.54\"}' \
+http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
     addAPIdoc("v2/sm/telegram",   "raw telegram as send by the Smart Meter including all \"\\r\\n\" line endings", false);
 

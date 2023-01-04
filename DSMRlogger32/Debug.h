@@ -51,9 +51,8 @@ char _bol[128];
 void _debugBOL(const char *fn, int line)
 {
 
-  snprintf(_bol, sizeof(_bol), "[%02d:%02d:%02d][%6u] %-14.14s(%4d): " \
+  snprintf(_bol, sizeof(_bol), "[%02d:%02d:%02d] %-20.20s(%4d): " \
            , tzEurope.hour(), tzEurope.minute(), tzEurope.second() \
-           , ESP.getFreeHeap()          \
            , fn, line);
 
   Serial.print (_bol);

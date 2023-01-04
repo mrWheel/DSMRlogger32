@@ -17,7 +17,7 @@ void processAPI()
   char URI[50]   = "";
   String words[10];
 
-  strncpy( URI, httpServer.uri().c_str(), sizeof(URI) );
+  strlcpy( URI, httpServer.uri().c_str(), sizeof(URI) );
 
   if (httpServer.method() == HTTP_GET)
         DebugTf("from[%s] URI[%s] method[GET] \r\n"
@@ -59,7 +59,7 @@ void processAPI()
 
   if (words[3] == "sm")
   {
-    processApiV2Sm(words[4].c_str());
+    processApiV2Sm(words[4].c_str(), words[5].c_str());
     return;
   } //-- api/v2/sm ...
 
@@ -82,7 +82,7 @@ void processAPI()
 
 
 //====================================================
-void processApiV2Sm(const char* apiId)
+void processApiV2Sm(const char* apiId, const char* oneField)
 {
   if (strcmp(apiId, "actual") == 0)
   {
@@ -98,6 +98,13 @@ void processApiV2Sm(const char* apiId)
     //--- new api. 
     onlyIfPresent = false;
     memset(fieldsArray, 0, sizeof(fieldsArray));
+    if (strlen(oneField) > 1)
+    {
+      DebugTf("apiID[%s], oneField[%s]\r\n", apiId, oneField);
+      strlcpy(fieldsArray[0], "timestamp", 34);
+      strlcpy(fieldsArray[1], oneField, 34);
+      fieldsElements = 2;
+    }
     sendJsonV2smApi(apiId);
     return;
   }
@@ -108,7 +115,38 @@ void processApiV2Sm(const char* apiId)
     sendJsonV2smApi(apiId);
     return;
   }
-  
+
+  if (strcmp(apiId, "settings") == 0)
+  {
+    //--- new api. 
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      //------------------------------------------------------------
+      // json string: {"name":"Interval","value":9}
+      // json string: {"name":"TelegramInterval","value":123.45}
+      // json string: {"name":"mBus1Type","value":"3"}
+      //------------------------------------------------------------
+      DebugTln(httpServer.arg(0));
+      //-- Allocate the JsonDocument
+      SpiRamJsonDocument  doc(3000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      //Debugln(jsonBuff);
+      char field[30]     = {0};
+      char newValue[101] = {0};
+      strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
+      strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
+      updateSmSettings(field, newValue);
+      httpServer.send(200, "application/json", httpServer.arg(0));
+      writeToSysLog("DSMReditor: Slimme Meter Field[%s] changed to [%s]", field, newValue);
+    }
+    else
+    {
+      sendSMsettings();
+    }
+    return;
+  }
+
   if (strcmp(apiId, "telegram") == 0)
   {
     int16_t thisCRC=CRC16(0x0000, (unsigned char *) tlgrmRaw, strlen(tlgrmRaw));
@@ -127,7 +165,7 @@ void processApiV2Sm(const char* apiId)
 //====================================================
 void processApiV2Dev(const char *URI, const char *apiId, const char *word5, const char *word6)
 {
-  //DebugTf("word4[%s], word5[%s], word6[%s]\r\n", word4, word5, word6);
+  DebugTf("apiId[%s], word5[%s], word6[%s]\r\n", apiId, word5, word6);
   if (strcmp(apiId, "info") == 0)
   {
     sendDeviceInfo();
@@ -172,10 +210,10 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
     writeLastStatus();
     return;
   }
-
+/*****
   if (strcmp(apiId, "settings") == 0)
   {
-    DebugTln("Handle /api/v2/settings..");
+    DebugTln("Handle /api/v2/dev/settings..");
     if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
     {
       //------------------------------------------------------------
@@ -195,18 +233,19 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
       updateSmSettings(field, newValue);
       httpServer.send(200, "application/json", httpServer.arg(0));
-      writeToSysLog("DSMReditor: Field[%s] changed to [%s]", field, newValue);
+      writeToSysLog("DSMReditor: Slimme Meter Field[%s] changed to [%s]", field, newValue);
     }
     else
     {
-      sendDeviceSettings();
+      sendSMsettings();
     }
     return;
   }
+****/
 
-  if (strcmp(apiId, "system") == 0)
+  if (strcmp(apiId, "settings") == 0)
   {
-    DebugTln("Handle /api/v2/system..");
+    DebugTln("Handle /api/v2/dev/settings..");
     if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
     {
       //------------------------------------------------------------
@@ -227,14 +266,14 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
       strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
       updateSysSettings(field, newValue);
-      writeToSysLog("DSMReditor: Field[%s] changed to [%s]", field, newValue);
+      writeToSysLog("DSMReditor: Syetem Field[%s] changed to [%s]", field, newValue);
       memset(field,    0, sizeof(field));
       memset(newValue, 0, sizeof(newValue));
       httpServer.send(200, "application/json", httpServer.arg(0));
     }
     else
     {
-      sendSystemSettings();
+      sendDevSettings();
     }
     return;
   }
@@ -485,7 +524,7 @@ void sendDeviceTime()
 
 
 //=======================================================================
-void sendDeviceSettings()
+void sendSMsettings()
 {
   DebugTln("sending settings ...\r");
 
@@ -577,11 +616,11 @@ void sendDeviceSettings()
   //Debugln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
-} // sendDeviceSettings()
+} // sendSMsettings()
 
 
 //=======================================================================
-void sendSystemSettings()
+void sendDevSettings()
 {
   DebugTln("sending System settings ...\r");
 
@@ -703,7 +742,7 @@ void sendSystemSettings()
   //Debugln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
-} // sendSystemSettings()
+} // sendDevSettings()
 
 
 //=======================================================================

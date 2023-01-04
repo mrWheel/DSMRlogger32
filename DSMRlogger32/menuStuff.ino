@@ -44,8 +44,10 @@ void displayMonthsHist(bool Telnet=true)
 void displayBoardInfo()
 {
   Debugln("\r\n==================================================================\r");
-  Debug(" \r\n            (c) by [Willem Aandewiel");
+  Debug(" \r\n         Copyright (c) by [Willem Aandewiel");
 
+  Debug("]\r\n                 Hostname [");
+  Debug( sysSetting->Hostname );
   Debug("]\r\n         Firmware Version [");
   Debug( _FW_VERSION );
   Debug("]\r\n                 Compiled [");

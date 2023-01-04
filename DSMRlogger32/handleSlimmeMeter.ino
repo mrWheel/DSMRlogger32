@@ -84,8 +84,8 @@ void processSlimmemeter()
   if (slimmeMeter.available())
   {
     DebugTf("telegramCount=[%d] telegramErrors=[%d]\r\n", telegramCount, telegramErrors);
-    Debugln(F("\r\n[Time----][frHeap] Function------(line):\r"));
-    //- Voorbeeld: [21:00:11][  9880] loop          ( 997): read telegram [28] => [140307210001S]
+    Debugln(F("\r\n[Time----] Function------------(line):\r"));
+    //- Voorbeeld: [21:00:11] loop          ( 997): read telegram [28] => [140307210001S]
     telegramCount++;
 
     tlgrmData = {};

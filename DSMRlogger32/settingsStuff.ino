@@ -13,9 +13,8 @@
 void writeSmSettings()
 {
   yield();
-  DebugT(F("Writing to ["));
-  Debug(_SETTINGS_FILE);
-  Debugln(F("] ..."));
+  DebugTf("Writing to [%s] ..\r\n", _SETTINGS_FILE);
+  
   File file = _FSYS.open(_SETTINGS_FILE, "w"); // open for reading and writing
   if (!file)
   {
@@ -237,9 +236,8 @@ void updateSmSettings(const char *field, const char *newValue)
 void writeSysSettings(bool show)
 {
   yield();
-  DebugT(F("Writing to ["));
-  Debug(_SYSTEM_FILE);
-  Debugln(F("] ..."));
+  DebugTf("Writing to [%s] ..\r\n", _SYSTEM_FILE);
+
   File file = _FSYS.open(_SYSTEM_FILE, "w"); // open for reading and writing
   if (!file)
   {

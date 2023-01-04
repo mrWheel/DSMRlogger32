@@ -13,7 +13,10 @@ slashes (//) ervoor weg te halen.
 // #define _IS_ESP32
 </pre>
 
-### In de tab "setup.h" 
+### "myCredentials_org.h" 
+Kopieer deze tab naar "myCredentials.h"
+
+### In de tab "myCredentials.h" 
 Define het IP address van jouw DSMR-logger:
 <pre>
 #define _DSMR_IP_ADDRESS    "IP_ADDRESS_OF_YOUR_DSMR_LOGGER"

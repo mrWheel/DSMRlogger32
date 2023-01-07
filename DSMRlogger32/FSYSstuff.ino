@@ -102,7 +102,7 @@ void buildDataRecordFromSM(char *recIn, timeStruct useTime)
   char key[10] = {0};
 
   //32 uint16_t recSlot = timestampToHourSlot(useTime);
-  uint16_t recSlot = (useTime.Hours % sysSetting->NoHourSlots);
+  uint16_t recSlot = (useTime.Hours % devSetting->NoHourSlots);
   strCpyFrm(key, 10, useTime.Timestamp, 0, 8);
 
   snprintf(record, sizeof(record), (char *)DATA_FORMAT, key
@@ -160,7 +160,7 @@ uint16_t buildDataRecordFromJson(char *recIn, int recLen, String jsonIn)
   timeStruct thisTimestamp;
   strlcpy(thisTimestamp.Timestamp, uKey, _TIMESTAMP_LEN);
   //recSlot = timestampToMonthSlot(uKey);
-  recSlot = (thisTimestamp.Months % sysSetting->NoMonthSlots);
+  recSlot = (thisTimestamp.Months % devSetting->NoMonthSlots);
 
   DebugTf("MONTHS: Write [%s] to slot[%02d] in %s\r\n", uKey, recSlot, MONTHS_FILE);
   snprintf(record, sizeof(record), (char *)DATA_FORMAT, uKey, (float)uEDT1
@@ -203,19 +203,19 @@ void writeDataToRingFile(char *fileName, int8_t ringType, char *record, timeStru
     switch(ringType)
     {
       case RNG_HOURS:
-        DebugTf("slotTime.Hours[%3d], sysSetting[%3d]\r\n", slotTime.Hours
-                                                          , sysSetting->NoHourSlots);
-        createRingFile(fileName, slotTime, ringType, sysSetting->NoHourSlots);
+        DebugTf("slotTime.Hours[%3d], devSetting[%3d]\r\n", slotTime.Hours
+                                                          , devSetting->NoHourSlots);
+        createRingFile(fileName, slotTime, ringType, devSetting->NoHourSlots);
         break;
       case RNG_DAYS:
-        DebugTf("slotTime.Days[%3d], sysSetting[%3d]\r\n", slotTime.Days
-                                                         , sysSetting->NoDaySlots);
-        createRingFile(fileName, slotTime, ringType, sysSetting->NoDaySlots);
+        DebugTf("slotTime.Days[%3d], devSetting[%3d]\r\n", slotTime.Days
+                                                         , devSetting->NoDaySlots);
+        createRingFile(fileName, slotTime, ringType, devSetting->NoDaySlots);
         break;
       case RNG_MONTHS:
-        DebugTf("slotTime.Months[%3d], sysSetting[%3d]\r\n", slotTime.Months
-                                                           , sysSetting->NoMonthSlots);
-        createRingFile(fileName, slotTime, ringType, sysSetting->NoMonthSlots);
+        DebugTf("slotTime.Months[%3d], devSetting[%3d]\r\n", slotTime.Months
+                                                           , devSetting->NoMonthSlots);
+        createRingFile(fileName, slotTime, ringType, devSetting->NoMonthSlots);
         break;
     }
   }
@@ -582,19 +582,19 @@ bool alterRingFile()
 
   tmpNoMonthSlots = (tmpNoMonthSlots * 12) +1;
 
-  if ((tmpNoHourSlots>=_NO_HOUR_SLOTS_) && (sysSetting->NoHourSlots != tmpNoHourSlots))
+  if ((tmpNoHourSlots>=_NO_HOUR_SLOTS_) && (devSetting->NoHourSlots != tmpNoHourSlots))
     ringType  = RNG_HOURS;
-  else if ((tmpNoDaySlots>=_NO_DAY_SLOTS_) && (sysSetting->NoDaySlots != tmpNoDaySlots))
+  else if ((tmpNoDaySlots>=_NO_DAY_SLOTS_) && (devSetting->NoDaySlots != tmpNoDaySlots))
     ringType  = RNG_DAYS;
-  else if ((tmpNoMonthSlots>=_NO_MONTH_SLOTS_) && (sysSetting->NoMonthSlots != tmpNoMonthSlots))
+  else if ((tmpNoMonthSlots>=_NO_MONTH_SLOTS_) && (devSetting->NoMonthSlots != tmpNoMonthSlots))
     ringType  = RNG_MONTHS;
   else
   {
     DebugTln("Did not change any RING file (not all conditions met)");
     writeToSysLog("Did not change any RING file (not all conditions met)");
-    tmpNoHourSlots    = sysSetting->NoHourSlots;
-    tmpNoDaySlots     = sysSetting->NoDaySlots;
-    tmpNoMonthSlots   = sysSetting->NoMonthSlots;
+    tmpNoHourSlots    = devSetting->NoHourSlots;
+    tmpNoDaySlots     = devSetting->NoDaySlots;
+    tmpNoMonthSlots   = devSetting->NoMonthSlots;
     tmpAlterRingSlots = false;
     return false;
   }
@@ -604,9 +604,9 @@ bool alterRingFile()
     case RNG_HOURS: {
           writeDataToRingFile(HOURS_FILE, ringType,  record, prevTlgrmTime);
           strlcpy(srcFileName, HOURS_FILE, sizeof(srcFileName));
-          snprintf(altFileName, sizeof(altFileName), "/RINGhours_%d.csv", sysSetting->NoHourSlots);
+          snprintf(altFileName, sizeof(altFileName), "/RINGhours_%d.csv", devSetting->NoHourSlots);
           strlcpy(cType, "HOURS", sizeof(cType));
-          srcMaxSlots   = sysSetting->NoHourSlots;
+          srcMaxSlots   = devSetting->NoHourSlots;
           srcLastSlot   = (lastTlgrmTime.Hours % srcMaxSlots);
           srcOldestSlot = (((srcLastSlot+srcMaxSlots) + 1) % srcMaxSlots);
           dstMaxSlots   = tmpNoHourSlots;
@@ -620,9 +620,9 @@ bool alterRingFile()
     case RNG_DAYS: {
           writeDataToRingFile(DAYS_FILE, ringType, record, prevTlgrmTime);
           strlcpy(srcFileName, DAYS_FILE, sizeof(srcFileName));
-          snprintf(altFileName, sizeof(altFileName), "/RINGdays_%d.csv", sysSetting->NoDaySlots);
+          snprintf(altFileName, sizeof(altFileName), "/RINGdays_%d.csv", devSetting->NoDaySlots);
           strlcpy(cType, "DAYS", sizeof(cType));
-          srcMaxSlots   = sysSetting->NoDaySlots;
+          srcMaxSlots   = devSetting->NoDaySlots;
           srcLastSlot   = (lastTlgrmTime.Days % srcMaxSlots);
           srcOldestSlot = (((srcLastSlot+srcMaxSlots) + 1) % srcMaxSlots);
           dstMaxSlots   = tmpNoDaySlots;
@@ -636,9 +636,9 @@ bool alterRingFile()
     case RNG_MONTHS: {
           writeDataToRingFile(MONTHS_FILE, ringType, record, prevTlgrmTime);
           strlcpy(srcFileName, MONTHS_FILE, sizeof(srcFileName));
-          snprintf(altFileName, sizeof(altFileName), "/RINGmonths_%d.csv", sysSetting->NoMonthSlots);
+          snprintf(altFileName, sizeof(altFileName), "/RINGmonths_%d.csv", devSetting->NoMonthSlots);
           strlcpy(cType, "MONTHS", sizeof(cType));
-          srcMaxSlots   = sysSetting->NoMonthSlots;
+          srcMaxSlots   = devSetting->NoMonthSlots;
           srcLastSlot   = (lastTlgrmTime.Months % srcMaxSlots);
           srcOldestSlot = (((srcLastSlot+srcMaxSlots) + 1) % srcMaxSlots);
           dstMaxSlots   = tmpNoMonthSlots;
@@ -823,19 +823,19 @@ bool alterRingFile()
   switch(ringType)
   {
     case RNG_HOURS:   
-            sysSetting->NoHourSlots  = tmpNoHourSlots;  
+            devSetting->NoHourSlots  = tmpNoHourSlots;  
             break;
     case RNG_DAYS:    
-            snprintf(altFileName, sizeof(altFileName), "RINGdays_%d.csv", sysSetting->NoDaySlots);
-            sysSetting->NoDaySlots   = tmpNoDaySlots;   
+            snprintf(altFileName, sizeof(altFileName), "RINGdays_%d.csv", devSetting->NoDaySlots);
+            devSetting->NoDaySlots   = tmpNoDaySlots;   
             break;
     case RNG_MONTHS:  
-            snprintf(altFileName, sizeof(altFileName), "RINGmonths_%d.csv", sysSetting->NoMonthSlots);
-            sysSetting->NoMonthSlots = tmpNoMonthSlots; 
+            snprintf(altFileName, sizeof(altFileName), "RINGmonths_%d.csv", devSetting->NoMonthSlots);
+            devSetting->NoMonthSlots = tmpNoMonthSlots; 
             break;
   }
 
-  writeSysSettings(true);
+  writeDevSettings(true);
 
   DebugTln("Done!");
   
@@ -846,9 +846,9 @@ bool alterRingFile()
   delay(2000);
 
   //-- code should never go here!
-  tmpNoHourSlots    = sysSetting->NoHourSlots;
-  tmpNoDaySlots     = sysSetting->NoDaySlots;
-  tmpNoMonthSlots   = sysSetting->NoMonthSlots;
+  tmpNoHourSlots    = devSetting->NoHourSlots;
+  tmpNoDaySlots     = devSetting->NoDaySlots;
+  tmpNoMonthSlots   = devSetting->NoMonthSlots;
   tmpAlterRingSlots = false;
 
   return true;
@@ -913,27 +913,27 @@ uint16_t readRingHistoryDepth(const char *fileName, int8_t ringType)
     switch(ringType)
     {
       case RNG_HOURS: 
-            { if (sysSetting->NoHourSlots != histDepth)
+            { if (devSetting->NoHourSlots != histDepth)
               {
-                sysSetting->NoHourSlots = histDepth;
+                devSetting->NoHourSlots = histDepth;
                 DebugTf("[HOURS]  History is [%d] hours\r\n", histDepth);
                 writeToSysLog("[HOURS]  History is [%d] hours", histDepth);
               }
             }
             break;
       case RNG_DAYS: 
-            { if (sysSetting->NoDaySlots != histDepth)
+            { if (devSetting->NoDaySlots != histDepth)
               {
-                sysSetting->NoDaySlots = histDepth;
+                devSetting->NoDaySlots = histDepth;
                 DebugTf("[DAYS]   History is [%d] days\r\n", histDepth);
                 writeToSysLog("[DAYS]   History is [%d] days", histDepth);
               }
             }
             break;
       case RNG_MONTHS: 
-            { if (sysSetting->NoMonthSlots != histDepth)
+            { if (devSetting->NoMonthSlots != histDepth)
               {
-                sysSetting->NoMonthSlots = histDepth;
+                devSetting->NoMonthSlots = histDepth;
                 DebugTf("[MONTHS] History is [%d] months\r\n", histDepth);
                 writeToSysLog("[MONTHS] History is [%d] months", histDepth);
               }
@@ -1168,7 +1168,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
   DebugTf("[%-12.12s][%s] %s .. \r\n", funcName, fName
                        , _FSYS.exists(fName) ? "Exists":"Does NOT exist");
 
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(1, "Bestaat:", 10);
     oled_Print_Msg(2, fName, 10);
@@ -1180,7 +1180,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
     if (doDisplay)
     {
       //Debugln(F("NO! Error!!"));
-      if (sysSetting->OledType > 0)
+      if (devSetting->OledType > 0)
       {
         oled_Print_Msg(3, "Nee! FOUT!", 6000);
       }
@@ -1190,7 +1190,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
     else
     {
       //Debugln(F("NO! "));
-      if (sysSetting->OledType > 0)
+      if (devSetting->OledType > 0)
       {
         oled_Print_Msg(3, "Nee! ", 6000);
       }
@@ -1201,7 +1201,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
   else
   {
     //Debugln("Yes! OK!");
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Print_Msg(3, "JA! (OK!)", 250);
     }

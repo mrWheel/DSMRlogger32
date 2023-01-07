@@ -10,9 +10,9 @@
 */
 
 //------ [SSD1306Ascii@1.3.0]
-#include "SSD1306Ascii.h"       // https://github.com/greiman/SSD1306Ascii
+#include <SSD1306Ascii.h>       // https://github.com/greiman/SSD1306Ascii
 //------ [Wire@2.0.0]
-#include "SSD1306AsciiWire.h"   // Version 1.2.x - Commit 97a05cd on 24 Mar 2019
+#include <SSD1306AsciiWire.h>   // Onderdeel van SSD1306Ascii
 
 // 0X3C+SA0 - 0x3C or 0x3D
 #define I2C_ADDRESS 0x3C
@@ -37,10 +37,10 @@ uint8_t     lineHeight, charHeight;
 void checkFlashButton()
 {
   //-- if the display timer is turned off, then don't check flashbutton
-  if (sysSetting->OledSleep == 0) return;  
+  if (devSetting->OledSleep == 0) return;  
 
   //--check if the displaytimer is due...
-  if ( (sysSetting->OledSleep > 0) && boolDisplay && DUE(oledSleepTimer) )
+  if ( (devSetting->OledSleep > 0) && boolDisplay && DUE(oledSleepTimer) )
   {
     DebugTln("Switching display off..");
     oled.clear();
@@ -78,7 +78,7 @@ void checkFlashButton()
 void oled_Init()
 {
   Wire.begin();
-  if (sysSetting->OledType == 2)
+  if (devSetting->OledType == 2)
         oled.begin(&SH1106_128x64, I2C_ADDRESS);
   else  oled.begin(&Adafruit128x64, I2C_ADDRESS);
 
@@ -89,7 +89,7 @@ void oled_Init()
           , oled.displayHeight()
           , charHeight, lineHeight, 4);
   boolDisplay = true;
-  if (sysSetting->OledFlip)  oled.displayRemap(true);
+  if (devSetting->OledFlip)  oled.displayRemap(true);
   RESTART_TIMER(oledSleepTimer);
 
 }   // oled_Init()

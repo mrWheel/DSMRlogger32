@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.3 (02-01-2023)"
+#define _FW_VERSION "v5.0.3 (07-01-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -11,14 +11,16 @@
 **
 **  Tested with: ESP32 core 2.0.5 by Espressif Systems
 **
-**  Arduino-IDE settings for DSMR-logger Revision 5 (ESP32):
+**  Arduino-IDE settings for DSMR-logger32 Revision 5 (ESP32):
 **
 **    - Board             : "ESP32 Wrover Module" [ESP32-WROVER-E]
-**    - Upload Speed      : "115200" - "230400" (max. with FTDI programmer)
+**    - Upload Speed      : "230400" to "460800" (max. with FTDI programmer)
+**    - Flash Frequency   : "40MHz" (sometimes 80MHz to fast)
 **    // Flash Size       : "4MB (32Mb)"
-**    - Flash Mode        : "DIO" ("QIO" is too fast for some chips!!)
+**    - Flash Mode        : "DIO" (sometimes "QIO" is too fast)
 **    - Partition Scheme  : "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
 **    - Core Debug Level  : "None" ??
+**    - Erase All Flash   : "Disabled"
 **    // PSRAM            : "Enabled"
 **    // Arduino Runs On  : "Core 1"
 **    // Events Run On    : "Core 0"
@@ -47,16 +49,16 @@
 **   https://mrwheel.github.io/DSMRloggerWS/
 */
 /******************** compiler options  ********************************************/
-//  #define _SHOW_PASSWRDS             // well .. show the PSK key and MQTT password, what else?
-//  #define _HAS_NO_SLIMMEMETER        // define for testing only!
+//#define _SHOW_PASSWRDS             // well .. show the PSK key and MQTT password, what else?
+//#define _HAS_NO_SLIMMEMETER        // define for testing only!
 
-//---- you have to choose one of these: { _SPIFFS | _LIITLEFS }
+//---- you have to choose one of these: { _SPIFFS | _LITTLEFS }
 //#define _LITTLEFS
 #define _SPIFFS
 
 /******************** don't change anything below this comment **********************/
 
-#include "esp_heap_caps.h"
+#include <esp_heap_caps.h>
 
 #include "DSMRlogger32.h"
 
@@ -153,7 +155,7 @@ struct addSmToActualStore
 //===========================================================================================
 void displayStatus()
 {
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     switch(msgMode)
     {
@@ -225,18 +227,15 @@ void setup()
 
   pulseHeart(true);
   neoPixOn(0, neoPixRed);
+  neoPixOff(1);
   
   //------ initialize File System --------------------------
   setupFileSystem();
 
-  //------ initialize sysSetting logger --------------------
+  //------ initialize devSetting logger --------------------
   setupSysLogger();
 
-  readSysSettings(true);
-//  sysSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
-//  sysSetting->NoDaySlots   = readRingHistoryDepth(DAYS_FILE,   RNG_DAYS);
-//  sysSetting->NoMonthSlots = readRingHistoryDepth(MONTHS_FILE, RNG_MONTHS);
-//  writeSysSettings(true);
+  readDevSettings(true);
 
   //------ read status file for last Timestamp --------------------
   strlcpy(lastTlgrmTime.Timestamp, "040302010101X", _TIMESTAMP_LEN);
@@ -263,7 +262,7 @@ void setup()
   
   readSmSettings(true);
   
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Init();
     oled_Clear();  // clear the screen so we can paint the menu.
@@ -287,7 +286,7 @@ void setup()
 
   if (filesysMounted)
   {
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Print_Msg(0, "<DSMRlogger32>", 0);
       oled_Print_Msg(3, "Filesystm mounted", 1500);
@@ -295,7 +294,7 @@ void setup()
   }
   else
   {
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Print_Msg(0, "<DSMRlogger32>", 0);
       oled_Print_Msg(3, "MOUNT FS FAILED!", 2000);
@@ -320,7 +319,7 @@ void setup()
     while(1) { delay(1000); }
   }
   
-  snprintf(sysSetting->Hostname, sizeof(sysSetting->Hostname), "%s", _DEFAULT_HOSTNAME);
+  snprintf(devSetting->Hostname, sizeof(devSetting->Hostname), "%s", _DEFAULT_HOSTNAME);
 
   //-- Press [Reset] -> "External System"
   //-- Software reset -> "Vbat power on reset"
@@ -328,26 +327,19 @@ void setup()
   DebugTf("Last Reset Reason [%s]\r\n", lastReset);
 
   oled_Init();
-  
-  if (sysSetting->DailyReboot)
-  {
-    ; //if (strcmp(lastReset, "Vbat power on reset") == 0) telegramCount = 0;
-  }
 
   //=============start Networkstuff==================================
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
-    if (sysSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
+    if (devSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
     oled_Clear();                       // clear the screen
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(1, "Verbinden met WiFi", 500);
   }
-  neoPixOn(0, neoPixRed);
   digitalWrite(LED_BUILTIN, LED_ON);
-  startWiFi(sysSetting->Hostname, 240, false);  // timeout 4 minuten
+  startWiFi(devSetting->Hostname, 240, false);  // timeout 4 minuten
   myWiFi.ipWiFi    = WiFi.localIP();
   myWiFi.ipGateway = WiFi.gatewayIP();
-  neoPixOn(0, neoPixBlue);
   
   WiFi.onEvent(WiFiEvent);
 
@@ -355,7 +347,7 @@ void setup()
   //--- Read more: http://www.esp32learning.com/code/esp32-true-random-number-generator-example.php
   esp_random();
 
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(1, WiFi.SSID(), 0);
@@ -364,7 +356,7 @@ void setup()
   }
   
   startTelnet();
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(3, "telnet (poort 23)", 2500);
@@ -388,8 +380,8 @@ void setup()
   }
   digitalWrite(LED_BUILTIN, LED_OFF);
 
-  startMDNS(sysSetting->Hostname);
-  if (sysSetting->OledType > 0)
+  startMDNS(devSetting->Hostname);
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(3, "mDNS gestart", 1500);
   }
@@ -397,7 +389,7 @@ void setup()
   //=============end Networkstuff======================================
 
   //================ startNTP =========================================
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(3, "setup NTP server", 100);
   }
@@ -422,13 +414,14 @@ void setup()
                                              , tzEurope.minute()
                                              , tzEurope.second());
 
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(3, "NTP gestart", 1500);
   }
-  //32 prevNtpHour = hour();
-
+  //-- OK, WiFi connected, time set
+  neoPixOn(0, neoPixGreen);
+  
   //================ end NTP =========================================
 
   writeToSysLog(lastReset);                         
@@ -440,7 +433,7 @@ void setup()
   //=============now test if FS is correct populated!============
   filesysNotPopulated = setupIsFsPopulated();
 
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     snprintf(gMsg,  _GMSG_LEN, "DT: %02d%02d%02d%02d0101x", thisYear
                                             , thisMonth, thisDay, thisHour);
@@ -451,7 +444,7 @@ void setup()
   //================ Start MQTT  ======================================
 
   connectMQTT();
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(3, "MQTT server set!", 1500);
@@ -462,7 +455,7 @@ void setup()
   if (!filesysNotPopulated)
   {
     DebugTln(F("Filesystem correct populated -> normal operation!\r"));
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Print_Msg(0, "<DSMRlogger32>", 0);
       oled_Print_Msg(1, "OK, FS correct", 0);
@@ -471,10 +464,10 @@ void setup()
     }
     if (hasAlternativeIndex)
     {
-      httpServer.serveStatic("/",                 _FSYS, sysSetting->IndexPage);
-      httpServer.serveStatic("/index",            _FSYS, sysSetting->IndexPage);
-      httpServer.serveStatic("/index.html",       _FSYS, sysSetting->IndexPage);
-      httpServer.serveStatic("/DSMRindex.html",   _FSYS, sysSetting->IndexPage);
+      httpServer.serveStatic("/",                 _FSYS, devSetting->IndexPage);
+      httpServer.serveStatic("/index",            _FSYS, devSetting->IndexPage);
+      httpServer.serveStatic("/index.html",       _FSYS, devSetting->IndexPage);
+      httpServer.serveStatic("/DSMRindex.html",   _FSYS, devSetting->IndexPage);
     }
     else
     {
@@ -491,13 +484,14 @@ void setup()
   {
     DebugTln(F("Oeps! not all files found on FS -> Start FSmanager!\r"));
     filesysNotPopulated = true;
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Print_Msg(0, "!OEPS! niet alle", 0);
       oled_Print_Msg(1, "files op FS", 0);
       oled_Print_Msg(2, "gevonden! (fout!)", 0);
       oled_Print_Msg(3, "Start FSmanager", 2000);
     }
+    neoPixOn(1, neoPixRed);
   }
 
   setupFSmanager();
@@ -507,7 +501,7 @@ void setup()
 
   httpServer.begin();
   DebugTln( "HTTP server gestart\r" );
-  if (sysSetting->OledType > 0)                                  //HAS_OLED
+  if (devSetting->OledType > 0)                                  //HAS_OLED
   {
     //HAS_OLED
     oled_Clear();                                           //HAS_OLED
@@ -523,7 +517,7 @@ void setup()
   DebugTf("Startup complete! lastTlgrmTime[%s]\r\n", lastTlgrmTime.Timestamp);
   writeToSysLog("Startup complete! lastTlgrmTime[%s]", lastTlgrmTime.Timestamp);
 
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
     oled_Print_Msg(1, "Startup complete", 0);
@@ -537,7 +531,7 @@ void setup()
 
 #if !defined( _HAS_NO_SLIMMEMETER )
   DebugTln("Setup serial port for Smart Meter reading");
-  if (setting->PreDSMR40 == 0)
+  if (smSetting->PreDSMR40 == 0)
   {
     DebugTf("SMserial is set to 115200 baud / 8N1 (RX=%d, TX=%d)\r\n", SMRX, SMTX);
     DebugFlush();
@@ -557,7 +551,7 @@ void setup()
     slimmeMeter.doChecksum(false);
   }
 
-#endif // HAS_NO_SLIMME_METER
+#endif // not _HAS_NO_SLIMME_METER
 
   neoPixOn(1, neoPixGreenLow);
   
@@ -615,7 +609,7 @@ void doSystemTasks()
   httpServer.handleClient();
 
   wait4KeyInput();
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     checkFlashButton();
   }
@@ -648,7 +642,7 @@ void loop ()
 //  }
 
   //--- if an OLED screen attached, display the status
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     if (DUE(updateDisplay))
     {
@@ -670,8 +664,8 @@ void loop ()
     glowTimer0 = millis() + 2000;
     if ((lostWiFiCount % 10) == 0)
     {
-      DebugTf("Reconnect wifi with [%s]...\r\n", sysSetting->Hostname);
-      writeToSysLog("Reconnect wifi with [%s]...", sysSetting->Hostname);
+      DebugTf("Reconnect wifi with [%s]...\r\n", devSetting->Hostname);
+      writeToSysLog("Reconnect wifi with [%s]...", devSetting->Hostname);
     }
     WiFi.disconnect();
     //WiFi.reconnect();
@@ -707,7 +701,7 @@ void loop ()
 #ifndef _HAS_NO_SLIMMEMETER
   //-- hier moet nog even over worden nagedacht
   //-- via een setting in- of uit-schakelen
-  if (sysSetting->DailyReboot && (hour() == 4) && (minute() == 5))
+  if (devSetting->DailyReboot && (hour() == 4) && (minute() == 5))
   {
     slotErrors      = 0;
     nrReboots       = 0;

@@ -1,7 +1,7 @@
 /*
 ***************************************************************************  
-**  Program  : DSMRindex.js, part of DSMRfirmwareESP32
-**  Version  : v5.0.1
+**  Program  : DSMRindex.js, part of DSMRfirmware32
+**  Version  : v5.0.3
 **
 **  Copyright (c) 2021, 2022, 2023 Willem Aandewiel
 **
@@ -53,15 +53,18 @@
   
   window.onload=bootsTrapMain;
   /*
-  window.onfocus = function() {
-    if (needBootsTrapMain) {
+  window.onfocus = function() 
+  {
+    if (needBootsTrapMain) 
+    {
       window.location.reload(true);
     }
   };
   */
     
   //============================================================================  
-  function bootsTrapMain() {
+  function bootsTrapMain() 
+  {
     console.log("bootsTrapMain()");
     needBootsTrapMain = false;
     
@@ -93,6 +96,7 @@
     document.getElementById('mCOST').checked = false;
     setMonthTableType();
     refreshDevTime();
+    getSmSettings();
     getDevSettings();
     refreshDevInfo();
     
@@ -111,7 +115,8 @@
   } // bootsTrapMain()
   
     
-  function bootsTrapSettings() {
+  function bootsTrapSettings() 
+  {
     console.log("bootsTrapSettings()");
     needBootsTrapSettings = false;
     
@@ -119,10 +124,10 @@
                                                 {openPage('mainPage');});
     document.getElementById('bEditMonths').addEventListener('click',function()
                                                 {openTab('tabEditMonths');});
-    document.getElementById('bEditSettings').addEventListener('click',function()
-                                                {openTab('tabEditSettings');});
-    document.getElementById('bEditSystem').addEventListener('click',function()
-                                                {openTab('tabEditSystem');});
+    document.getElementById('bEditSmSettings').addEventListener('click',function()
+                                                {openTab('tabEditSmSettings');});
+    document.getElementById('bEditDevSettings').addEventListener('click',function()
+                                                {openTab('tabEditDevSettings');});
     document.getElementById('bUndo').addEventListener('click',function() 
                                                 {undoReload();});
     document.getElementById('bSave').addEventListener('click',function() 
@@ -132,11 +137,12 @@
     
     openPage("settingsPage");
 
-    //openTab("tabEditSettings");
+    //openTab("tabEditSmSettings");
     
     //---- update buttons in navigation bar ---
     let x = document.getElementsByClassName("editButton");
-    for (var i = 0; i < x.length; i++) {
+    for (var i = 0; i < x.length; i++) 
+    {
       x[i].style.background     = settingBgColor;
       x[i].style.border         = 'none';
       x[i].style.textDecoration = 'none';  
@@ -148,8 +154,8 @@
   
 
   //============================================================================  
-  function openTab(tabName) {
-        
+  function openTab(tabName) 
+  {
     activeTab = tabName;
     actualHist = false;
 
@@ -161,7 +167,8 @@
     console.log("openTab("+bID+")..");
     //---- update buttons in navigation bar ---
     let x = document.getElementsByClassName("tabButton");
-    for (i = 0; i < x.length; i++) {
+    for (i = 0; i < x.length; i++) 
+    {
       x[i].style.background     = 'deepskyblue';
       x[i].style.border         = 'none';
       x[i].style.textDecoration = 'none';  
@@ -173,20 +180,23 @@
     document.getElementById("gasChart").style.display  = "none";
     //--- hide all tab's -------
     x = document.getElementsByClassName("tabName");
-    for (i = 0; i < x.length; i++) {
+    for (i = 0; i < x.length; i++) 
+    {
       x[i].style.display    = "none";  
     }
     //--- and set active tab to 'block'
     console.log("now set ["+bID+"] to block ..");
     //document.getElementById(bID).style.background='lightgray';
     document.getElementById(tabName).style.display = "block";  
-    if (tabName != "ActualTab") {
+    if (tabName != "ActualTab") 
+    {
       clearInterval(actualTimer);
       actualHist  = false;
       actualTimer = setInterval(refreshSmActual, 60 * 1000);                  // repeat every 60s
     }
     
-    if (tabName == "ActualTab") {
+    if (tabName == "ActualTab") 
+    {
       console.log("newTab: ActualTab");
       refreshSmActual();
       clearInterval(actualTimer);
@@ -194,64 +204,75 @@
             actualTimer = setInterval(refreshSmActual, 10 * 1000);            // repeat every 10s
       else  actualTimer = setInterval(refreshSmActual, tlgrmInterval * 1000); // repeat every tlgrmInterval seconds
 
-    } else if (tabName == "HoursTab") {
+    } else if (tabName == "HoursTab") 
+    {
       console.log("newTab: HoursTab");
       refreshHours();
       clearInterval(tabTimer);
       tabTimer = setInterval(refreshHours, 58 * 1000); // repeat every 58s
 
-    } else if (tabName == "DaysTab") {
+    } else if (tabName == "DaysTab") 
+    {
       console.log("newTab: DaysTab");
       refreshDays();
       clearInterval(tabTimer);
       tabTimer = setInterval(refreshDays, 58 * 1000); // repeat every 58s
 
-    } else if (tabName == "MonthsTab") {
+    } else if (tabName == "MonthsTab") 
+    {
       console.log("newTab: MonthsTab");
       refreshMonths();
       clearInterval(tabTimer);
       tabTimer = setInterval(refreshMonths, 118 * 1000); // repeat every 118s
     
-    } else if (tabName == "SysInfoTab") {
+    } else if (tabName == "SysInfoTab") 
+    {
       console.log("newTab: SysInfoTab");
       refreshDevInfo();
       clearInterval(tabTimer);
       tabTimer = setInterval(refreshDevInfo, 58 * 1000); // repeat every 58s
 
-    } else if (tabName == "FieldsTab") {
+    } else if (tabName == "FieldsTab") 
+    {
       console.log("newTab: FieldsTab");
       refreshSmFields();
       clearInterval(tabTimer);
       tabTimer = setInterval(refreshSmFields, 58 * 1000); // repeat every 58s
 
-    } else if (tabName == "TelegramTab") {
+    } else if (tabName == "TelegramTab") 
+    {
       console.log("newTab: TelegramTab");
       refreshSmTelegram();
       clearInterval(tabTimer); // do not repeat!
 
-    } else if (tabName == "SyslogTab") {
+    } else if (tabName == "SyslogTab") 
+    {
       console.log("newTab: SyslogTab");
       refreshDevSyslog();
       clearInterval(tabTimer); // do not repeat!
 
-    } else if (tabName == "APIdocTab") {
+    } else if (tabName == "APIdocTab") 
+    {
       console.log("newTab: APIdocTab");
       showAPIdoc();
       
-    } else if (tabName == "tabEditMonths") {
+    } else if (tabName == "tabEditMonths") 
+    {
       console.log("newTab: tabEditMonths");
       document.getElementById('tabMaanden').style.display = 'block';
       getMonths();
 
-    } else if (tabName == "tabEditSettings") {
-      console.log("newTab: tabEditSettings");
-      document.getElementById('tabEditSettings').style.display = 'block';
-      refreshSettings();
+    } else if (tabName == "tabEditSmSettings") 
+    {
+      console.log("newTab: tabEditSmSettings");
+      document.getElementById('tabEditSmSettings').style.display = 'block';
+      refreshSmSettings();
 
-    } else if (tabName == "tabEditSystem") {
-      console.log("newTab: tabEditSystem");
-      document.getElementById('tabEditSystem').style.display = 'block';
-      refreshSystem();
+    } else if (tabName == "tabEditDevSettings") 
+    {
+      console.log("newTab: tabEditDevSettings");
+      document.getElementById('tabEditDevSettings').style.display = 'block';
+      refreshDevSettings();
     
     }
 
@@ -259,29 +280,32 @@
   
   
   //============================================================================  
-  function openPage(pageName) {
-        
+  function openPage(pageName) 
+  {
     console.log("openPage("+pageName+")");
     activePage = pageName;
-    if (pageName == "mainPage") {
+    if (pageName == "mainPage") 
+    {
       document.getElementById("settingsPage").style.display = "none";
       data = {};
       needBootsTrapSettings = true;
       openTab("ActualTab");
       if (needBootsTrapMain)       bootsTrapMain();
     }
-    else if (pageName == "settingsPage") {
+    else if (pageName == "settingsPage") 
+    {
       document.getElementById("mainPage").style.display = "none";  
       data = {};
       needBootsTrapMain = true;
-      openTab('tabEditSettings');
+      openTab('tabEditSmSettings');
       if (needBootsTrapSettings)   bootsTrapSettings();
     }
-    else if (pageName == "systemPage") {
+    else if (pageName == "systemPage") 
+    {
       document.getElementById("mainPage").style.display = "none";  
       data = {};
       needBootsTrapMain = true;
-      openTab('tabEditSystem');
+      openTab('tabEditDevSettings');
       if (needBootsTrapSystem)   bootsTrapSystem();
     }
     document.getElementById(pageName).style.display = "block";  
@@ -371,7 +395,8 @@
             }
          }  // for ..
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -399,7 +424,8 @@
           }
         }
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -442,7 +468,8 @@
             else  showActualGraph(data);
             //console.log("-->done..");
         })
-        .catch(function(error) {
+        .catch(function(error) 
+        {
           var p = document.createElement('p');
           p.appendChild(
             document.createTextNode('Error: ' + error.message)
@@ -465,7 +492,8 @@
             else  showActualGraph(data);
             //console.log("-->done..");
         })
-        .catch(function(error) {
+        .catch(function(error) 
+        {
           var p = document.createElement('p');
           p.appendChild(
             document.createTextNode('Error: ' + error.message)
@@ -552,7 +580,8 @@
           }
           //console.log("-->done..");
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -577,7 +606,8 @@
               showHistTable(data, "Hours");
         else  showHistGraph(data, "Hours");
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -599,7 +629,8 @@
               showHistTable(data, "Days");
         else  showHistGraph(data, "Days");
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -626,7 +657,8 @@
         }
         else  showMonthsGraph(data);
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -656,7 +688,8 @@
         preT = document.getElementById("TelData");
         preT.textContent = response;
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -686,7 +719,8 @@
         preT = document.getElementById("LogData");
         preT.textContent = response;
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -1222,13 +1256,14 @@
 
   
   //============================================================================  
-  function getDevSettings()
+  function getSmSettings()
   {
-    fetch(APIGW+"v2/dev/settings")
+    fetch(APIGW+"v2/sm/settings")
       .then(response => response.json())
       .then(json => {
         //console.log("parsed .., data is ["+ JSON.stringify(json)+"]");
-        for( let i in json.settings ){
+        for( let i in json.settings )
+        {
             if (json.settings[i].name == "ed_tariff1")
             {
               ed_tariff1 = json.settings[i].value;
@@ -1265,22 +1300,46 @@
             {
               pre_dsmr40 = json.settings[i].value;
             }
-            else if (json.settings[i].name == "dailyreboot")
-            {
-              dailyreboot = json.settings[i].value;
-            }
-            else if (json.settings[i].name == "hostname")
-            {
-              hostName = json.settings[i].value;
-            }
           }
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
         );
       });     
+      
+  } // getSmSettings()
+
+  
+  //============================================================================  
+  function getDevSettings()
+  {
+    fetch(APIGW+"v2/dev/settings")
+      .then(response => response.json())
+      .then(json => {
+        //console.log("parsed .., data is ["+ JSON.stringify(json)+"]");
+        for( let i in json.settings )
+        {
+          if (json.settings[i].name == "dailyreboot")
+          {
+            dailyreboot = json.settings[i].value;
+          }
+          else if (json.settings[i].name == "hostname")
+          {
+            hostName = json.settings[i].value;
+          }
+        }
+      })
+      .catch(function(error) 
+      {
+        var p = document.createElement('p');
+        p.appendChild(
+          document.createTextNode('Error: ' + error.message)
+        );
+      });     
+      
   } // getDevSettings()
 
   
@@ -1291,14 +1350,20 @@
       .then(response => response.json())
       .then(json => {
         console.log("parsed .., data is ["+ JSON.stringify(json)+"]");
-        for( let i in json.system ){
-            if (json.system[i].name == "hostname")
-            {
-              hostName = json.system[i].value;
-            }
+        for( let i in json.system )
+        {
+          if (json.system[i].name == "hostname")
+          {
+            hostName = json.system[i].value;
           }
+          else if (json.settings[i].name == "dailyreboot")
+          {
+            dailyreboot = json.settings[i].value;
+          }
+        }
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -1355,7 +1420,8 @@
   
     
   //============================================================================  
-  function setMonthTableType() {
+  function setMonthTableType() 
+  {
     console.log("Set Month Table Type");
     if (presentationType == 'GRAPH') 
     {
@@ -1379,7 +1445,8 @@
 
     
   //============================================================================  
-  function showAPIdoc() {
+  function showAPIdoc() 
+  {
     console.log("Show API doc ..@["+location.host+"]");
     document.getElementById("APIdocTab").style.display = "block";
     addAPIdoc("v2/dev/info",      "Device info in JSON format", true);
@@ -1413,7 +1480,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
     
   //============================================================================  
-  function addAPIdoc(restAPI, description, linkURL) {
+  function addAPIdoc(restAPI, description, linkURL) 
+  {
     if (document.getElementById(restAPI) == null)
     {
       var topDiv = document.getElementById("APIdocTab");
@@ -1455,20 +1523,20 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
   
     
   //============================================================================  
-  function refreshSettings()
+  function refreshSmSettings()
   {
-    console.log("refreshSettings() ..");
+    console.log("refreshSmSettings() ..");
     data = {};
-    fetch(APIGW+"v2/dev/settings")
+    fetch(APIGW+"v2/sm/settings")
       .then(response => response.json())
       .then(json => {
         console.log("then(json => ..)");
         stngsData = json.settings;
-        //console.log("refreshSettings():["+JSON.stringify(data)+"]");
+        //console.log("refreshSmSettings():["+JSON.stringify(data)+"]");
         for( let i in stngsData )
         {
           let fieldName=stngsData[i].name;
-          console.log("refreshSettings("+fieldName+")..["+JSON.stringify(stngsData[i])+"]");
+          console.log("refreshSmSettings("+fieldName+")..["+JSON.stringify(stngsData[i])+"]");
           var settings = document.getElementById('settings');
           if( ( document.getElementById("settingR_"+fieldName)) == null )
           {
@@ -1534,7 +1602,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
         }
         //console.log("-->done..");
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -1543,15 +1612,15 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
       document.getElementById('message').innerHTML = newVersionMsg;
 
-  } // refreshSettings()
+  } // refreshSmSettings()
     
   
   //============================================================================  
-  function refreshSystem()
+  function refreshDevSettings()
   {
-    console.log("refreshSystem() ..");
+    console.log("refreshDevSettings() ..");
     data = {};
-    fetch(APIGW+"v2/dev/system")
+    fetch(APIGW+"v2/dev/settings")
       .then(response => response.json())
       .then(json => {
         console.log("then(json => ..)");
@@ -1627,7 +1696,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
         }
         //console.log("-->done..");
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -1636,7 +1706,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
       document.getElementById('message').innerHTML = newVersionMsg;
 
-  } // refreshSystem()
+  } // refreshDevSettings()
   
   
   //============================================================================  
@@ -1651,7 +1721,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
         expandDataSettings(data);
         showMonths(data, monthType);
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         var p = document.createElement('p');
         p.appendChild(
           document.createTextNode('Error: ' + error.message)
@@ -1852,14 +1923,14 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
     if (activeTab == "tabEditMonths") {
       console.log("getMonths");
       getMonths();
-    } else if (activeTab == "tabEditSettings") {
+    } else if (activeTab == "tabEditSmSettings") {
       console.log("undoReload(): reload Settings..");
       data = {};
-      refreshSettings();
-    } else if (activeTab == "tabEditSystem") {
+      refreshSmSettings();
+    } else if (activeTab == "tabEditDevSettings") {
       console.log("undoReload(): reload System..");
       data = {};
-      refreshSystem();
+      refreshDevSettings();
 
     } else {
       console.log("undoReload(): I don't knwo what to do ..");
@@ -1873,13 +1944,13 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
   {
     document.getElementById('message').innerHTML = "Gegevens worden opgeslagen ..";
 
-    if (activeTab == "tabEditSettings")
+    if (activeTab == "tabEditSmSettings")
     {
-      saveSettings();
+      saveSmSettings();
     } 
-    else if (activeTab == "tabEditSystem")
+    else if (activeTab == "tabEditDevSettings")
     {
-      saveSystem();
+      saveDevSettings();
     }
     else if (activeTab == "tabEditMonths")
     {
@@ -1890,7 +1961,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
   
   
   //============================================================================  
-  function saveSettings() 
+  function saveSmSettings() 
   {
     for(var i in stngsData)
     {
@@ -1899,19 +1970,20 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       if (stngsData[i].value != newVal)
       {
         console.log("save stngsData ["+fldId+"] => from["+stngsData[i].value+"] to["+newVal+"]");
-        sendPostSetting(fldId, newVal);
+        sendPostSmSetting(fldId, newVal);
       }
     }    
     // delay refresh as all fetch functions are asynchroon!!
-    setTimeout(function() {
-      refreshSettings();
+    setTimeout(function() 
+    {
+      refreshSmSettings();
     }, 1000);
     
-  } // saveSettings()
+  } // saveSmSettings()
   
   
   //============================================================================  
-  function saveSystem() 
+  function saveDevSettings() 
   {
     for(var i in sysData)
     {
@@ -1920,7 +1992,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       if (sysData[i].value != newVal)
       {
         console.log("save data ["+fldId+"] => from["+sysData[i].value+"] to["+newVal+"]");
-        sendPostSystem(fldId, newVal);
+        sendPostDevSetting(fldId, newVal);
         if (fldId == "alter_ring_slots") 
         {
           document.getElementById("setFld_"+fldId).value = 0;
@@ -1929,11 +2001,12 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       }
     }    
     // delay refresh as all fetch functions are asynchroon!!
-    setTimeout(function() {
-      refreshSystem();
+    setTimeout(function() 
+    {
+      refreshDevSettings();
     }, 1000);
     
-  } // saveSystem()
+  } // saveDevSettings()
   
   
   //============================================================================  
@@ -1983,7 +2056,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
     
   //============================================================================  
-  function sendPostSetting(field, value) 
+  function sendPostSmSetting(field, value) 
   {
     const jsonString = {"name" : field, "value" : value};
     //console.log("send JSON:["+jsonString+"]");
@@ -1994,6 +2067,36 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
         mode : "cors"
     };
 
+    //-fetch(APIGW+"v2/dev/settings", other_params)
+    fetch(APIGW+"v2/sm/settings", other_params)
+      .then(function(response) {
+            //console.log(response.status );    //=> number 100–599
+            //console.log(response.statusText); //=> String
+            //console.log(response.headers);    //=> Headers
+            //console.log(response.url);        //=> String
+            //console.log(response.text());
+            //return response.text()
+      }, function(error) 
+      {
+        console.log("Error["+error.message+"]"); //=> String
+      });
+      
+  } // sendPostSmSetting()
+
+    
+  //============================================================================  
+  function sendPostDevSetting(field, value) 
+  {
+    const jsonString = {"name" : field, "value" : value};
+    //console.log("send JSON:["+jsonString+"]");
+    const other_params = {
+        headers : { "content-type" : "application/json; charset=UTF-8"},
+        body : JSON.stringify(jsonString),
+        method : "POST",
+        mode : "cors"
+    };
+
+    //-fetch(APIGW+"v2/dev/system", other_params)
     fetch(APIGW+"v2/dev/settings", other_params)
       .then(function(response) {
             //console.log(response.status );    //=> number 100–599
@@ -2002,38 +2105,12 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
             //console.log(response.url);        //=> String
             //console.log(response.text());
             //return response.text()
-      }, function(error) {
+      }, function(error) 
+      {
         console.log("Error["+error.message+"]"); //=> String
       });
       
-  } // sendPostSetting()
-
-    
-  //============================================================================  
-  function sendPostSystem(field, value) 
-  {
-    const jsonString = {"name" : field, "value" : value};
-    //console.log("send JSON:["+jsonString+"]");
-    const other_params = {
-        headers : { "content-type" : "application/json; charset=UTF-8"},
-        body : JSON.stringify(jsonString),
-        method : "POST",
-        mode : "cors"
-    };
-
-    fetch(APIGW+"v2/dev/system", other_params)
-      .then(function(response) {
-            //console.log(response.status );    //=> number 100–599
-            //console.log(response.statusText); //=> String
-            //console.log(response.headers);    //=> Headers
-            //console.log(response.url);        //=> String
-            //console.log(response.text());
-            //return response.text()
-      }, function(error) {
-        console.log("Error["+error.message+"]"); //=> String
-      });
-      
-  } // sendPostSystem()
+  } // sendPostDevSetting()
 
     
   //============================================================================  
@@ -2245,7 +2322,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
         console.log(newVersionMsg);
 
       })
-      .catch(function(error) {
+      .catch(function(error) 
+      {
         console.log(error);
         GitHubVersion_dspl   = "";
         GitHubVersion        = 0;

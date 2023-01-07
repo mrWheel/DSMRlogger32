@@ -1,7 +1,7 @@
 /*
 ***************************************************************************  
-**  Program  : DSMRgraphics.js, part of DSMRloggerAPI
-**  Version  : v5.0.1
+**  Program  : DSMRgraphics.js, part of DSMRlogger32
+**  Version  : v5.0.3
 **
 **  Copyright (c) 2020, 2021, 2022, 2023 Willem Aandewiel
 **

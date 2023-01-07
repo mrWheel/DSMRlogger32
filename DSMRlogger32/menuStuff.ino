@@ -47,7 +47,7 @@ void displayBoardInfo()
   Debug(" \r\n         Copyright (c) by [Willem Aandewiel");
 
   Debug("]\r\n                 Hostname [");
-  Debug( sysSetting->Hostname );
+  Debug( devSetting->Hostname );
   Debug("]\r\n         Firmware Version [");
   Debug( _FW_VERSION );
   Debug("]\r\n                 Compiled [");
@@ -120,7 +120,7 @@ void displayBoardInfo()
   Debug("]\r\n               IP Address [");
   Debug( WiFi.localIP().toString() );
   Debug("]\r\n                 Hostname [");
-  Debug( sysSetting->Hostname );
+  Debug( devSetting->Hostname );
   //esp32 Debug("]\r\n     Last reset reason [");
   //esp32 Debug( ESP.getResetReason() );
   Debug("]\r\n        number of reboots [");
@@ -131,19 +131,19 @@ void displayBoardInfo()
 
   Debugln("==================================================================\r");
   Debug(" \r\n              MQTT broker [");
-  Debug( sysSetting->MQTTbroker );
+  Debug( devSetting->MQTTbroker );
   Debug("]\r\n                MQTT User [");
-  Debug( sysSetting->MQTTuser );
+  Debug( devSetting->MQTTuser );
 #ifdef _SHOW_PASSWRDS
   Debug("]\r\n            MQTT PassWord [");
-  Debug( sysSetting->MQTTpasswd );
+  Debug( devSetting->MQTTpasswd );
 #else
   Debug("]\r\n            MQTT PassWord [**********");
 #endif
   Debug("]\r\n                Top Topic [");
-  Debug(sysSetting->MQTTtopTopic );
+  Debug(devSetting->MQTTtopTopic );
   Debug("]\r\n          Update Interval [");
-  Debug(sysSetting->MQTTinterval);
+  Debug(devSetting->MQTTinterval);
   Debugln("]\r");
   Debugln("==================================================================\r\n\r");
 
@@ -227,7 +227,7 @@ void handleKeyInput(char inChar)
       case 's':
       case 'S':
         readSmSettings(true);
-        readSysSettings(true);
+        readDevSettings(true);
         break;
 
       case 'U':
@@ -256,11 +256,11 @@ void handleKeyInput(char inChar)
         break;
 
       case 'W':
-        Debugf("\r\nConnect to AP [%s] and go to ip address shown in the AP-name\r\n", sysSetting->Hostname);
+        Debugf("\r\nConnect to AP [%s] and go to ip address shown in the AP-name\r\n", devSetting->Hostname);
         delay(1000);
         WiFi.disconnect(true);  // deletes credentials ?!
         writeToSysLog("Erase WiFi credentials! and restart..");
-        startWiFi(sysSetting->Hostname, 240, true);
+        startWiFi(devSetting->Hostname, 240, true);
         delay(2000);
         ESP.restart();
         delay(2000);

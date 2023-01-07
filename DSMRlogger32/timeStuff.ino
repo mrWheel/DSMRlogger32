@@ -17,9 +17,9 @@ void saveTimestamp(const char *timeStamp)
   prevTlgrmTime = lastTlgrmTime;
   //-- fill all other fields
   strlcpy(lastTlgrmTime.Timestamp, timeStamp, _TIMESTAMP_LEN);
-  lastTlgrmTime = buildTimeStruct(lastTlgrmTime.Timestamp, sysSetting->NoHourSlots
-                                                         , sysSetting->NoDaySlots 
-                                                         , sysSetting->NoMonthSlots);
+  lastTlgrmTime = buildTimeStruct(lastTlgrmTime.Timestamp, devSetting->NoHourSlots
+                                                         , devSetting->NoDaySlots 
+                                                         , devSetting->NoMonthSlots);
 
 } //  saveTimestamp()
 

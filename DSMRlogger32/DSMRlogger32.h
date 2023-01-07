@@ -58,7 +58,7 @@ HardwareSerial SMserial (1);
 
 #include <WiFiUdp.h>        // part of ESP32 Core https://github.com/ESP32/Arduino
 //------ [HTTPUpdateServer@2.0.0] - part of ESP32 Core https://github.com/ESP32/Arduino
-#include "HTTPUpdateServer.h"  
+#include <HTTPUpdateServer.h>  
 //------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
 #include <WiFiManager.h>        // version 0.15.0 - https://github.com/tzapu/WiFiManager
 
@@ -115,8 +115,8 @@ Timezone    tzEurope;
 #define _MQTT_TOPTOPIC_LEN      21
 #define _FIELDTABLE_CNAME_LEN  100
 #define _FIELDTABLE_CVALUE_LEN 100
-#define _SETTINGS_FILE     "/DSMRsettings.json"
-#define _SYSTEM_FILE       "/DSMRsysSetting.json"
+#define _SETTINGS_FILE     "/DSMRsmSettings.json"
+#define _SYSTEM_FILE       "/DSMRdevSettings.json"
 #define _STATUS_FILE       "/DSMRstatus.csv"
 
 #define LED_ON                 LOW
@@ -259,7 +259,7 @@ struct fieldTableStruct
 };
 
 
-struct settingStruct
+struct settingSmStruct
 {
   uint8_t   PreDSMR40;
   uint8_t   SmHasFaseInfo;
@@ -276,7 +276,7 @@ struct settingStruct
   float     GNBK;
 };
 
-struct sysSettingStruct
+struct settingDevStruct
 {
   char      Hostname[_HOSTNAME_LEN];
   char      IndexPage[_INDEXPAGE_LEN];
@@ -357,8 +357,8 @@ char              *fChar;
 
 fieldTableStruct  *fieldTable; 
 uint16_t          fieldTableCount = 0;
-settingStruct     *setting;
-sysSettingStruct  *sysSetting;
+settingSmStruct   *smSetting;
+settingDevStruct  *devSetting;
 actualDataStruct  *actualStore;
 
 time_t      actT;

@@ -1,7 +1,7 @@
 <!--
 ***************************************************************************  
-**  Program  : DSMRindex.html.inc, part of DSMRloggerESP32
-**  Version  : v5.0.1
+**  Program  : DSMRindex.html.inc, part of DSMRlogger32
+**  Version  : v5.0.3
 **
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -12,7 +12,7 @@
     <!-- <div class="dev-header"> -->
     <div class="header">
       <h1>
-        <span id="sysName">DSMR-logger(ESP32)</span> &nbsp; &nbsp; &nbsp;
+        <span id="sysName">DSMR-logger32</span> &nbsp; &nbsp; &nbsp;
         <span id="devName"    style='font-size: small;'>-</span> &nbsp;
         <span id="devVersion" style='font-size: small;'>[version]</span>
         <span id="source"     style='font-size: small;'> &nbsp; &nbsp; [-]</span>
@@ -325,12 +325,12 @@
 
   <div class="nav-container">
     <div class='nav-left'>
-      <a id='bTerug'        class='nav-item tabButton'>Terug</a>
-      <a id='bEditMonths'   class='nav-item tabButton'>Meterstanden</a>
-      <a id='bEditSettings' class='nav-item tabButton'>Settings</a>
-      <a id='bEditSystem'   class='nav-item tabButton'>System</a>
-      <a id='bUndo'         class='nav-item tabButton'>Herstel</a>
-      <a id='bSave'         class='nav-item tabButton'>Opslaan</a>
+      <a id='bTerug'            class='nav-item tabButton'>Terug</a>
+      <a id='bEditMonths'       class='nav-item tabButton'>Meterstanden</a>
+      <a id='bEditSmSettings'   class='nav-item tabButton'>Settings</a>
+      <a id='bEditDevSettings'  class='nav-item tabButton'>System</a>
+      <a id='bUndo'             class='nav-item tabButton'>Herstel</a>
+      <a id='bSave'             class='nav-item tabButton'>Opslaan</a>
     </div>
   </div>  <!-- END nav-container -->
 
@@ -356,14 +356,14 @@
 
   </div> <!-- tabMonths -->
   
-  <div id="tabEditSettings" class="tabName outer-div" style="display:none">
+  <div id="tabEditSmSettings" class="tabName outer-div" style="display:none">
     <!-- START settingsTab Settings -->
     <br>
       <div id="settings" class="inner-div" style="width: 500px;">
       </div> 
   </div>  <!-- END tabSettings -->
   
-  <div id="tabEditSystem" class="tabName outer-div" style="display:none">
+  <div id="tabEditDevSettings" class="tabName outer-div" style="display:none">
     <!-- START network Tab System -->
     <br>
       <div id="system" class="inner-div" style="width: 500px;">

@@ -265,7 +265,7 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       char newValue[101] = {0};
       strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
       strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
-      updateSysSettings(field, newValue);
+      updateDevSettings(field, newValue);
       writeToSysLog("DSMReditor: Syetem Field[%s] changed to [%s]", field, newValue);
       memset(field,    0, sizeof(field));
       memset(newValue, 0, sizeof(newValue));
@@ -417,10 +417,10 @@ void sendDeviceInfo()
   snprintf(gMsg,  _GMSG_LEN, "%s %s", __DATE__, __TIME__);
   doc["devinfo"]["compiled"] = gMsg;
 
-  doc["devinfo"]["hostname"]        = sysSetting->Hostname;
+  doc["devinfo"]["hostname"]        = devSetting->Hostname;
   doc["devinfo"]["ipaddress"]       = WiFi.localIP().toString();
   doc["devinfo"]["macaddress"]      = String(WiFi.macAddress());
-  doc["devinfo"]["indexfile"]       = sysSetting->IndexPage;
+  doc["devinfo"]["indexfile"]       = devSetting->IndexPage;
   doc["devinfo"]["free_heap"]       = ESP.getFreeHeap();
   doc["devinfo"]["min_free_heap"]   = esp_get_minimum_free_heap_size();
   doc["devinfo"]["psram_size"]      = ESP.getPsramSize();
@@ -431,7 +431,7 @@ void sendDeviceInfo()
   doc["devinfo"]["cpu_freq"]        = ESP.getCpuFreqMHz();
   doc["devinfo"]["sketch_size"]     = ESP.getSketchSize();
   doc["devinfo"]["free_sketch_space"] = ESP.getFreeSketchSpace();
-  doc["devinfo"]["filesysSetting_size"] = _FSYS.totalBytes();
+  doc["devinfo"]["filedevSetting_size"] = _FSYS.totalBytes();
   doc["devinfo"]["flashchip_speed"] = ESP.getFlashChipSpeed();
   FlashMode_t ideMode = ESP.getFlashChipMode();
   doc["devinfo"]["flashchip_mode"]  = flashMode[ideMode];
@@ -451,18 +451,18 @@ void sendDeviceInfo()
   doc["devinfo"]["time"]            = theTime;
   doc["devinfo"]["uptime"]          = upTime();
   doc["devinfo"]["uptime_sec"]      = upTimeSeconds;
-  doc["devinfo"]["daily_reboot"]    = (int)sysSetting->DailyReboot;
-  doc["devinfo"]["oled_type"]       = (int)sysSetting->OledType;
-  doc["devinfo"]["oled_flip_screen"] = (int)sysSetting->OledFlip;
-  doc["devinfo"]["neo_brightness"]  = (int)sysSetting->NeoBrightness;
-  doc["devinfo"]["smhasfaseinfo"]   = (int)setting->SmHasFaseInfo;
-  doc["devinfo"]["telegram_interval"] = (int)sysSetting->TelegramInterval;
+  doc["devinfo"]["daily_reboot"]    = (int)devSetting->DailyReboot;
+  doc["devinfo"]["oled_type"]       = (int)devSetting->OledType;
+  doc["devinfo"]["oled_flip_screen"] = (int)devSetting->OledFlip;
+  doc["devinfo"]["neo_brightness"]  = (int)devSetting->NeoBrightness;
+  doc["devinfo"]["smhasfaseinfo"]   = (int)smSetting->SmHasFaseInfo;
+  doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
 
-  snprintf(gMsg,  _GMSG_LEN, "%s:%04d", sysSetting->MQTTbroker, sysSetting->MQTTbrokerPort);
+  snprintf(gMsg,  _GMSG_LEN, "%s:%04d", devSetting->MQTTbroker, devSetting->MQTTbrokerPort);
   doc["devinfo"]["mqtt_broker"]     = gMsg;
-  doc["devinfo"]["mqtt_interval"]   = sysSetting->MQTTinterval;
+  doc["devinfo"]["mqtt_interval"]   = devSetting->MQTTinterval;
   if (mqttIsConnected)
         doc["devinfo"]["mqtt_broker_connected"] = "yes";
   else  doc["devinfo"]["mqtt_broker_connected"] = "no";
@@ -535,79 +535,79 @@ void sendSMsettings()
 
   JsonObject nestedRec  = doc["settings"].createNestedObject();
   nestedRec["name"]     =  "pre_dsmr40";
-  nestedRec["value"]    =  setting->PreDSMR40;
+  nestedRec["value"]    =  smSetting->PreDSMR40;
   nestedRec["type"]     = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 1; 
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "ed_tariff1";
-  nestedRec["value"]  =  round3(setting->EDT1);
+  nestedRec["value"]  =  round3(smSetting->EDT1);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 10; nestedRec["dec"] = 5;
   
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "ed_tariff2";
-  nestedRec["value"]  =  round3(setting->EDT2);
+  nestedRec["value"]  =  round3(smSetting->EDT2);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 10; nestedRec["dec"] = 5;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "er_tariff1";
-  nestedRec["value"]  =  round3(setting->ERT1);
+  nestedRec["value"]  =  round3(smSetting->ERT1);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 10; nestedRec["dec"] = 5;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "er_tariff2";
-  nestedRec["value"]  =  round3(setting->ERT2);
+  nestedRec["value"]  =  round3(smSetting->ERT2);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 10; nestedRec["dec"] = 5;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "gd_tariff";
-  nestedRec["value"]  =  round3(setting->GDT);
+  nestedRec["value"]  =  round3(smSetting->GDT);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 10; nestedRec["dec"] = 5;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "electr_netw_costs";
-  nestedRec["value"]  =  round3(setting->ENBK);
+  nestedRec["value"]  =  round3(smSetting->ENBK);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 100; nestedRec["dec"] = 2;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "gas_netw_costs";
-  nestedRec["value"]  =  round3(setting->GNBK);
+  nestedRec["value"]  =  round3(smSetting->GNBK);
   nestedRec["type"]   = "f"; 
   nestedRec["min"] = 0; nestedRec["max"] = 100; nestedRec["dec"] = 2;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "mbus1_type";
-  nestedRec["value"]  =  setting->Mbus1Type;
+  nestedRec["value"]  =  smSetting->Mbus1Type;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 200; 
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "mbus2_type";
-  nestedRec["value"]  =  setting->Mbus2Type;
+  nestedRec["value"]  =  smSetting->Mbus2Type;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 1; nestedRec["max"] = 200; 
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "mbus3_type";
-  nestedRec["value"]  =  setting->Mbus3Type;
+  nestedRec["value"]  =  smSetting->Mbus3Type;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 1; nestedRec["max"] = 200;
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "mbus4_type";
-  nestedRec["value"]  =  setting->Mbus4Type;
+  nestedRec["value"]  =  smSetting->Mbus4Type;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 1; nestedRec["max"] = 200; 
 
   nestedRec = doc["settings"].createNestedObject();
   nestedRec["name"]   = "sm_has_fase_info";
-  nestedRec["value"]  =  setting->SmHasFaseInfo;
+  nestedRec["value"]  =  smSetting->SmHasFaseInfo;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 1;
   
@@ -631,37 +631,37 @@ void sendDevSettings()
 
   JsonObject nestedRec  = doc["system"].createNestedObject();
   nestedRec["name"]     =  "hostname";
-  nestedRec["value"]    =  sysSetting->Hostname;
+  nestedRec["value"]    =  devSetting->Hostname;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->Hostname) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->Hostname) -1; 
 
   nestedRec  = doc["system"].createNestedObject();
   nestedRec["name"]     =  "index_page";
-  nestedRec["value"]    =  sysSetting->IndexPage;
+  nestedRec["value"]    =  devSetting->IndexPage;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->IndexPage) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->IndexPage) -1; 
   
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "daily_reboot";
-  nestedRec["value"]  =  sysSetting->DailyReboot;
+  nestedRec["value"]  =  devSetting->DailyReboot;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 1; nestedRec["max"] = 1; 
   
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "no_hour_slots";
-  nestedRec["value"]  =  sysSetting->NoHourSlots;
+  nestedRec["value"]  =  devSetting->NoHourSlots;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = _NO_HOUR_SLOTS_; nestedRec["max"] = 190; 
   
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "no_day_slots";
-  nestedRec["value"]  =  sysSetting->NoDaySlots;
+  nestedRec["value"]  =  devSetting->NoDaySlots;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = _NO_DAY_SLOTS_; nestedRec["max"] = 155; 
   
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "no_month_slots";
-  nestedRec["value"]  =  (sysSetting->NoMonthSlots -1)/12;
+  nestedRec["value"]  =  (devSetting->NoMonthSlots -1)/12;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = ((_NO_MONTH_SLOTS_ -1)/12); nestedRec["max"] = 5; 
   
@@ -673,67 +673,67 @@ void sendDevSettings()
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "tlgrm_interval";
-  nestedRec["value"]  =  sysSetting->TelegramInterval;
+  nestedRec["value"]  =  devSetting->TelegramInterval;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 2; nestedRec["max"] = 60;
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "oled_type";
-  nestedRec["value"]  =  sysSetting->OledType;
+  nestedRec["value"]  =  devSetting->OledType;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 2; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "oled_screen_time";
-  nestedRec["value"]  =  sysSetting->OledSleep;
+  nestedRec["value"]  =  devSetting->OledSleep;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 300; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "oled_flip_screen";
-  nestedRec["value"]  =  sysSetting->OledFlip;
+  nestedRec["value"]  =  devSetting->OledFlip;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 1;
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "neo_brightness";
-  nestedRec["value"]  =  sysSetting->NeoBrightness;
+  nestedRec["value"]  =  devSetting->NeoBrightness;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 10; nestedRec["max"] = 250;
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_broker";
-  nestedRec["value"]    =  sysSetting->MQTTbroker;
+  nestedRec["value"]    =  devSetting->MQTTbroker;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->MQTTbroker) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->MQTTbroker) -1; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_broker_port";
-  nestedRec["value"]    =  sysSetting->MQTTbrokerPort;
+  nestedRec["value"]    =  devSetting->MQTTbrokerPort;
   nestedRec["type"]     = "1"; 
   nestedRec["min"]      = 1; nestedRec["max"] = 9999; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_user";
-  nestedRec["value"]    =  sysSetting->MQTTuser;
+  nestedRec["value"]    =  devSetting->MQTTuser;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->MQTTuser) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->MQTTuser) -1; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_passwd";
-  nestedRec["value"]    =  sysSetting->MQTTpasswd;
+  nestedRec["value"]    =  devSetting->MQTTpasswd;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->MQTTpasswd) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->MQTTpasswd) -1; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_toptopic";
-  nestedRec["value"]    =  sysSetting->MQTTtopTopic;
+  nestedRec["value"]    =  devSetting->MQTTtopTopic;
   nestedRec["type"]     = "s"; 
-  nestedRec["maxlen"]   = sizeof(sysSetting->MQTTtopTopic) -1; 
+  nestedRec["maxlen"]   = sizeof(devSetting->MQTTtopTopic) -1; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "mqtt_interval";
-  nestedRec["value"]    =  sysSetting->MQTTinterval;
+  nestedRec["value"]    =  devSetting->MQTTinterval;
   nestedRec["type"]     = "i"; 
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
 
@@ -912,21 +912,21 @@ void sendJsonHist(int8_t ringType, const char *fileName, timeStruct useTime, uin
   switch(ringType)
   {
     case RNG_HOURS:
-      startSlot       = (useTime.Hours % sysSetting->NoHourSlots);
-      nrSlots         = sysSetting->NoHourSlots;
-      maxSlots        = sysSetting->NoHourSlots;
+      startSlot       = (useTime.Hours % devSetting->NoHourSlots);
+      nrSlots         = devSetting->NoHourSlots;
+      maxSlots        = devSetting->NoHourSlots;
       strlcpy(typeApi, "hours", 9);
       break;
     case RNG_DAYS:
-      startSlot       = (useTime.Days % sysSetting->NoDaySlots);
-      nrSlots         = sysSetting->NoDaySlots;
-      maxSlots        = sysSetting->NoDaySlots;
+      startSlot       = (useTime.Days % devSetting->NoDaySlots);
+      nrSlots         = devSetting->NoDaySlots;
+      maxSlots        = devSetting->NoDaySlots;
       strlcpy(typeApi, "days", 9);
       break;
     case RNG_MONTHS:
-      startSlot       = (useTime.Months % sysSetting->NoMonthSlots);
-      nrSlots         = sysSetting->NoMonthSlots;
-      maxSlots        = sysSetting->NoMonthSlots;
+      startSlot       = (useTime.Months % devSetting->NoMonthSlots);
+      nrSlots         = devSetting->NoMonthSlots;
+      maxSlots        = devSetting->NoMonthSlots;
       strlcpy(typeApi, "months", 9);
       break;
   }

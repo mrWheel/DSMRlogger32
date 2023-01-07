@@ -47,7 +47,7 @@ void handleTestdata()
     {
       case SInit:
         runMode = SMonth;
-        forceBuildRecs = (sysSetting->NoMonthSlots *2) +5;
+        forceBuildRecs = (devSetting->NoMonthSlots *2) +5;
         runMode = SMonth;
         nt = epoch(lastTlgrmTime.Timestamp, _TIMESTAMP_LEN, true);
         break;
@@ -55,7 +55,7 @@ void handleTestdata()
       case SMonth:
         if (forceBuildRecs <= 0)
         {
-          forceBuildRecs = (sysSetting->NoDaySlots *2) +4;
+          forceBuildRecs = (devSetting->NoDaySlots *2) +4;
           nt = epoch(lastTlgrmTime.Timestamp, _TIMESTAMP_LEN, true);
           runMode = SDay;
           break;
@@ -68,7 +68,7 @@ void handleTestdata()
       case SDay:
         if (forceBuildRecs <= 0)
         {
-          forceBuildRecs = (sysSetting->NoHourSlots * 2) +5;
+          forceBuildRecs = (devSetting->NoHourSlots * 2) +5;
           nt = epoch(lastTlgrmTime.Timestamp, _TIMESTAMP_LEN, true);
           runMode = SHour;
           break;
@@ -112,7 +112,7 @@ void handleTestdata()
   currentCRC     = 0;
   memset(tlgrmTmpData, 0, _TLGRM_LEN);
   DebugTln("Now build telegram ..");
-  if (setting->PreDSMR40 == 1)
+  if (smSetting->PreDSMR40 == 1)
   {
     for (int16_t line = 0; line <= testTlgrmLines; line++)
     {
@@ -147,7 +147,7 @@ void handleTestdata()
   tlgrmData = {};
   ParseResult<void> res;
 
-  if (setting->PreDSMR40 == 1)
+  if (smSetting->PreDSMR40 == 1)
         res = P1Parser::parse(&tlgrmData, tlgrmTmpData, _TLGRM_LEN, false, false);
   else  res = P1Parser::parse(&tlgrmData, tlgrmTmpData, _TLGRM_LEN, false, true);
 

@@ -116,17 +116,17 @@ void setupPsram()
   //DebugTf("Used [%d]bytes, Psram Free [%d]bytes [after]\r\n", (PsramStart - PsramEnd), ESP.getFreePsram() );
   PsramStart  = PsramEnd;
 
-  setting     = (settingStruct *) ps_malloc( sizeof(settingStruct) );
+  smSetting     = (settingSmStruct *) ps_malloc( sizeof(settingSmStruct) );
   PsramEnd    = ESP.getFreePsram();
-  //DebugTf("Claim [%d]bytes for setting's\r\n", sizeof(settingStruct) );
-  memset(setting, 0, sizeof(settingStruct) );
+  //DebugTf("Claim [%d]bytes for smSetting's\r\n", sizeof(settingSmStruct) );
+  memset(smSetting, 0, sizeof(settingSmStruct) );
   //DebugTf("Used [%d]bytes, Psram Free [%d]bytes [after]\r\n", (PsramStart - PsramEnd), ESP.getFreePsram() );
   PsramStart  = PsramEnd;
 
-  sysSetting  = (sysSettingStruct *) ps_malloc( sizeof(sysSettingStruct) );
+  devSetting  = (settingDevStruct *) ps_malloc( sizeof(settingDevStruct) );
   PsramEnd    = ESP.getFreePsram();
-  //DebugTf("Claim [%d]bytes for sysSetting\r\n", sizeof(sysSettingStruct) );
-  memset(sysSetting, 0, sizeof(sysSettingStruct) );
+  //DebugTf("Claim [%d]bytes for devSetting\r\n", sizeof(settingDevStruct) );
+  memset(devSetting, 0, sizeof(settingDevStruct) );
   //DebugTf("Used [%d]bytes, Psram Free [%d]bytes [after]\r\n", (PsramStart - PsramEnd), ESP.getFreePsram() );
   PsramStart  = PsramEnd;
 
@@ -159,18 +159,18 @@ bool setupIsFsPopulated()
 {
   bool tmpError = false;
   
-  if (DSMRfileExist(sysSetting->IndexPage, __FUNCTION__, false) )
+  if (DSMRfileExist(devSetting->IndexPage, __FUNCTION__, false) )
   {
-    if (strcmp(sysSetting->IndexPage, "DSMRindex.html") != 0)
+    if (strcmp(devSetting->IndexPage, "DSMRindex.html") != 0)
     {
-      if (sysSetting->IndexPage[0] != '/')
+      if (devSetting->IndexPage[0] != '/')
       {
         char tempPage[50] = "/";
 #ifdef _LITTLEFS
         tempPage[0] = '/';
 #endif
-        strlcat(tempPage, sysSetting->IndexPage, _INDEXPAGE_LEN);
-        strlcpy(sysSetting->IndexPage, tempPage, _INDEXPAGE_LEN);
+        strlcat(tempPage, devSetting->IndexPage, _INDEXPAGE_LEN);
+        strlcpy(devSetting->IndexPage, tempPage, _INDEXPAGE_LEN);
       }
       hasAlternativeIndex        = true;
     }

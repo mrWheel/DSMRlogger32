@@ -41,13 +41,14 @@ static bool        isConnected = false;
 void configModeCallback (WiFiManager *myWiFiManager)
 {
   resetWatchdog(); //-- buy some time ..
-  neoPixOn(0, neoPixBlue);
+  neoPixOn(0, neoPixWhite);
+  neoPixOff(1);
   
   DebugTln(F("Entered config mode\r"));
   DebugTln(WiFi.softAPIP().toString());
   //if you used auto generated SSID, print it
   DebugTln(myWiFiManager->getConfigPortalSSID());
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Clear();
     oled_Print_Msg(0, "<DSMRlogger32>", 0);
@@ -89,7 +90,7 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
   if (!manageWiFi.autoConnect(thisAP.c_str()))
   {
     DebugTln(F("failed to connect and hit timeout"));
-    if (sysSetting->OledType > 0)
+    if (devSetting->OledType > 0)
     {
       oled_Clear();
       oled_Print_Msg(0, "<DSMRlogger32>", 0);
@@ -99,13 +100,13 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
     }
 
     DebugTf(" took [%d] milli-seconds ==> ERROR!\r\n", (millis() - lTime));
-    //return;
+    neoPixOn(0, neoPixRed);
   }
   else
   {
     DebugTf("Connected with IP-address [%s]\r\n\r\n", WiFi.localIP().toString().c_str());
   }
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     oled_Clear();
   }
@@ -121,7 +122,9 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
   DebugTf(" took [%d] milli-seconds => OK!\r\n", (millis() - lTime));
 
   myWiFi.ipGateway = WiFi.gatewayIP();
- 
+
+  neoPixOn(0, neoPixBlue);
+
   pulseHeart(true);
   
 } // startWiFi()

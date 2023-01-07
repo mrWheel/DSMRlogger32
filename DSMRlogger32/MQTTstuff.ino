@@ -35,7 +35,7 @@ void connectMQTT()
                           , MQTTclient.connected()
                           , mqttIsConnected, stateMQTT);
 
-  if (sysSetting->MQTTinterval == 0)
+  if (devSetting->MQTTinterval == 0)
   {
     mqttIsConnected = false;
     return;
@@ -65,7 +65,7 @@ bool connectMQTT_FSM()
   {
     case MQTT_STATE_INIT:
       DebugTln(F("MQTT State: MQTT Initializing"));
-      WiFi.hostByName(sysSetting->MQTTbroker, MQTTbrokerIP);  // lookup the MQTTbroker convert to IP
+      WiFi.hostByName(devSetting->MQTTbroker, MQTTbrokerIP);  // lookup the MQTTbroker convert to IP
       snprintf(MQTTbrokerIPchar, sizeof(MQTTbrokerIPchar), "%d.%d.%d.%d"
                                                             , MQTTbrokerIP[0]
                                                             , MQTTbrokerIP[1]
@@ -73,39 +73,39 @@ bool connectMQTT_FSM()
                                                             , MQTTbrokerIP[3]);
       if (!isValidIP(MQTTbrokerIP))
       {
-        //-- sysSetting->MQTTinterval = 0;
-        DebugTf("ERROR: [%s] => extend interval\r\n", sysSetting->MQTTbroker);
+        //-- devSetting->MQTTinterval = 0;
+        DebugTf("ERROR: [%s] => extend interval\r\n", devSetting->MQTTbroker);
         DebugTln(F("Next State: MQTT_STATE_ERROR"));
         stateMQTT = MQTT_STATE_ERROR;
         return false;
       }
       //MQTTclient.disconnect();
       //DebugTf("disconnect -> MQTT status, rc=%d \r\n", MQTTclient.state());
-      DebugTf("[%s] => setServer(%s, %d) \r\n", sysSetting->MQTTbroker, MQTTbrokerIPchar, sysSetting->MQTTbrokerPort);
-      MQTTclient.setServer(MQTTbrokerIPchar, sysSetting->MQTTbrokerPort);
+      DebugTf("[%s] => setServer(%s, %d) \r\n", devSetting->MQTTbroker, MQTTbrokerIPchar, devSetting->MQTTbrokerPort);
+      MQTTclient.setServer(MQTTbrokerIPchar, devSetting->MQTTbrokerPort);
       DebugTf("setServer  -> MQTT status, rc=%d \r\n", MQTTclient.state());
-      MQTTclientId  = String(sysSetting->Hostname) + "-" + WiFi.macAddress();
+      MQTTclientId  = String(devSetting->Hostname) + "-" + WiFi.macAddress();
       stateMQTT = MQTT_STATE_TRY_TO_CONNECT;
       DebugTln(F("Next State: MQTT_STATE_TRY_TO_CONNECT"));
       reconnectAttempts = 0;
 
     case MQTT_STATE_TRY_TO_CONNECT:
       DebugTln(F("MQTT State: MQTT try to connect"));
-      DebugTf("MQTT server is [%s], IP[%s]\r\n", sysSetting->MQTTbroker, MQTTbrokerIPchar);
+      DebugTf("MQTT server is [%s], IP[%s]\r\n", devSetting->MQTTbroker, MQTTbrokerIPchar);
 
       DebugTf("Attempting MQTT connection as [%s] .. \r\n", MQTTclientId.c_str());
       reconnectAttempts++;
 
       //--- If no username, then anonymous connection to broker, otherwise assume username/password.
-      if (String(sysSetting->MQTTuser).length() == 0)
+      if (String(devSetting->MQTTuser).length() == 0)
       {
         DebugT(F("without a Username/Password "));
         MQTTclient.connect(MQTTclientId.c_str());
       }
       else
       {
-        DebugTf("with Username [%s] and password ", sysSetting->MQTTuser);
-        MQTTclient.connect(MQTTclientId.c_str(), sysSetting->MQTTuser, sysSetting->MQTTpasswd);
+        DebugTf("with Username [%s] and password ", devSetting->MQTTuser);
+        MQTTclient.connect(MQTTclientId.c_str(), devSetting->MQTTuser, devSetting->MQTTpasswd);
       }
       //--- If connection was made succesful, move on to next state...
       if (MQTTclient.connected())
@@ -154,8 +154,8 @@ bool connectMQTT_FSM()
 //===========================================================================================
 void sendMQTTData()
 {
-  DebugTf("MQTTinterval [%d]\r\n", sysSetting->MQTTinterval);
-  if (sysSetting->MQTTinterval == 0) return;
+  DebugTf("MQTTinterval [%d]\r\n", devSetting->MQTTinterval);
+  if (devSetting->MQTTinterval == 0) return;
 
   if (!MQTTclient.connected() || ! mqttIsConnected)
   {
@@ -215,7 +215,7 @@ void sendMQTTData()
 
     //-- calculate maxPayload:
     //-- https://arduino.stackexchange.com/questions/76840/pubsubclient-mqtt-max-packet-size-how-is-it-calculated
-    int maxBuff = MQTT_MAX_PACKET_SIZE - MQTT_MAX_HEADER_SIZE - 2  - strlen(sysSetting->MQTTtopTopic);
+    int maxBuff = MQTT_MAX_PACKET_SIZE - MQTT_MAX_HEADER_SIZE - 2  - strlen(devSetting->MQTTtopTopic);
     if (jsonBuff[maxBuff] != 0)
     {
       //-tst-Debugln(jsonBuff);
@@ -227,11 +227,11 @@ void sendMQTTData()
       jsonBuff[maxBuff]   =  0;
     }
 
-    if (!MQTTclient.publish(sysSetting->MQTTtopTopic, jsonBuff) )
+    if (!MQTTclient.publish(devSetting->MQTTtopTopic, jsonBuff) )
     {
-      DebugTf("Error publish(%s) [%s] [%d bytes]\r\n", sysSetting->MQTTtopTopic
+      DebugTf("Error publish(%s) [%s] [%d bytes]\r\n", devSetting->MQTTtopTopic
                                                      , jsonBuff
-                                                     , (strlen(sysSetting->MQTTtopTopic) + strlen(jsonBuff)));
+                                                     , (strlen(devSetting->MQTTtopTopic) + strlen(jsonBuff)));
     }
 
   } //-- for all enttries in table

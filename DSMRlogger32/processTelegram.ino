@@ -21,7 +21,7 @@ void processTelegram()
   saveTimestamp(tlgrmData.timestamp.c_str());
   
   //----- update OLED display ---------
-  if (sysSetting->OledType > 0)
+  if (devSetting->OledType > 0)
   {
     String DT   = buildDateTimeString(tlgrmData.timestamp.c_str(), sizeof(tlgrmData.timestamp));
 

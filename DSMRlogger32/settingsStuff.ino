@@ -23,7 +23,7 @@ void writeSmSettings()
   }
   yield();
 
-  if (sysSetting->TelegramInterval < 2)  sysSetting->TelegramInterval = 10;
+  if (devSetting->TelegramInterval < 2)  devSetting->TelegramInterval = 10;
 
   DebugTln(F("Start writing setting data .."));
 
@@ -31,19 +31,19 @@ void writeSmSettings()
   SpiRamJsonDocument  doc(3000);
 
   //-- Fill JSON document from settings
-  doc["preDSMR40"]          = setting->PreDSMR40;
-  doc["EnergyDeliveredT1"]  = String(setting->EDT1, 5);
-  doc["EnergyDeliveredT2"]  = String(setting->EDT2, 5);
-  doc["EnergyReturnedT1"]   = String(setting->ERT1, 5);
-  doc["EnergyReturnedT2"]   = String(setting->ERT2, 5);
-  doc["mBus1Type"]          = setting->Mbus1Type;
-  doc["mBus2Type"]          = setting->Mbus2Type;
-  doc["mBus3Type"]          = setting->Mbus3Type;
-  doc["mBus4Type"]          = setting->Mbus4Type;
-  doc["GasDeliveredT"]      = String(setting->GDT,  5);
-  doc["EnergyVasteKosten"]  = String(setting->ENBK, 2);
-  doc["GasVasteKosten"]     = String(setting->GNBK, 2);
-  doc["SmHasFaseInfo"]      = setting->SmHasFaseInfo;
+  doc["preDSMR40"]          = smSetting->PreDSMR40;
+  doc["EnergyDeliveredT1"]  = String(smSetting->EDT1, 5);
+  doc["EnergyDeliveredT2"]  = String(smSetting->EDT2, 5);
+  doc["EnergyReturnedT1"]   = String(smSetting->ERT1, 5);
+  doc["EnergyReturnedT2"]   = String(smSetting->ERT2, 5);
+  doc["mBus1Type"]          = smSetting->Mbus1Type;
+  doc["mBus2Type"]          = smSetting->Mbus2Type;
+  doc["mBus3Type"]          = smSetting->Mbus3Type;
+  doc["mBus4Type"]          = smSetting->Mbus4Type;
+  doc["GasDeliveredT"]      = String(smSetting->GDT,  5);
+  doc["EnergyVasteKosten"]  = String(smSetting->ENBK, 2);
+  doc["GasVasteKosten"]     = String(smSetting->GNBK, 2);
+  doc["SmHasFaseInfo"]      = smSetting->SmHasFaseInfo;
 
   //DebugTln("---------------------------------------------------");
   //serializeJsonPretty(doc, Serial);
@@ -53,7 +53,7 @@ void writeSmSettings()
   bool success = serializeJsonPretty(doc, file) > 0;
   if (!success)
   {
-    DebugTln("Failed to serialize and write sysSetting settings to file");
+    DebugTln("Failed to serialize and write devSetting settings to file");
   }
 
   file.close();
@@ -63,39 +63,39 @@ void writeSmSettings()
   {
     DebugTln(F("Wrote this:"));
     DebugT(F("EnergyDeliveredT1 = "));
-    Debugln(String(setting->EDT1, 5));
+    Debugln(String(smSetting->EDT1, 5));
     DebugT(F("EnergyDeliveredT2 = "));
-    Debugln(String(setting->EDT2, 5));
+    Debugln(String(smSetting->EDT2, 5));
     DebugT(F("EnergyReturnedT1 = "));
-    Debugln(String(setting->ERT1, 5));
+    Debugln(String(smSetting->ERT1, 5));
     DebugT(F("EnergyReturnedT2 = "));
-    Debugln(String(setting->ERT2, 5));
+    Debugln(String(smSetting->ERT2, 5));
     DebugT(F("mBus1Type = "));
-    Debugln(setting->Mbus1Type);
+    Debugln(smSetting->Mbus1Type);
     DebugT(F("mBus2Type = "));
-    Debugln(setting->Mbus2Type);
+    Debugln(smSetting->Mbus2Type);
     DebugT(F("mBus3Type = "));
-    Debugln(setting->Mbus3Type);
+    Debugln(smSetting->Mbus3Type);
     DebugT(F("mBus4Type = "));
-    Debugln(setting->Mbus4Type);
+    Debugln(smSetting->Mbus4Type);
     DebugT(F("GasDeliveredT = "));
-    Debugln(String(setting->GDT,  5));
+    Debugln(String(smSetting->GDT,  5));
     DebugT(F("EnergyVasteKosten = "));
-    Debugln(String(setting->ENBK, 2));
+    Debugln(String(smSetting->ENBK, 2));
     DebugT(F("GasVasteKosten = "));
-    Debugln(String(setting->GNBK, 2));
+    Debugln(String(smSetting->GNBK, 2));
     DebugT(F("OledType = "));
-    if (sysSetting->OledType == 1)      Debugln("SDD1306");
-    else if (sysSetting->OledType == 2) Debugln("SH1306");
+    if (devSetting->OledType == 1)      Debugln("SDD1306");
+    else if (devSetting->OledType == 2) Debugln("SH1306");
     else                             Debugln("None");
     DebugT(F("OledSleep = "));
-    Debugln(sysSetting->OledSleep);
+    Debugln(devSetting->OledSleep);
     DebugT(F("OledFlip = "));
-    if (sysSetting->OledFlip)  Debugln(F("Yes"));
+    if (devSetting->OledFlip)  Debugln(F("Yes"));
     else                    Debugln(F("No"));
 
     DebugT(F("SmHasFaseInfo"));
-    if (setting->SmHasFaseInfo == 1) Debugln("Yes");
+    if (smSetting->SmHasFaseInfo == 1) Debugln("Yes");
     else                             Debugln("No");
 
   } // Verbose1
@@ -112,18 +112,20 @@ void readSmSettings(bool show)
   File file;
 
   DebugTf(" %s ..\r\n", _SETTINGS_FILE);
-
-  setting->EDT1               = 0.778;
-  setting->EDT2               = 0.678;
-  setting->ERT1               = 0.338;
-  setting->ERT2               = 0.438;
-  setting->GDT                = 1.8712;
-  setting->ENBK               = 19.15;
-  setting->GNBK               = 18.11;
-
+  
   if (!_FSYS.exists(_SETTINGS_FILE))
   {
     DebugTln(F(" .. file not found! --> created file!"));
+    smSetting->PreDSMR40      = 0;
+    smSetting->EDT1           = 0.0;
+    smSetting->EDT2           = 0.0;
+    smSetting->ERT1           = 0.0;
+    smSetting->ERT2           = 0.0;
+    smSetting->GDT            = 0.0;
+    smSetting->ENBK           = 0.0;
+    smSetting->GNBK           = 0.0;
+    smSetting->Mbus1Type      = 3;
+    smSetting->SmHasFaseInfo  = 1;
     writeSmSettings();
   }
 
@@ -160,41 +162,41 @@ void readSmSettings(bool show)
   //DebugTln("---------------------------------------------------");
 
   //-- Extract settings from the JSON document
-  setting->PreDSMR40      = doc["preDSMR40"].as<int>();
-  setting->EDT1           = doc["EnergyDeliveredT1"].as<float>();
-  setting->EDT2           = doc["EnergyDeliveredT2"].as<float>();
-  setting->ERT1           = doc["EnergyReturnedT1"].as<float>();
-  setting->ERT2           = doc["EnergyReturnedT2"].as<float>();
-  setting->Mbus1Type      = doc["mBus1Type"].as<int>();
-  setting->Mbus2Type      = doc["mBus2Type"].as<int>();
-  setting->Mbus3Type      = doc["mBus3Type"].as<int>();
-  setting->Mbus4Type      = doc["mBus4Type"].as<int>();
-  setting->GDT            = doc["GasDeliveredT"].as<float>();
-  setting->ENBK           = doc["EnergyVasteKosten"].as<float>();
-  setting->GNBK           = doc["GasVasteKosten"].as<float>();
-  setting->SmHasFaseInfo  = doc["SmHasFaseInfo"].as<int>();
+  if (doc["preDSMR40"])         { smSetting->PreDSMR40 = doc["preDSMR40"].as<int>(); }
+  if (doc["EnergyDeliveredT1"]) { smSetting->EDT1 = doc["EnergyDeliveredT1"].as<float>(); }
+  if (doc["EnergyDeliveredT2"]) { smSetting->EDT2 = doc["EnergyDeliveredT2"].as<float>(); }
+  if (doc["EnergyReturnedT1"])  { smSetting->ERT1  = doc["EnergyReturnedT1"].as<float>(); }
+  if (doc["EnergyReturnedT2"])  { smSetting->ERT2  = doc["EnergyReturnedT2"].as<float>(); }
+  if (doc["mBus1Type"])         { smSetting->Mbus1Type = doc["mBus1Type"].as<int>(); }
+  if (doc["mBus2Type"])         { smSetting->Mbus2Type = doc["mBus2Type"].as<int>(); }
+  if (doc["mBus3Type"])         { smSetting->Mbus3Type = doc["mBus3Type"].as<int>(); }
+  if (doc["mBus4Type"])         { smSetting->Mbus4Type = doc["mBus4Type"].as<int>(); }
+  if (doc["GasDeliveredT"])     { smSetting->GDT = doc["GasDeliveredT"].as<float>(); }
+  if (doc["EnergyVasteKosten"]) { smSetting->ENBK = doc["EnergyVasteKosten"].as<float>(); }
+  if (doc["GasVasteKosten"])    { smSetting->GNBK = doc["GasVasteKosten"].as<float>(); }
+  if (doc["SmHasFaseInfo"])     { smSetting->SmHasFaseInfo  = doc["SmHasFaseInfo"].as<int>(); }
 
   DebugTln(F(" .. done\r"));
 
-  if (setting->SmHasFaseInfo != 0)  setting->SmHasFaseInfo = 1;
-  else                              setting->SmHasFaseInfo = 0;
+  if (smSetting->SmHasFaseInfo != 0)  smSetting->SmHasFaseInfo = 1;
+  else                                smSetting->SmHasFaseInfo = 0;
 
   if (!show) return;
 
   Debugln(F("\r\n==== Smart Meter settings ========================================\r"));
-  Debugf("   Pre DSMR 40 (0=No, 1=Yes) : %s\r\n",     setting->PreDSMR40 ? "Yes":"No");
-  Debugf("   Energy Delivered Tarief 1 : %9.7f\r\n",  setting->EDT1);
-  Debugf("   Energy Delivered Tarief 2 : %9.7f\r\n",  setting->EDT2);
-  Debugf("   Energy Delivered Tarief 1 : %9.7f\r\n",  setting->ERT1);
-  Debugf("   Energy Delivered Tarief 2 : %9.7f\r\n",  setting->ERT2);
-  Debugf("        Gas Delivered Tarief : %9.7f\r\n",  setting->GDT);
-  Debugf("     Energy Netbeheer Kosten : %9.2f\r\n",  setting->ENBK);
-  Debugf("        Gas Netbeheer Kosten : %9.2f\r\n",  setting->GNBK);
-  Debugf("                 MBus 1 Type : %d\r\n",     setting->Mbus1Type);
-  Debugf("                 MBus 2 Type : %d\r\n",     setting->Mbus2Type);
-  Debugf("                 MBus 3 Type : %d\r\n",     setting->Mbus3Type);
-  Debugf("                 MBus 4 Type : %d\r\n",     setting->Mbus4Type);
-  Debugf("  SM Fase Info (0=No, 1=Yes) : %s\r\n",     setting->SmHasFaseInfo ? "Yes":"No");
+  Debugf("   Pre DSMR 40 (0=No, 1=Yes) : %s\r\n",     smSetting->PreDSMR40 ? "Yes":"No");
+  Debugf("   Energy Delivered Tarief 1 : %9.7f\r\n",  smSetting->EDT1);
+  Debugf("   Energy Delivered Tarief 2 : %9.7f\r\n",  smSetting->EDT2);
+  Debugf("   Energy Delivered Tarief 1 : %9.7f\r\n",  smSetting->ERT1);
+  Debugf("   Energy Delivered Tarief 2 : %9.7f\r\n",  smSetting->ERT2);
+  Debugf("        Gas Delivered Tarief : %9.7f\r\n",  smSetting->GDT);
+  Debugf("     Energy Netbeheer Kosten : %9.2f\r\n",  smSetting->ENBK);
+  Debugf("        Gas Netbeheer Kosten : %9.2f\r\n",  smSetting->GNBK);
+  Debugf("                 MBus 1 Type : %d\r\n",     smSetting->Mbus1Type);
+  Debugf("                 MBus 2 Type : %d\r\n",     smSetting->Mbus2Type);
+  Debugf("                 MBus 3 Type : %d\r\n",     smSetting->Mbus3Type);
+  Debugf("                 MBus 4 Type : %d\r\n",     smSetting->Mbus4Type);
+  Debugf("  SM Fase Info (0=No, 1=Yes) : %s\r\n",     smSetting->SmHasFaseInfo ? "Yes":"No");
 
   Debugln(F("-\r"));
 
@@ -206,26 +208,26 @@ void updateSmSettings(const char *field, const char *newValue)
 {
   DebugTf("-> field[%s], newValue[%s]\r\n", field, newValue);
 
-  //if (!stricmp(field, "pre_DSMR40"))        setting->PreDSMR40    = String(newValue).toInt();
-  if (!strcasecmp(field, "pre_DSMR40"))     setting->PreDSMR40    = String(newValue).toInt();
-  if (!strcasecmp(field, "ed_tariff1"))        setting->EDT1         = String(newValue).toFloat();
-  if (!strcasecmp(field, "ed_tariff2"))        setting->EDT2         = String(newValue).toFloat();
-  if (!strcasecmp(field, "er_tariff1"))        setting->ERT1         = String(newValue).toFloat();
-  if (!strcasecmp(field, "er_tariff2"))        setting->ERT2         = String(newValue).toFloat();
-  if (!strcasecmp(field, "electr_netw_costs")) setting->ENBK         = String(newValue).toFloat();
+  //if (!stricmp(field, "pre_DSMR40"))        smSetting->PreDSMR40    = String(newValue).toInt();
+  if (!strcasecmp(field, "pre_DSMR40"))     smSetting->PreDSMR40    = String(newValue).toInt();
+  if (!strcasecmp(field, "ed_tariff1"))        smSetting->EDT1         = String(newValue).toFloat();
+  if (!strcasecmp(field, "ed_tariff2"))        smSetting->EDT2         = String(newValue).toFloat();
+  if (!strcasecmp(field, "er_tariff1"))        smSetting->ERT1         = String(newValue).toFloat();
+  if (!strcasecmp(field, "er_tariff2"))        smSetting->ERT2         = String(newValue).toFloat();
+  if (!strcasecmp(field, "electr_netw_costs")) smSetting->ENBK         = String(newValue).toFloat();
 
-  if (!strcasecmp(field, "mbus1_type"))        setting->Mbus1Type    = String(newValue).toInt();
-  if (!strcasecmp(field, "mbus2_type"))        setting->Mbus2Type    = String(newValue).toInt();
-  if (!strcasecmp(field, "mbus3_type"))        setting->Mbus3Type    = String(newValue).toInt();
-  if (!strcasecmp(field, "mbus4_type"))        setting->Mbus4Type    = String(newValue).toInt();
-  if (!strcasecmp(field, "gd_tariff"))         setting->GDT          = String(newValue).toFloat();
-  if (!strcasecmp(field, "gas_netw_costs"))    setting->GNBK         = String(newValue).toFloat();
+  if (!strcasecmp(field, "mbus1_type"))        smSetting->Mbus1Type    = String(newValue).toInt();
+  if (!strcasecmp(field, "mbus2_type"))        smSetting->Mbus2Type    = String(newValue).toInt();
+  if (!strcasecmp(field, "mbus3_type"))        smSetting->Mbus3Type    = String(newValue).toInt();
+  if (!strcasecmp(field, "mbus4_type"))        smSetting->Mbus4Type    = String(newValue).toInt();
+  if (!strcasecmp(field, "gd_tariff"))         smSetting->GDT          = String(newValue).toFloat();
+  if (!strcasecmp(field, "gas_netw_costs"))    smSetting->GNBK         = String(newValue).toFloat();
 
   if (!strcasecmp(field, "sm_has_fase_info"))
   {
-    setting->SmHasFaseInfo = String(newValue).toInt();
-    if (setting->SmHasFaseInfo != 0)  setting->SmHasFaseInfo = 1;
-    else                              setting->SmHasFaseInfo = 0;
+    smSetting->SmHasFaseInfo = String(newValue).toInt();
+    if (smSetting->SmHasFaseInfo != 0)  smSetting->SmHasFaseInfo = 1;
+    else                              smSetting->SmHasFaseInfo = 0;
   }
   writeSmSettings();
 
@@ -233,7 +235,7 @@ void updateSmSettings(const char *field, const char *newValue)
 
 
 //=======================================================================
-void writeSysSettings(bool show)
+void writeDevSettings(bool show)
 {
   yield();
   DebugTf("Writing to [%s] ..\r\n", _SYSTEM_FILE);
@@ -246,37 +248,37 @@ void writeSysSettings(bool show)
   }
   yield();
 
-  if (strlen(sysSetting->IndexPage) < 7) strlcpy(sysSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
-  if (sysSetting->MQTTbrokerPort < 1)    sysSetting->MQTTbrokerPort = 1883;
-  if (sysSetting->NoHourSlots  < _NO_HOUR_SLOTS_)  sysSetting->NoHourSlots  = _NO_HOUR_SLOTS_;
-  if (sysSetting->NoDaySlots   < _NO_DAY_SLOTS_)   sysSetting->NoDaySlots   = _NO_DAY_SLOTS_;
-  if (sysSetting->NoMonthSlots < _NO_MONTH_SLOTS_) sysSetting->NoMonthSlots = _NO_MONTH_SLOTS_;
+  if (strlen(devSetting->IndexPage) < 7) strlcpy(devSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
+  if (devSetting->MQTTbrokerPort < 1)    devSetting->MQTTbrokerPort = 1883;
+  if (devSetting->NoHourSlots  < _NO_HOUR_SLOTS_)  devSetting->NoHourSlots  = _NO_HOUR_SLOTS_;
+  if (devSetting->NoDaySlots   < _NO_DAY_SLOTS_)   devSetting->NoDaySlots   = _NO_DAY_SLOTS_;
+  if (devSetting->NoMonthSlots < _NO_MONTH_SLOTS_) devSetting->NoMonthSlots = _NO_MONTH_SLOTS_;
 
-  DebugTln("Start writing sysSetting's ..");
-  DebugTf("NoHourSlots [%3d]\r\n", sysSetting->NoHourSlots);
-  DebugTf("NoDaySlots  [%3d]\r\n", sysSetting->NoDaySlots);
-  DebugTf("NoMonthSlots[%3d]\r\n", sysSetting->NoMonthSlots);
+  DebugTln("Start writing devSetting's ..");
+  DebugTf("NoHourSlots [%3d]\r\n", devSetting->NoHourSlots);
+  DebugTf("NoDaySlots  [%3d]\r\n", devSetting->NoDaySlots);
+  DebugTf("NoMonthSlots[%3d]\r\n", devSetting->NoMonthSlots);
   //-- Allocate the JsonDocument
   SpiRamJsonDocument  doc(3000);
 
   //-- Fill JSON document from settings
-  doc["hostname"]         = sysSetting->Hostname;
-  doc["indexPage"]        = sysSetting->IndexPage;
-  doc["dailyReboot"]      = sysSetting->DailyReboot;
-  doc["noHourSlots"]      = sysSetting->NoHourSlots;  //-- don't change directly
-  doc["noDaySlots"]       = sysSetting->NoDaySlots;   //-- don't change directly
-  doc["noMonthSlots"]     = sysSetting->NoMonthSlots; //-- don't change directly
-  doc["oledType"]         = sysSetting->OledType;
-  doc["oledSleep"]        = sysSetting->OledSleep;
-  doc["oledFlip"]         = sysSetting->OledFlip;
-  doc["neoBrightness"]    = sysSetting->NeoBrightness;
-  doc["telegramInterval"] = sysSetting->TelegramInterval;
-  doc["mqttBroker"]       = sysSetting->MQTTbroker;
-  doc["mqttBrokerPort"]   = sysSetting->MQTTbrokerPort;
-  doc["mqttUser"]         = sysSetting->MQTTuser;
-  doc["mqttPassword"]     = sysSetting->MQTTpasswd;
-  doc["mqttInterval"]     = sysSetting->MQTTinterval;
-  doc["mqttTopTopic"]     = sysSetting->MQTTtopTopic;
+  doc["hostname"]         = devSetting->Hostname;
+  doc["indexPage"]        = devSetting->IndexPage;
+  doc["dailyReboot"]      = devSetting->DailyReboot;
+  doc["noHourSlots"]      = devSetting->NoHourSlots;  //-- don't change directly
+  doc["noDaySlots"]       = devSetting->NoDaySlots;   //-- don't change directly
+  doc["noMonthSlots"]     = devSetting->NoMonthSlots; //-- don't change directly
+  doc["oledType"]         = devSetting->OledType;
+  doc["oledSleep"]        = devSetting->OledSleep;
+  doc["oledFlip"]         = devSetting->OledFlip;
+  doc["neoBrightness"]    = devSetting->NeoBrightness;
+  doc["telegramInterval"] = devSetting->TelegramInterval;
+  doc["mqttBroker"]       = devSetting->MQTTbroker;
+  doc["mqttBrokerPort"]   = devSetting->MQTTbrokerPort;
+  doc["mqttUser"]         = devSetting->MQTTuser;
+  doc["mqttPassword"]     = devSetting->MQTTpasswd;
+  doc["mqttInterval"]     = devSetting->MQTTinterval;
+  doc["mqttTopTopic"]     = devSetting->MQTTtopTopic;
 
   //DebugTln("---------------------------------------------------");
   //serializeJsonPretty(doc, Serial);
@@ -286,31 +288,31 @@ void writeSysSettings(bool show)
   bool success = serializeJsonPretty(doc, file) > 0;
   if (!success)
   {
-    DebugTln("\r\nFailed to serialize and write sysSetting's to file ");
+    DebugTln("\r\nFailed to serialize and write devSetting's to file ");
   }
 
   file.close();
   
-  if (sysSetting->OledType > 2)          sysSetting->OledType = 1;
-  if (sysSetting->OledFlip != 0)         sysSetting->OledFlip = 1;
-  else                                   sysSetting->OledFlip = 0;
-  if (sysSetting->NeoBrightness <  10)   sysSetting->NeoBrightness = 10;
-  if (sysSetting->NeoBrightness > 250)   sysSetting->NeoBrightness = 250;
-  if (sysSetting->TelegramInterval  < 2) sysSetting->TelegramInterval = 10;
+  if (devSetting->OledType > 2)          devSetting->OledType = 1;
+  if (devSetting->OledFlip != 0)         devSetting->OledFlip = 1;
+  else                                   devSetting->OledFlip = 0;
+  if (devSetting->NeoBrightness <  10)   devSetting->NeoBrightness = 10;
+  if (devSetting->NeoBrightness > 250)   devSetting->NeoBrightness = 250;
+  if (devSetting->TelegramInterval  < 2) devSetting->TelegramInterval = 10;
 
-  DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", sysSetting->TelegramInterval);
-  CHANGE_INTERVAL_SEC(nextTelegram,   sysSetting->TelegramInterval);
-  CHANGE_INTERVAL_MIN(oledSleepTimer, sysSetting->OledSleep);
+  DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", devSetting->TelegramInterval);
+  CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
+  CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
 
-  if (show) { showSysSettings(); }
+  if (show) { showDevSettings(); }
 
   Debugln("done ..");
 
-} // writeSysSettings()
+} // writeDevSettings()
 
 
 //=======================================================================
-void readSysSettings(bool show)
+void readDevSettings(bool show)
 {
   String sTmp, nColor;
   String words[10];
@@ -322,7 +324,15 @@ void readSysSettings(bool show)
   if (!_FSYS.exists(_SYSTEM_FILE))
   {
     DebugTln(F(" .. file not found! --> created file!"));
-    writeSysSettings(false);
+    strlcpy(devSetting->Hostname, _DEFAULT_HOSTNAME, (_HOSTNAME_LEN -1));
+    strlcpy(devSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
+    devSetting->DailyReboot       = 0;
+    devSetting->OledType          = 1;
+    devSetting->NeoBrightness     = 75;
+    devSetting->TelegramInterval  = 10;
+    devSetting->MQTTinterval      = 0;
+    strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1));
+    writeDevSettings(false);
   }
 
   file = _FSYS.open(_SYSTEM_FILE, "r");
@@ -332,7 +342,7 @@ void readSysSettings(bool show)
     delay(100);
   }
 
-  DebugTln("Reading SysSetting's\r");
+  DebugTln("Reading Device Setting's\r");
   //-- Allocate the JsonDocument (size by trail and error)
   SpiRamJsonDocument  doc(3500);
 
@@ -342,7 +352,7 @@ void readSysSettings(bool show)
   //-- This may fail if the JSON is invalid
   if (err)
   {
-    DebugTln("Failed to deserialize sysSetting's: ");
+    DebugTln("Failed to deserialize devSetting's: ");
     Debugln(err.f_str());
     file.close();
     return;
@@ -352,106 +362,106 @@ void readSysSettings(bool show)
 
   //serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   //Debugln(jsonBuff);
+  
+  //-- Extract devSetting settings from the JSON document
+  if (doc["hostname"])      { strlcpy(devSetting->Hostname,   doc["hostname"], (_HOSTNAME_LEN -1)); }
+  if (doc["indexPage"])     { strlcpy(devSetting->IndexPage,  doc["indexPage"], (_INDEXPAGE_LEN -1)); }
+  if (doc["dailyReboot"])   { devSetting->DailyReboot         = doc["dailyReboot"].as<int>(); }
+  if (doc["oledType"])      { devSetting->OledType            = doc["oledType"].as<int>(); }
+  if (doc["oledSleep"])     { devSetting->OledSleep           = doc["oledSleep"].as<int>(); }
+  if (doc["oledFlip"])      { devSetting->OledFlip            = doc["oledFlip"].as<int>(); }
+  if (doc["neoBrightness"]) { devSetting->NeoBrightness       = doc["neoBrightness"].as<int>(); }
+  if (doc["telegramInterval"]) { devSetting->TelegramInterval = doc["telegramInterval"].as<int>(); }
+  if (doc["mqttBroker"])    { strlcpy(devSetting->MQTTbroker, doc["mqttBroker"] | "", (_MQTT_BROKER_LEN -1)); }
+  if (doc["mqttBrokerPort"]) { devSetting->MQTTbrokerPort     = doc["mqttBrokerPort"].as<int>(); }
+  if (doc["mqttUser"])      { strlcpy(devSetting->MQTTuser,   doc["mqttUser"] | "", (_MQTT_USER_LEN -1)); }
+  if (doc["mqttPassword"])  { strlcpy(devSetting->MQTTpasswd, doc["mqttPassword"] | "", (_MQTT_PASSWD_LEN -1)); }
+  if (doc["mqttInterval"])  { devSetting->MQTTinterval        = doc["mqttInterval"].as<int>(); }
+  if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
 
-  //-- Extract sysSetting settings from the JSON document
-  strlcpy(sysSetting->Hostname,   doc["hostname"] | _DEFAULT_HOSTNAME, _HOSTNAME_LEN);
-  strlcpy(sysSetting->IndexPage,  doc["indexPage"] | "DSMRindex.html", _INDEXPAGE_LEN);
-  sysSetting->DailyReboot       = doc["dailyReboot"].as<int>();
-  sysSetting->OledType          = doc["oledType"].as<int>();
-  sysSetting->OledSleep         = doc["oledSleep"].as<int>();
-  sysSetting->OledFlip          = doc["oledFlip"].as<int>();
-  sysSetting->NeoBrightness     = doc["neoBrightness"].as<int>();
-  sysSetting->TelegramInterval  = doc["telegramInterval"].as<int>();
-  strlcpy(sysSetting->MQTTbroker, doc["mqttBroker"] | "", _MQTT_BROKER_LEN);
-  sysSetting->MQTTbrokerPort    = doc["mqttBrokerPort"].as<int>();
-  strlcpy(sysSetting->MQTTuser,   doc["mqttUser"] | "", _MQTT_USER_LEN);
-  strlcpy(sysSetting->MQTTpasswd, doc["mqttPassword"] | "", _MQTT_PASSWD_LEN);
-  sysSetting->MQTTinterval      = doc["mqttInterval"].as<int>();
-  strlcpy(sysSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, _MQTT_TOPTOPIC_LEN);
-
-  sysSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
-  sysSetting->NoDaySlots   = readRingHistoryDepth(DAYS_FILE,   RNG_DAYS);
-  sysSetting->NoMonthSlots = readRingHistoryDepth(MONTHS_FILE, RNG_MONTHS);
+  devSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
+  devSetting->NoDaySlots   = readRingHistoryDepth(DAYS_FILE,   RNG_DAYS);
+  devSetting->NoMonthSlots = readRingHistoryDepth(MONTHS_FILE, RNG_MONTHS);
 
   //--- this will take some time to settle in
   //--- probably need a reboot before that to happen :-(
-  MDNS.begin(sysSetting->Hostname);    // start advertising with new(?) sysSetting->Hostname
+  MDNS.begin(devSetting->Hostname);    // start advertising with new(?) devSetting->Hostname
 
-  if (sysSetting->NeoBrightness ==  0) sysSetting->NeoBrightness =  50;
-  if (sysSetting->NeoBrightness <  10) sysSetting->NeoBrightness =  10;
-  if (sysSetting->NeoBrightness > 250) sysSetting->NeoBrightness = 250;
-  neoPixels.setBrightness(sysSetting->NeoBrightness);  
+  if (devSetting->NeoBrightness ==  0) devSetting->NeoBrightness =  50;
+  if (devSetting->NeoBrightness <  10) devSetting->NeoBrightness =  10;
+  if (devSetting->NeoBrightness > 250) devSetting->NeoBrightness = 250;
+  neoPixels.setBrightness(devSetting->NeoBrightness);  
 
-  if (strlen(sysSetting->IndexPage)    < 7) strlcpy(sysSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
-  if (sysSetting->TelegramInterval     < 2) sysSetting->TelegramInterval = 10;
-  DebugTf("Set nextTelegram timer to [%d] seconds\r\n", sysSetting->TelegramInterval);
-  CHANGE_INTERVAL_SEC(nextTelegram, sysSetting->TelegramInterval)
-  if (sysSetting->MQTTbrokerPort       < 1) sysSetting->MQTTbrokerPort   = 1883;
-  if (strlen(sysSetting->MQTTtopTopic) < 2) strlcpy(sysSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, _MQTT_TOPTOPIC_LEN);
+  if (strlen(devSetting->IndexPage)    < 7) strlcpy(devSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
+  if (devSetting->TelegramInterval     < 2) devSetting->TelegramInterval = 10;
+  DebugTf("Set nextTelegram timer to [%d] seconds\r\n", devSetting->TelegramInterval);
+  CHANGE_INTERVAL_SEC(nextTelegram, devSetting->TelegramInterval)
+  if (devSetting->MQTTbrokerPort       < 1) devSetting->MQTTbrokerPort   = 1883;
+  if (strlen(devSetting->MQTTtopTopic) < 2) strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, _MQTT_TOPTOPIC_LEN);
 
-  if (show) { showSysSettings(); }
+  if (show) { showDevSettings(); }
 
   DebugTln(F(" .. done\r"));
 
-} // readSysSettings()
+} // readDevSettings()
 
 
 //=======================================================================
-void showSysSettings()
+void showDevSettings()
 {
     Debugln("\r\n==== System settings ============================================\r");
-    Debugf("                    Hostname : %s\r\n",     sysSetting->Hostname);
-    Debugf("                  Index Page : %s\r\n",     sysSetting->IndexPage);
-    Debugf("  Daily Reboot (0=No, 1=Yes) : %s\r\n",     sysSetting->DailyReboot ? "Yes":"No");
-    Debugf("               Hours History : %d\r\n",     sysSetting->NoHourSlots);
-    Debugf("                Days History : %d\r\n",     sysSetting->NoDaySlots);
-    Debugf("              Months History : %d\r\n",     sysSetting->NoMonthSlots);
-    Debugf("   Telegram Process Interval : %d\r\n",     sysSetting->TelegramInterval);
-    Debugf("         OLED Type (0, 1, 2) : %d\r\n",     sysSetting->OledType);
-    Debugf("OLED Sleep Min. (0=oneindig) : %d\r\n",     sysSetting->OledSleep);
-    Debugf("     Flip Oled (0=No, 1=Yes) : %d\r\n",     sysSetting->OledFlip);
-    Debugf("         NeoPixel Brightness : %d\r\n",     sysSetting->NeoBrightness);
+    Debugf("                    Hostname : %s\r\n",     devSetting->Hostname);
+    Debugf("                  Index Page : %s\r\n",     devSetting->IndexPage);
+    Debugf("  Daily Reboot (0=No, 1=Yes) : %s\r\n",     devSetting->DailyReboot ? "Yes":"No");
+    Debugf("               Hours History : %d\r\n",     devSetting->NoHourSlots);
+    Debugf("                Days History : %d\r\n",     devSetting->NoDaySlots);
+    Debugf("              Months History : %d\r\n",     devSetting->NoMonthSlots);
+    Debugf("   Telegram Process Interval : %d\r\n",     devSetting->TelegramInterval);
+    Debugf("         OLED Type (0, 1, 2) : %d\r\n",     devSetting->OledType);
+    Debugf("OLED Sleep Min. (0=oneindig) : %d\r\n",     devSetting->OledSleep);
+    Debugf("     Flip Oled (0=No, 1=Yes) : %d\r\n",     devSetting->OledFlip);
+    Debugf("         NeoPixel Brightness : %d\r\n",     devSetting->NeoBrightness);
 
     Debugln(F("\r\n==== MQTT settings ==============================================\r"));
-    Debugf("          MQTT broker URL/IP : %s:%d", sysSetting->MQTTbroker, sysSetting->MQTTbrokerPort);
+    Debugf("          MQTT broker URL/IP : %s:%d", devSetting->MQTTbroker, devSetting->MQTTbrokerPort);
     if (MQTTclient.connected()) Debugln(F(" (is Connected!)\r"));
     else                        Debugln(F(" (NOT Connected!)\r"));
-    Debugf("                   MQTT user : %s\r\n", sysSetting->MQTTuser);
+    Debugf("                   MQTT user : %s\r\n", devSetting->MQTTuser);
 #ifdef _SHOW_PASSWRDS
-    Debugf("               MQTT password : %s\r\n", sysSetting->MQTTpasswd);
+    Debugf("               MQTT password : %s\r\n", devSetting->MQTTpasswd);
 #else
     Debug( "               MQTT password : *************\r\n");
 #endif
-    Debugf("          MQTT send Interval : %d\r\n", sysSetting->MQTTinterval);
-    Debugf("              MQTT top Topic : %s\r\n", sysSetting->MQTTtopTopic);
+    Debugf("          MQTT send Interval : %d\r\n", devSetting->MQTTinterval);
+    Debugf("              MQTT top Topic : %s\r\n", devSetting->MQTTtopTopic);
 
     Debugln("-\r");
 
-} //  showSysSettings()
+} //  showDevSettings()
 
 
 //=======================================================================
-void updateSysSettings(const char *field, const char *newValue)
+void updateDevSettings(const char *field, const char *newValue)
 {
   DebugTf("-> field[%s], newValue[%s]\r\n", field, newValue);
 
   if (!strcasecmp(field, "hostname"))
   {
-    strlcpy(sysSetting->Hostname, newValue, 29);
-    if (strlen(sysSetting->Hostname) < 1) strlcpy(sysSetting->Hostname, _DEFAULT_HOSTNAME, 29);
-    char *dotPntr = strchr(sysSetting->Hostname, '.') ;
+    strlcpy(devSetting->Hostname, newValue, 29);
+    if (strlen(devSetting->Hostname) < 1) strlcpy(devSetting->Hostname, _DEFAULT_HOSTNAME, 29);
+    char *dotPntr = strchr(devSetting->Hostname, '.') ;
     if (dotPntr != NULL)
     {
-      byte dotPos = (dotPntr-sysSetting->Hostname);
-      if (dotPos > 0)  sysSetting->Hostname[dotPos] = '\0';
+      byte dotPos = (dotPntr-devSetting->Hostname);
+      if (dotPos > 0)  devSetting->Hostname[dotPos] = '\0';
     }
     Debugln();
-    DebugTf("Need reboot before new %s.local will be available!\r\n\n", sysSetting->Hostname);
+    DebugTf("Need reboot before new %s.local will be available!\r\n\n", devSetting->Hostname);
   }
 
-  if (!strcasecmp(field, "index_page"))        strlcpy(sysSetting->IndexPage, newValue, (sizeof(sysSetting->IndexPage) -1));
-  if (!strcasecmp(field, "daily_reboot"))      sysSetting->DailyReboot  = String(newValue).toInt();
-  //-- don't change the sysSettings .. yet!
+  if (!strcasecmp(field, "index_page"))        strlcpy(devSetting->IndexPage, newValue, (sizeof(devSetting->IndexPage) -1));
+  if (!strcasecmp(field, "daily_reboot"))      devSetting->DailyReboot  = String(newValue).toInt();
+  //-- don't change the devSettings .. yet!
   if (!strcasecmp(field, "no_hour_slots"))     tmpNoHourSlots  = String(newValue).toInt();
   if (!strcasecmp(field, "no_day_slots"))      tmpNoDaySlots   = String(newValue).toInt();
   if (!strcasecmp(field, "no_month_slots"))    tmpNoMonthSlots = String(newValue).toInt();
@@ -468,73 +478,73 @@ void updateSysSettings(const char *field, const char *newValue)
   
   if (!strcasecmp(field, "oled_type"))
   {
-    sysSetting->OledType     = String(newValue).toInt();
-    if (sysSetting->OledType > 2)  sysSetting->OledType = 1;
+    devSetting->OledType     = String(newValue).toInt();
+    if (devSetting->OledType > 2)  devSetting->OledType = 1;
     oled_Init();
   }
   if (!strcasecmp(field, "oled_screen_time"))
   {
-    sysSetting->OledSleep    = String(newValue).toInt();
-    CHANGE_INTERVAL_MIN(oledSleepTimer, sysSetting->OledSleep)
+    devSetting->OledSleep    = String(newValue).toInt();
+    CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep)
   }
   if (!strcasecmp(field, "oled_flip_screen"))
   {
-    sysSetting->OledFlip     = String(newValue).toInt();
-    if (sysSetting->OledFlip != 0) sysSetting->OledFlip = 1;
-    else                           sysSetting->OledFlip = 0;
+    devSetting->OledFlip     = String(newValue).toInt();
+    if (devSetting->OledFlip != 0) devSetting->OledFlip = 1;
+    else                           devSetting->OledFlip = 0;
     oled_Init();
   }
   if (!strcasecmp(field, "neo_brightness"))
   {
-    sysSetting->NeoBrightness = String(newValue).toInt();
-    if (sysSetting->NeoBrightness <  10) sysSetting->NeoBrightness =  10;
-    if (sysSetting->NeoBrightness > 250) sysSetting->NeoBrightness = 250;
-    neoPixels.setBrightness(sysSetting->NeoBrightness);  
+    devSetting->NeoBrightness = String(newValue).toInt();
+    if (devSetting->NeoBrightness <  10) devSetting->NeoBrightness =  10;
+    if (devSetting->NeoBrightness > 250) devSetting->NeoBrightness = 250;
+    neoPixels.setBrightness(devSetting->NeoBrightness);  
   }
   if (!strcasecmp(field, "tlgrm_interval"))
   {
-    sysSetting->TelegramInterval     = String(newValue).toInt();
-    DebugTf("Change nextTelegram timer to [%d] seconds\r\n", sysSetting->TelegramInterval);
-    CHANGE_INTERVAL_SEC(nextTelegram, sysSetting->TelegramInterval)
+    devSetting->TelegramInterval     = String(newValue).toInt();
+    DebugTf("Change nextTelegram timer to [%d] seconds\r\n", devSetting->TelegramInterval);
+    CHANGE_INTERVAL_SEC(nextTelegram, devSetting->TelegramInterval)
   }
 
   if (!strcasecmp(field, "mqtt_broker"))
   {
-    DebugT("sysSetting->MQTTbroker! to : ");
-    memset(sysSetting->MQTTbroker, '\0', sizeof(sysSetting->MQTTbroker));
-    strlcpy(sysSetting->MQTTbroker, newValue, 100);
-    Debugf("[%s]\r\n", sysSetting->MQTTbroker);
+    DebugT("devSetting->MQTTbroker! to : ");
+    memset(devSetting->MQTTbroker, '\0', sizeof(devSetting->MQTTbroker));
+    strlcpy(devSetting->MQTTbroker, newValue, 100);
+    Debugf("[%s]\r\n", devSetting->MQTTbroker);
     mqttIsConnected = false;
     CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_broker_port"))
   {
-    sysSetting->MQTTbrokerPort = String(newValue).toInt();
+    devSetting->MQTTbrokerPort = String(newValue).toInt();
     mqttIsConnected = false;
     CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_user"))
   {
-    strlcpy(sysSetting->MQTTuser, newValue, 35);
+    strlcpy(devSetting->MQTTuser, newValue, 35);
     mqttIsConnected = false;
     CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_passwd"))
   {
-    strlcpy(sysSetting->MQTTpasswd, newValue, 35);
+    strlcpy(devSetting->MQTTpasswd, newValue, 35);
     mqttIsConnected = false;
     CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_interval"))
   {
-    sysSetting->MQTTinterval   = String(newValue).toInt();
-    CHANGE_INTERVAL_SEC(publishMQTTtimer, sysSetting->MQTTinterval);
+    devSetting->MQTTinterval   = String(newValue).toInt();
+    CHANGE_INTERVAL_SEC(publishMQTTtimer, devSetting->MQTTinterval);
   }
-  if (!strcasecmp(field, "mqtt_toptopic"))     strlcpy(sysSetting->MQTTtopTopic, newValue, 20);
+  if (!strcasecmp(field, "mqtt_toptopic"))     strlcpy(devSetting->MQTTtopTopic, newValue, 20);
 
-  writeSysSettings(false);
+  writeDevSettings(false);
 
-} // updateSysSettings()
+} // updateDevSettings()
 
 /***************************************************************************
 *

@@ -11,6 +11,13 @@ Documentation can be found [here](https://mrwheel-docs.gitbook.io/dsmrloggerapi/
 <table>
   <tr><th>Versie</th><th align="Left">Opmerking</th></tr>
   <tr>
+    <td valign="top">5.0.4</td>
+    <td>First Production Release
+        <br>De API is aangepast en uitvoer ervan zal verschillen van die in de 
+        DSMRloggerAPI firmware (Rev. 3).
+    </td>
+  </tr>
+  <tr>
     <td valign="top">5.0.3</td>
     <td>Release Candidate
         <br>Mindergas functionaliteit is weggehaald, want hoort niet thuis in deze firmware.

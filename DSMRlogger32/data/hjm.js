@@ -101,21 +101,35 @@ var AmpOptions = {
 
 };
 
+  window.onload=bootsTrapMain;
+    
+  //============================================================================  
+  function bootsTrapMain() 
+  {
+    console.log("bootsTrapMain()");
+    document.getElementById('FSmanager').addEventListener('click',function() 
+                                                { console.log("newTab: goFSmanager");
+                                                  location.href = "/FSmanager.html";
+                                                });
+    
+    console.log("..exit bootsTrapMain()!");
+      
+  } // bootsTrapMain()
+  
+
+  
 function abs(x)
 {
     return (x < 0 ? -x : x);
 }
 
-function getFieldByName(json, prefix, factor = 1) {
-    for (const field of json.fields) {
-        if (field.name.startsWith(prefix)) {
-             return {
-                 name: field.name,
-                 value: factor * Number(field.value)
-             };
-        }
-    }
-    throw new Error(`Did not find field '${prefix}' in the JSON`);
+function getFieldByName(data, prefix, factor = 1) 
+{
+    //console.log("["+prefix+"]->["+data[prefix]+"]");
+    return {
+      name: prefix,
+      value: factor * Number(data[prefix])
+    };
 }
 
 function update()
@@ -123,16 +137,16 @@ function update()
     var phase;
     for( let phase = 1 ; phase <= PHASES ; phase++ )
     {
-        fetch(APIGW+"v1/sm/fields/power_delivered_l"+phase)
+        fetch(APIGW+"v2/sm/fields/power_delivered_l"+phase)
         .then(response => response.json())
         .then(json => {
-            const field = getFieldByName(json, "power_delivered_l"+phase);
+            const field = getFieldByName(json.fields, "power_delivered_l"+phase);
             let cvKW=document.getElementById(field.name).innerHTML;
             let nvKW=Number(field.value);
             (nvKW == 0 // check if power is generated
-                ? fetch(APIGW+"v1/sm/fields/power_returned_l"+phase)
+                ? fetch(APIGW+"v2/sm/fields/power_returned_l"+phase)
                     .then(response => response.json())
-                    .then(json2 => getFieldByName(json2,"power_returned_l"+phase, -1))
+                    .then(json2 => getFieldByName(json2.fields,"power_returned_l"+phase, -1))
                 : Promise.resolve(field)
             ).then(({name, value: nvKW}) => {
                 //console.log("nvKW = "+ nvKW.toString()) // here nvKW is 0

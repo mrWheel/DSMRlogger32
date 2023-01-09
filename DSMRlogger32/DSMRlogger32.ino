@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.3 (07-01-2023)"
+#define _FW_VERSION "v5.0.4 (09-01-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -323,8 +323,12 @@ void setup()
 
   //-- Press [Reset] -> "External System"
   //-- Software reset -> "Vbat power on reset"
-  lastResetReason(lastReset, _GMSG_LEN, (int)esp_reset_reason());
-  DebugTf("Last Reset Reason [%s]\r\n", lastReset);
+  getLastResetReason(rtc_get_reset_reason(0), lastResetCPU0, 99);
+  DebugTf("last Reset Reason CPU[0] - %s\r\n", lastResetCPU0);
+  writeToSysLog("last Reset Reason CPU[0] - %s", lastResetCPU0);
+  getLastResetReason(rtc_get_reset_reason(1), lastResetCPU1, 99);
+  DebugTf("last Reset Reason CPU[1] - %s\r\n", lastResetCPU1);
+  writeToSysLog("last Reset Reason CPU[1] - %s", lastResetCPU1);  
 
   oled_Init();
 
@@ -424,7 +428,7 @@ void setup()
   
   //================ end NTP =========================================
 
-  writeToSysLog(lastReset);                         
+  //writeToSysLog(lastReset);                         
   
   Serial.print("\nGebruik 'telnet ");
   Serial.print (WiFi.localIP());

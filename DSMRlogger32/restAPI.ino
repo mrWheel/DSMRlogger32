@@ -266,7 +266,7 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
       strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
       updateDevSettings(field, newValue);
-      writeToSysLog("DSMReditor: Syetem Field[%s] changed to [%s]", field, newValue);
+      writeToSysLog("DSMReditor: System Field[%s] changed to [%s]", field, newValue);
       memset(field,    0, sizeof(field));
       memset(newValue, 0, sizeof(newValue));
       httpServer.send(200, "application/json", httpServer.arg(0));
@@ -468,7 +468,8 @@ void sendDeviceInfo()
   else  doc["devinfo"]["mqtt_broker_connected"] = "no";
 
   doc["devinfo"]["reboots"]         = (int)nrReboots;
-  doc["devinfo"]["last_reset"]      = lastReset;
+  doc["devinfo"]["last_reset_cpu0"] = lastResetCPU0;
+  doc["devinfo"]["last_reset_cpu1"] = lastResetCPU1;
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   //serializeJson(doc, jsonBuff, _JSONBUFF_LEN);

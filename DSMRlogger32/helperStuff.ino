@@ -235,28 +235,28 @@ double round3(double value) {
 
 
 //===========================================================================================
-void lastResetReason(char *cReason, int lenReason, int reason)
+void getLastResetReason(RESET_REASON reason, char *txtReason, int txtReasonLen)
 {
   switch (reason)
   {
-    case 1  : snprintf(cReason, lenReason, "[%d] Vbat power on reset", reason); break;
-    case 3  : snprintf(cReason, lenReason, "[%d] Software reset digital core (ESP.restart())", reason); break;
-    case 4  : snprintf(cReason, lenReason, "[%d] Legacy watch dog reset digital core", reason); break;
-    case 5  : snprintf(cReason, lenReason, "[%d] Deep Sleep reset digital core", reason); break;
-    case 6  : snprintf(cReason, lenReason, "[%d] Reset by SLC module, reset digital core", reason); break;
-    case 7  : snprintf(cReason, lenReason, "[%d] Timer Group0 Watch dog reset digital core", reason); break;
-    case 8  : snprintf(cReason, lenReason, "[%d] Timer Group1 Watch dog reset digital core", reason); break;
-    case 9  : snprintf(cReason, lenReason, "[%d] RTC Watch dog Reset digital core", reason); break;
-    case 10 : snprintf(cReason, lenReason, "[%d] Instrusion tested to reset CPU", reason); break;
-    case 11 : snprintf(cReason, lenReason, "[%d] Time Group reset CPU", reason); break;
-    case 12 : snprintf(cReason, lenReason, "[%d] Software reset CPU", reason); break;
-    case 13 : snprintf(cReason, lenReason, "[%d] RTC Watch dog Reset CPU", reason); break;
-    case 14 : snprintf(cReason, lenReason, "[%d] for APP CPU, reseted by PRO CPU", reason); break;
-    case 15 : snprintf(cReason, lenReason, "[%d] Reset when the vdd voltage is not stable", reason); break;
-    case 16 : snprintf(cReason, lenReason, "[%d] RTC Watch dog reset digital core and rtc module", reason); break;
-    default : snprintf(cReason, lenReason, "[%d] NO_MEAN", reason);
+    case 1  : snprintf(txtReason, txtReasonLen, "[%02d] Vbat power on reset", reason); break;
+    case 3  : snprintf(txtReason, txtReasonLen, "[%02d] Software reset digital core (ESP.restart())", reason); break;
+    case 4  : snprintf(txtReason, txtReasonLen, "[%02d] Legacy watch dog reset digital core", reason); break;
+    case 5  : snprintf(txtReason, txtReasonLen, "[%02d] Deep Sleep reset digital core", reason); break;
+    case 6  : snprintf(txtReason, txtReasonLen, "[%02d] Reset by SLC module, reset digital core", reason); break;
+    case 7  : snprintf(txtReason, txtReasonLen, "[%02d] Timer Group0 Watch dog reset digital core", reason); break;
+    case 8  : snprintf(txtReason, txtReasonLen, "[%02d] Timer Group1 Watch dog reset digital core", reason); break;
+    case 9  : snprintf(txtReason, txtReasonLen, "[%02d] RTC Watch dog Reset digital core", reason); break;
+    case 10 : snprintf(txtReason, txtReasonLen, "[%02d] Instrusion tested to reset CPU", reason); break;
+    case 11 : snprintf(txtReason, txtReasonLen, "[%02d] Time Group reset CPU", reason); break;
+    case 12 : snprintf(txtReason, txtReasonLen, "[%02d] Software reset CPU", reason); break;
+    case 13 : snprintf(txtReason, txtReasonLen, "[%02d] RTC Watch dog Reset CPU", reason); break;
+    case 14 : snprintf(txtReason, txtReasonLen, "[%02d] for APP CPU, reseted by PRO CPU", reason); break;
+    case 15 : snprintf(txtReason, txtReasonLen, "[%02d] Reset when the vdd voltage is not stable", reason); break;
+    case 16 : snprintf(txtReason, txtReasonLen, "[%02d] RTC Watch dog reset digital core and rtc module", reason); break;
+    default : snprintf(txtReason, txtReasonLen, "[%03d] NO_MEAN", reason);
   }
-} // lastResetReason()
+} // getLastResetReason()
 
 
 //=======================================================================

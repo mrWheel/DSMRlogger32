@@ -46,6 +46,9 @@ ESPSL     sysLog;
 #define _SYSLOG_LINE_LEN    120
 //-- part of ESP32 Core https://github.com/ESP32/Arduino
 #include <HardwareSerial.h>
+//-- part of ESP32 Core https://github.com/ESP32/Arduino
+//#include <esp32/rom/rtc.h>
+#include <rom/rtc.h>      // low-level 'C'???
 
 //-- use UART1 for SMserial
 HardwareSerial SMserial (1);
@@ -429,7 +432,8 @@ bool onlyIfPresent  = false;
 
 static PubSubClient MQTTclient(wifiClient);
 
-char      lastReset[100]        = {0};
+char      lastResetCPU0[100]    = {0};
+char      lastResetCPU1[100]    = {0};
 bool      filesysMounted        = false;
 bool      filesysNotPopulated   = false;
 bool      hasAlternativeIndex   = false;

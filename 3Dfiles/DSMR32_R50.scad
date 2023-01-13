@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMRlogger32 v5.x PCB
 //
-//  Version 1.0 (06-12-2022)
+//  Version 1.0 (13-02-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------

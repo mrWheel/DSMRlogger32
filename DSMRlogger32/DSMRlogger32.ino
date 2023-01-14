@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.4 (09-01-2023)"
+#define _FW_VERSION "v5.0.4 (14-01-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -689,8 +689,9 @@ void loop ()
       snprintf(gMsg,  _GMSG_LEN, "IP:[%s], Gateway:[%s]"
                                       , WiFi.localIP().toString().c_str()
                                       , WiFi.gatewayIP().toString().c_str());
-      DebugTf("%s", gMsg);
+      DebugTf("%s\r\n", gMsg);
       writeToSysLog("%s", gMsg);
+      startMDNS(devSetting->Hostname);
     }
   } //  lostWiFiConnection
   else

@@ -143,14 +143,17 @@ void startTelnet()
 //=======================================================================
 void startMDNS(const char *Hostname)
 {
+  MDNS.end(); //-- end service
   DebugTf("[1] mDNS setup as [%s.local]\r\n", Hostname);
   if (MDNS.begin(Hostname))               // Start the mDNS responder for Hostname.local
   {
     DebugTf("[2] mDNS responder started as [%s.local]\r\n", Hostname);
+    writeToSysLog("mDNS responder started as [%s.local]", Hostname);
   }
   else
   {
-    DebugTln(F("[3] Error setting up MDNS responder!\r\n"));
+    DebugTln("[3] Error setting up MDNS responder!\r\n");
+    writeToSysLog("Error setting up MDNS responder!");
   }
   MDNS.addService("http", "tcp", 80);
 

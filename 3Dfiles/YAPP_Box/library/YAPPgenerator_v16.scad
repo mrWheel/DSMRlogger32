@@ -3,14 +3,15 @@
 **  Yet Another Parameterised Projectbox generator
 **
 */
-Version="v1.6 (06-10-2022)";
+Version="v1.6 (14-01-2023)";
 /*
 **
-**  Copyright (c) 2021, 2022 Willem Aandewiel
+**  Copyright (c) 2021, 2022, 2023 Willem Aandewiel
 **
 **  With help from:
 **   - Keith Hadley (parameterized label depth)
 **   - Oliver Grafe (connectorsPCB)
+**   - Juan Jose Chong (dynamic standoff support)
 **
 **
 **  for many or complex cutoutsGrill you might need to adjust
@@ -89,6 +90,8 @@ standoffHeight      = 3.0;
 pinDiameter         = 2.0;
 pinHoleSlack        = 0.2;
 standoffDiameter    = 4;
+standoffSupportHeight   = 3.0;
+standoffSupportDiameter = 3.0;
 
 
 //-- D E B U G -----------------//-> Default ---------
@@ -1137,7 +1140,7 @@ module cutoutsInXY(type)
           }
         } //  for ..
 
-	      for(conn = connectorsPCB)
+        for(conn = connectorsPCB)
         {
           //-- [0] x-pos
           //-- [1] y-pos
@@ -1820,8 +1823,8 @@ module baseShell()
           {
             minkowski()
             {
-              //square([(L)-((iRad*2)), (W)-((iRad*2))], center=true);
-              square([(L)-((iRad*2)), (W-ridgeSlack)-((iRad*2))], center=true);  // 13-02-2022
+            //square([(L)-((iRad*2)), (W-ridgeSlack)-((iRad*2))], center=true);  // 13-02-2022
+            square([(L-ridgeSlack)-((iRad*2)), (W-ridgeSlack)-((iRad*2))], center=true);  // 14-01-2023
                 circle(iRad);
             }
           
@@ -1929,7 +1932,7 @@ module lidShell()
             {
                 minkowski()
                 {
-                  square([L-((iRad*2)), W-((iRad*2))+(ridgeSlack/2)], center=true); // 26-02-2022
+                  square([L-(iRad*2)+(ridgeSlack/2), W-(iRad*2)+(ridgeSlack/2)], center=true); // 26-02-2022
                   circle(iRad);
                 }
               
@@ -1997,68 +2000,93 @@ module lidShell()
 //===========================================================
 module pcbStandoff(color, height, type, plane) 
 {
-        module standoff(color)
+    module standoff(color)
+    {
+      color(color,1.0)
+        cylinder(
+          d = standoffDiameter,
+          h = height,
+          center = false,
+          $fn = 20);
+      //-- flange --
+      if (plane == "base")
+      {
+        translate([0,0,-0.3]) 
         {
-          color(color,1.0)
-            cylinder(
-              d = standoffDiameter,
-              h = height,
-              center = false,
-              $fn = 20);
-          //-- flange --
-          if (plane == "base")
-          {
-            translate([0,0,-0.3]) 
+            if (standoffHeight > standoffSupportHeight)
             {
-              cylinder(h=2, r1=(standoffDiameter/2)+3, r2=standoffDiameter/2);
+                cylinder(h=standoffSupportHeight, 
+                         r1=(standoffDiameter/2)+standoffSupportDiameter, 
+                         r2=standoffDiameter/2);
             }
-          }
-          if (plane == "lid")
-          {
-            //translate([0,0,lidWallHeight]) 
-            zP = height-1.8;//+standoffHeight-lidPlaneThickness;
-            translate([0,0,height-1.8]) 
+            else
             {
-              //echo("Lid ..", height=height, zP=zP);
-              cylinder(h=2, r1=standoffDiameter/2, r2=(standoffDiameter/2)+3);
+                cylinder(h=standoffHeight, 
+                         r1=(standoffDiameter/2)+standoffSupportDiameter, 
+                         r2=standoffDiameter/2);
             }
+        }
+      }
+      if (plane == "lid")
+      {
+        if (standoffHeight > standoffSupportHeight)
+        {
+          echo(standoffHeight=standoffHeight, " > ",standoffSupportHeight=standoffSupportHeight);
+          //translate([0,0,height-1.8])
+          translate([0,0,height-standoffSupportHeight-1.8])
+          {
+            cylinder(h=standoffSupportHeight, 
+                     r1=standoffDiameter/2, 
+                     r2=(standoffDiameter/2)+standoffSupportDiameter);
           }
+        }
+        else
+        {
+          echo(standoffHeight=standoffHeight, " <= ",standoffSupportHeight=standoffSupportHeight);
+          translate([0,0,height-1.8])
+          {
+            cylinder(h=standoffHeight, 
+                     r1=standoffDiameter/2, 
+                     r2=(standoffDiameter/2)+standoffSupportDiameter);
+          }
+        }
+      }
 
-        } // standoff()
+    } // standoff()
         
-        module standPin(color)
-        {
-          color(color, 1.0)
-            cylinder(
-              d = pinDiameter,
-              h = pcbThickness+standoffHeight+pinDiameter,
-              center = false,
-              $fn = 20);
-        } // standPin()
-        
-        module standHole(color)
-        {
-          color(color, 1.0)
-            cylinder(
-              d = pinDiameter+.2+pinHoleSlack,
-              h = (pcbThickness*2)+height+0.02,
-              center = false,
-              $fn = 20);
-        } // standhole()
-        
-        if (type == yappPin)  // pin
-        {
-         standoff(color);
-         standPin(color);
-        }
-        else            // hole
-        {
-          difference()
-          {
-            standoff(color);
-            standHole(color);
-          }
-        }
+    module standPin(color)
+    {
+      color(color, 1.0)
+        cylinder(
+          d = pinDiameter,
+          h = pcbThickness+standoffHeight+pinDiameter,
+          center = false,
+          $fn = 20);
+    } // standPin()
+    
+    module standHole(color)
+    {
+      color(color, 1.0)
+        cylinder(
+          d = pinDiameter+.2+pinHoleSlack,
+          h = (pcbThickness*2)+height+0.02,
+          center = false,
+          $fn = 20);
+    } // standhole()
+    
+    if (type == yappPin)  // pin
+    {
+     standoff(color);
+     standPin(color);
+    }
+    else            // hole
+    {
+      difference()
+      {
+        standoff(color);
+        standHole(color);
+      }
+    }
         
 } // pcbStandoff()
 
@@ -2088,7 +2116,16 @@ module connector(plane, isPcb, x, y, d1, d2, d3)
                 d = d3,
                 $fn = 20);
           //-- flange --
-          translate([0,0,(basePlaneThickness-0.5)]) cylinder(h=2, r1=(d3/2)+3, r2=d3/2);
+          //translate([0,0,(basePlaneThickness-0.5)]) cylinder(h=2, r1=(d3/2)+3, r2=d3/2);
+          if (hb < standoffSupportHeight)
+                translate([0,0,(basePlaneThickness-0.5)]) 
+                {
+                  cylinder(h=2, r1=(d3/2)+standoffSupportDiameter, r2=d3/2);
+                }
+          else  translate([0,0,(basePlaneThickness-0.5)]) 
+                {
+                  cylinder(h=standoffSupportHeight, r1=(d3/2)+standoffSupportDiameter, r2=d3/2);
+                }
         }  
         
         //-- screw head Hole --
@@ -2130,7 +2167,17 @@ module connector(plane, isPcb, x, y, d1, d2, d3)
                 d = d3,
                 $fn = 20);
           //-- flange --
-          translate([0,0,(ht*1)-1.9]) cylinder(h=2, r1=(d3/2), r2=(d3/2)+3);
+          //translate([0,0,(ht*1)-1.9]) cylinder(h=2, r1=(d3/2), r2=(d3/2)+3);
+          if (ht < standoffSupportHeight)
+                translate([0,0,(ht*1)-1.9]) 
+                {
+                  cylinder(h=2, r1=(d3/2), r2=(d3/2)+standoffSupportDiameter);
+                }
+          else  translate([0,0,(ht-standoffSupportHeight)-1.9]) 
+                {
+                  cylinder(h=standoffSupportHeight, r1=(d3/2), r2=(d3/2)+standoffSupportDiameter);
+                }
+
         }  
         //-- insert --
         linear_extrude(ht)

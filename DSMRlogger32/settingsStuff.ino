@@ -385,7 +385,9 @@ void readDevSettings(bool show)
 
   //--- this will take some time to settle in
   //--- probably need a reboot before that to happen :-(
-  MDNS.begin(devSetting->Hostname);    // start advertising with new(?) devSetting->Hostname
+  //MDNS.begin(devSetting->Hostname);    // start advertising with new(?) devSetting->Hostname
+  startMDNS(devSetting->Hostname);
+
 
   if (devSetting->NeoBrightness ==  0) devSetting->NeoBrightness =  50;
   if (devSetting->NeoBrightness <  10) devSetting->NeoBrightness =  10;
@@ -455,8 +457,9 @@ void updateDevSettings(const char *field, const char *newValue)
       byte dotPos = (dotPntr-devSetting->Hostname);
       if (dotPos > 0)  devSetting->Hostname[dotPos] = '\0';
     }
+    startMDNS(devSetting->Hostname);
     Debugln();
-    DebugTf("Need reboot before new %s.local will be available!\r\n\n", devSetting->Hostname);
+    DebugTf("Need reboot before new %s.local will be available!??\r\n\n", devSetting->Hostname);
   }
 
   if (!strcasecmp(field, "index_page"))        strlcpy(devSetting->IndexPage, newValue, (sizeof(devSetting->IndexPage) -1));

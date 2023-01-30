@@ -104,7 +104,7 @@ printBaseShell        = false;
 printLidShell         = true;
 printSwitchExtenders  = true;
 printInsideOLED       = false;
-printOledStand        = false;
+printOledStand        = true;
 printSwitchCap        = true;
 
 // Edit these parameters for your own board dimensions
@@ -623,14 +623,14 @@ if (printOledStand)
     translate([-15,125,0])
     {
       translate([0,0,0])  cube([2,oledPcbWidth, 2]);                    // main balk
-      translate([0,5,0])                 color("green") cube([11,3,2]);   // stand
-      translate([0,oledPcbWidth-8,0])    color("green") cube([11,3,2]);   // stand
+      translate([0,5,0])                color("green") cube([11,3,2]);      // stand
+      translate([0,oledPcbWidth-8,0])   color("green") cube([11,3,2]);      // stand
       
-      translate([0,0,0])                 color("blue")  cube([3,8,2]);    // bigger
-      translate([0,oledPcbWidth-8,0])    color("blue")  cube([3,8,2]);    // bigger
+      translate([0,0,0])                color("blue")  cube([3,8,2]);       // bigger
+      translate([0,oledPcbWidth-8,0])   color("blue")  cube([3,8,2]);       // bigger
       
-      translate([-1,2,0])                color("black") cube([3,1.5,1.5]);  // centreer nop
-      translate([-1,oledPcbWidth-3.4,0]) color("red")   cube([3,1.5,1.5]);  // centreer nop
+      translate([-1,1.5,0])             color("black") cube([3,1.5,1.5]);   // centreer nop
+      translate([-1,oledPcbWidth-3,0])  color("red")   cube([3,1.5,1.5]);   // centreer nop
       //-- meet balk
       //translate([-3,2,0]) cube([2,oledPcbWidth-4.0, 2]);
     }

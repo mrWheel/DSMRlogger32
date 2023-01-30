@@ -3,7 +3,7 @@
 **  Yet Another Parameterised Projectbox generator
 **
 */
-Version="v1.6 (14-01-2023)";
+Version="v1.7 (29-01-2023)";
 /*
 **
 **  Copyright (c) 2021, 2022, 2023 Willem Aandewiel
@@ -11,7 +11,7 @@ Version="v1.6 (14-01-2023)";
 **  With help from:
 **   - Keith Hadley (parameterized label depth)
 **   - Oliver Grafe (connectorsPCB)
-**   - Juan Jose Chong (dynamic standoff support)
+**   - Juan Jose Chong (dynamic standoff flange)
 **
 **
 **  for many or complex cutoutsGrill you might need to adjust
@@ -90,8 +90,6 @@ standoffHeight      = 3.0;
 pinDiameter         = 2.0;
 pinHoleSlack        = 0.2;
 standoffDiameter    = 4;
-standoffSupportHeight   = 3.0;
-standoffSupportDiameter = 3.0;
 
 
 //-- D E B U G -----------------//-> Default ---------
@@ -116,20 +114,25 @@ inspectY            = 0;        //-> 0=none (>0 from left, <0 from right)
 */
 
 //-- constants, do not change
-yappRectangle   =  0;
-yappCircle      =  1;
-yappBoth        =  2;
-yappLidOnly     =  3;
-yappBaseOnly    =  4;
-yappHole        =  5;
-yappPin         =  6;
-yappLeft        =  7;
-yappRight       =  8;
-yappFront       =  9;
-yappBack        = 10;
-yappCenter      = 11;
-yappSymmetric   = 12;
-yappAllCorners  = 13;
+yappRectangle   =  -1;
+yappCircle      =  -2;
+yappBoth        =  -3;
+yappLidOnly     =  -4;
+yappBaseOnly    =  -5;
+yappHole        =  -6;
+yappPin         =  -7;
+yappLeft        =  -8;
+yappRight       =  -9;
+yappFront       = -10;
+yappBack        = -11;
+yappCenter      = -12;
+yappSymmetric   = -13;
+yappAllCorners  = -14;
+yappFrontLeft   = -15;
+yappFrontRight  = -16;
+yappBackLeft    = -17;
+yappBackRight   = -18;
+yappConnWithPCB = -19;
 
 //-------------------------------------------------------------------
 
@@ -150,12 +153,15 @@ pcbZlid           = (baseWallHeight+lidWallHeight+lidPlaneThickness)
 //-- pcb_standoffs  -- origin is pcb[0,0,0]
 // (0) = posx
 // (1) = posy
-// (2) = { yappBoth | yappLidOnly | yappBaseOnly }
-// (3) = { yappHole, YappPin }
+// (2) = flangeHeight
+// (3) = flangeDiam
+// (4) = { yappBoth | yappLidOnly | yappBaseOnly }
+// (5) = { yappHole, YappPin }
+// (6) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 pcbStands =    [
-                //   , [20,  20, yappBoth, yappPin] 
-                //   , [3,  3, yappBoth, yappPin] 
-                //   , [pcbLength-10,  pcbWidth-3, yappBoth, yappPin]
+                //   , [20,  20, 6, 9, yappBoth, yappPin] 
+                //   , [3,  3, yappBoth, yappPin, yappAllCorners] 
+                //   , [pcbLength-10,  pcbWidth-3, yappBoth, yappPin, yappBackRight]
                ];
 
 //-- base plane    -- origin is pcb[0,0,0]
@@ -260,31 +266,24 @@ cutoutsRight =  [
               //    , [pcbLength-10, 2, 10, 0, 0, yappCircle]
                 ];
 
-//-- connectors -- origen = box[0,0,0]
+//-- connectors 
+//-- normal         : origen = box[0,0,0]
+//-- yappConnWithPCB: origen = pcb[0,0,0]
 // (0) = posx
 // (1) = posy
 // (2) = screwDiameter
-// (3) = insertDiameter
-// (4) = outsideDiameter
-// (5) = { yappAllCorners }
-connectors   =  [
-              //      [10, 10, 2, 3, 2, yappAllCorners]
-              //    , [4, 3, 34, 3]
-              //    , [25, 3, 3, 3]
-                ];
-
-//-- connectorsPCB -- origin = pcb[0,0,0]
-// (0) = posx
-// (1) = posy
-// (2) = screwDiameter
-// (3) = insertDiameter
-// (4) = outsideDiameter
-// (5) = { yappAllCorners }
-connectorsPCB   =  [
-              //      [10, 10, 2, 3, 2]
-              //    , [30, 20, 4, 6, 9]
-              //    , [4, 3, 34, 3, yappAllCorners]
-                ];
+// (3) = screwHeadDiameter
+// (4) = insertDiameter
+// (5) = outsideDiameter
+// (6) = flangeHeight
+// (7) = flangeDiam
+// (8) = { yappConnWithPCB }
+// (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
+connectors   = [ 
+             //   [18, 10, 2.5, 5, 4.0, 6, 4, 11, yappConnWithPCB, yappFrontRight, yappBackLeft, yappBackRight]
+             // , [18, 10, 2.5, 5, 4.0, 6, yappConnWithPCB, yappFrontLeft]
+             // , [10, 10, 2.5, 5, 5.0, 6, 4, 8, yappAllCorners]
+               ];
 
 //-- base mounts -- origen = box[x0,y0]
 // (0) = posx | posy
@@ -323,21 +322,27 @@ snapJoins   =     [
 // (6) = size
 // (7) = "label text"
 labelsPlane =   [
-                      [5, 5, 0, 1, "lid", "Liberation Mono:style=bold", 5, "YAPP" ]
+                  //  [5, 5, 0, 1, "lid", "Liberation Mono:style=bold", 5, "YAPP" ]
                 ];
 
 
 //===========================================================
 function getMinRad(p1, wall) = ((p1<(wall+0.001)) ? 1 : (p1 - wall));
-function isTrue(w, aw, from) = ((   w==aw[from] 
-                                 || w==aw[from+1]  
-                                 || w==aw[from+2]  
-                                 || w==aw[from+3]  
-                                 || w==aw[from+4]  
-                                 || w==aw[from+5]  
-                                 || w==aw[from+6] ) ? 1 : 0);  
 
-function minOutside(ins, outs) = ((((ins*2.2)+0.2)>=outs) ? (ins*2.2)+0.2 : outs);  
+function isTrue(w, aw) = ((   w==aw[2] 
+                           || w==aw[3]  
+                           || w==aw[4]  
+                           || w==aw[5]  
+                           || w==aw[6]  
+                           || w==aw[7]  
+                           || w==aw[8]  
+                           || w==aw[9]  
+                           || w==aw[10]  
+                           || w==aw[11]  
+                           || w==aw[12]  
+                           || w==aw[13] ) ? 1 : 0);  
+
+function minOutside(ins, outs) = ((((ins*1.5)+0.2)>=outs) ? (ins*1.5)+0.2 : outs);  
 function newHeight(T, h, z, t) = (((h+z)>t)&&(T=="base")) ? t+standoffHeight : h;
 
 //===========================================================
@@ -446,14 +451,14 @@ module printBaseMounts()
       
       for (bm = baseMounts)
       {
-        c = isTrue(yappCenter, bm, 5);
+        c = isTrue(yappCenter, bm);
         
         // (0) = posx | posy
         // (1) = screwDiameter
         // (2) = width
         // (3) = Height
         // (4..7) = yappLeft / yappRight / yappFront / yappBack (one or more)
-        if (isTrue(yappLeft, bm, 4))
+        if (isTrue(yappLeft, bm))
         {
             newWidth  = maxWidth(bm[2], bm[1], shellLength);
             tmpPos    = calcScrwPos(bm[0], newWidth, shellLength, c);
@@ -469,7 +474,7 @@ module printBaseMounts()
         // (2) = width
         // (3) = Height
         // (4..7) = yappLeft / yappRight / yappFront / yappBack (one or more)
-        if (isTrue(yappRight, bm, 4))
+        if (isTrue(yappRight, bm))
         {
           rotate([0,0,180])
           {
@@ -494,7 +499,7 @@ module printBaseMounts()
         // (2) = width
         // (3) = Height
         // (4..7) = yappLeft / yappRight / yappFront / yappBack (one or more)
-        if (isTrue(yappFront, bm, 4))
+        if (isTrue(yappFront, bm))
         {
           rotate([0,180,0])
           {
@@ -525,7 +530,7 @@ module printBaseMounts()
         // (2) = width
         // (3) = Height
         // (4..7) = yappLeft / yappRight / yappFront / yappBack (one or more)
-        if (isTrue(yappBack, bm, 4))
+        if (isTrue(yappBack, bm))
         {
           //echo("printBaseMount: BACK!!");
           rotate([0,180,0])
@@ -571,19 +576,15 @@ module printBaseSnapJoins()
     snapZposBF = (basePlaneThickness+baseWallHeight)-((snapHeight/2)-0.2);
     tmpYmin    = (roundRadius*2)+(snapWidth/2);
     tmpYmax    = shellWidth - tmpYmin;
-    //-aaw- tmpY       = lowestVal(snj[0]+(snapWidth/2), tmpYmin);
     tmpY       = max(snj[0]+(snapWidth/2), tmpYmin);
-    //-aaw- snapYpos   = highestVal(tmpY, tmpYmax);
     snapYpos   = min(tmpY, tmpYmax);
 
     tmpXmin    = (roundRadius*2)+(snapWidth/2);
     tmpXmax    = shellLength - tmpXmin;
-    //-aaw- tmpX       = lowestVal(snj[0]+(snapWidth/2), tmpXmin);
     tmpX       = max(snj[0]+(snapWidth/2), tmpXmin);
-    //-aaw- snapXpos   = highestVal(tmpX, tmpXmax);
     snapXpos   = min(tmpX, tmpXmax);
 
-    if (isTrue(yappLeft, snj, 2))
+    if (isTrue(yappLeft, snj))
     {
       translate([snapXpos-(snapWidth/2),
                     wallThickness/2,
@@ -593,7 +594,7 @@ module printBaseSnapJoins()
           //color("blue") cylinder(d=wallThickness, h=snapWidth);
           color("blue") cylinder(d=snapDiam, h=snapWidth); // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(snapXpos+(snapWidth/2)),
                     wallThickness/2,
@@ -606,7 +607,7 @@ module printBaseSnapJoins()
       } // yappCenter
     } // yappLeft
     
-    if (isTrue(yappRight, snj, 2))
+    if (isTrue(yappRight, snj))
     {
       translate([snapXpos-(snapWidth/2),
                     shellWidth-(wallThickness/2),
@@ -616,7 +617,7 @@ module printBaseSnapJoins()
           //color("blue") cylinder(d=wallThickness, h=snapWidth);
           color("blue") cylinder(d=snapDiam, h=snapWidth);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(snapXpos+(snapWidth/2)),
                     shellWidth-(wallThickness/2),
@@ -630,7 +631,7 @@ module printBaseSnapJoins()
       } // yappCenter
     } // yappRight
     
-    if (isTrue(yappBack, snj, 2))
+    if (isTrue(yappBack, snj))
     {
       translate([(wallThickness/2),
                     snapYpos-(snapWidth/2),
@@ -640,7 +641,7 @@ module printBaseSnapJoins()
           //color("blue") cylinder(d=wallThickness, h=snapWidth);
           color("blue") cylinder(d=snapDiam, h=snapWidth);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([(wallThickness/2),
                       shellWidth-(snapYpos+(snapWidth/2)),
@@ -654,7 +655,7 @@ module printBaseSnapJoins()
       } // yappCenter
     } // yappBack
     
-    if (isTrue(yappFront, snj, 2))
+    if (isTrue(yappFront, snj))
     {
       translate([shellLength-(wallThickness/2),
                     snapYpos-(snapWidth/2),
@@ -664,7 +665,7 @@ module printBaseSnapJoins()
           //color("blue") cylinder(d=wallThickness, h=snapWidth);
           color("blue") cylinder(d=snapDiam, h=snapWidth);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(wallThickness/2),
                       shellWidth-(snapYpos+(snapWidth/2)),
@@ -715,7 +716,7 @@ module printLidSnapJoins()
     snapZposLR = ((lidPlaneThickness+lidWallHeight)*-1)-(snapHeight/2)-0.5;
     snapZposBF = ((lidPlaneThickness+lidWallHeight)*-1)-(snapHeight/2)-0.5;
 
-    if (isTrue(yappLeft, snj, 2))
+    if (isTrue(yappLeft, snj))
     {
       translate([snapXpos-(snapWidth/2)-0.5,
                     -0.5,
@@ -724,7 +725,7 @@ module printLidSnapJoins()
         //color("red") cube([snapWidth, 5, wallThickness]);
         color("red") cube([snapWidth, wallThickness+1, snapDiam]);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(snapXpos+(snapWidth/2))+0.5,
                     -0.5,
@@ -737,7 +738,7 @@ module printLidSnapJoins()
       } // yappSymmetric
     } // yappLeft
     
-    if (isTrue(yappRight, snj, 2))
+    if (isTrue(yappRight, snj))
     {
       translate([snapXpos-(snapWidth/2)-0.5,
                     shellWidth-(wallThickness-0.5),
@@ -746,7 +747,7 @@ module printLidSnapJoins()
         //color("red") cube([snapWidth, 5, wallThickness]);
         color("red") cube([snapWidth, wallThickness+1, snapDiam]);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(snapXpos+(snapWidth/2)-0.5),
                     shellWidth-(wallThickness-0.5),
@@ -759,7 +760,7 @@ module printLidSnapJoins()
       } // yappSymmetric
     } // yappRight
     
-    if (isTrue(yappBack, snj, 2))
+    if (isTrue(yappBack, snj))
     {
       //translate([(wallThickness/2)+2,
       translate([-0.5,
@@ -769,7 +770,7 @@ module printLidSnapJoins()
         //color("red") cube([5, snapWidth, wallThickness]);
         color("red") cube([wallThickness+1, snapWidth, snapDiam]);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([-0.5,
                       shellWidth-(snapYpos+(snapWidth/2))+0.5,
@@ -782,7 +783,7 @@ module printLidSnapJoins()
       } // yappSymmetric
     } // yappBack
     
-    if (isTrue(yappFront, snj, 2))
+    if (isTrue(yappFront, snj))
     {
       //translate([shellLength-(wallThickness/2)-1,
       translate([shellLength-wallThickness+0.5,
@@ -792,7 +793,7 @@ module printLidSnapJoins()
         //color("red") cube([5, snapWidth, wallThickness]);
         color("red") cube([wallThickness+1, snapWidth, snapDiam]);  // 13-02-2022
       }
-      if (isTrue(yappSymmetric, snj, 3))
+      if (isTrue(yappSymmetric, snj))
       {
         translate([shellLength-(wallThickness-0.5),
                       shellWidth-(snapYpos+(snapWidth/2))+0.5,
@@ -990,21 +991,169 @@ module pcbHolders()
   for ( stand = pcbStands )
   {
     //echo("pcbHolders:", pcbX=pcbX, pcbY=pcbY, pcbZ=pcbZ);
-    //-- [0]posx, [1]posy, [2]{yappBoth|yappLidOnly|yappBaseOnly}
-    //--          , [3]{yappHole, YappPin}
-    posx=pcbX+stand[0];
-    posy=pcbY+stand[1];
-    //echo("pcbHolders:", posx=posx, posy=posy);
-    if (stand[2] != yappLidOnly)
+      //-- [0]posx, [1]posy, [2]flangeHeight, [3]flangeDiam 
+      //--          , [4]{yappBoth|yappLidOnly|yappBaseOnly}
+      //--          , [5]{yappHole|YappPin}
+    flangeH=stand[2];
+    flangeD=stand[3];
+    if (!isTrue(yappLidOnly, stand) && isTrue(yappHole, stand))
     {
-      translate([posx, posy, basePlaneThickness])
-        pcbStandoff("green", standoffHeight, stand[3], "base");
+      if (isTrue(yappAllCorners, stand) || isTrue(yappBackLeft, stand))
+      {
+        translate([pcbX+stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappFrontLeft, stand))
+      {
+        translate([(pcbX+pcbLength)-stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappFrontRight, stand))
+      {
+        translate([(pcbX+pcbLength)-stand[0], (pcbY+pcbWidth)-stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappBackRight, stand))
+      {
+        translate([pcbX+stand[0], (pcbY+pcbWidth)-stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+      }
+      if (!isTrue(yappAllCorners, stand) 
+            && !isTrue(yappBackLeft, stand) && !isTrue(yappFrontLeft, stand) 
+            && !isTrue(yappFrontRight, stand) && !isTrue(yappBackRight, stand))
+      {
+        translate([pcbX+stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+      }
+
     }
+    
+    if (!isTrue(yappLidOnly, stand) && isTrue(yappPin, stand))
+    {
+      if (isTrue(yappAllCorners, stand) || isTrue(yappBackLeft, stand))
+      {
+        translate([pcbX+stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappFrontLeft, stand))
+      {
+        translate([(pcbX+pcbLength)-stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappFrontRight, stand))
+      {
+        translate([(pcbX+pcbLength)-stand[0], (pcbY+pcbWidth)-stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+      }
+      if (isTrue(yappAllCorners, stand) || isTrue(yappBackRight, stand))
+      {
+        translate([pcbX+stand[0], (pcbY+pcbWidth)-stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+      }
+      if (!isTrue(yappAllCorners, stand) 
+            && !isTrue(yappBackLeft, stand) && !isTrue(yappFrontLeft, stand) 
+            && !isTrue(yappFrontRight, stand) && !isTrue(yappBackRight, stand))
+      {
+        translate([pcbX+stand[0], pcbY+stand[1], basePlaneThickness])
+          pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+      }
+    }
+    
   }
     
 } // pcbHolders()
 
+/**
+//===========================================================
+// Place the standoffs and through-PCB pins in the base Box
+module pcbHolders() 
+{        
+  //-- place pcb Standoff's
+  for ( stand = pcbStands )
+  {
+    //echo("pcbHolders:", pcbX=pcbX, pcbY=pcbY, pcbZ=pcbZ);
+      //-- [0]posx, [1]posy, [2]flangeHeight, [3]flangeDiam 
+      //--          , [4]{yappBoth|yappLidOnly|yappBaseOnly}
+      //--          , [5]{yappHole|YappPin}
+    posx=pcbX+stand[0];
+    posy=pcbY+stand[1];
+    flangeH=stand[2];
+    flangeD=stand[3];
+    if (!isTrue(yappLidOnly, stand) && isTrue(yappHole, stand))
+    {
+      translate([posx, posy, basePlaneThickness])
+        pcbStandoff("base", standoffHeight, flangeH, flangeD, yappHole, "green");
+    }
+    if (!isTrue(yappLidOnly, stand) && isTrue(yappPin, stand))
+    {
+      translate([posx, posy, basePlaneThickness])
+        pcbStandoff("base", standoffHeight, flangeH, flangeD, yappPin, "green");
+    }
+  }
+    
+} // pcbHolders()
+**/
 
+//===========================================================
+module pcbPushdowns() 
+{        
+  //-- place pcb Standoff-pushdown on the lid
+  for ( pushdown = pcbStands )
+  {
+    //echo("pcb_pushdowns:", pcbX=pcbX, pcbY=pcbY, pcbZ=pcbZ);
+    //-- [0]posx, [1]posy, [2]flangeHeight, [3]flangeDiam 
+    //--          , [4]{yappBoth|yappLidOnly|yappBaseOnly}
+    //--          , [5]{yappHole|YappPin}
+    //
+    //-- stands in lid are alway's holes!
+    posx=pcbX+pushdown[0];
+    posy=(pcbY+pushdown[1]);
+    flangeH=pushdown[2];
+    flangeD=pushdown[3];
+    standHeight=(baseWallHeight+lidWallHeight)
+                  -(standoffHeight+pcbThickness);
+//      if (!isTrue(yappBaseOnly, pushdown))
+//      {
+//        translate([posx, posy, pcbZlid*-1])
+//          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+//      }
+    if (!isTrue(yappBaseOnly, pushdown))
+    {
+      if (isTrue(yappAllCorners, pushdown) || isTrue(yappBackLeft, pushdown))
+      {
+        translate([pcbX+pushdown[0], pcbY+pushdown[1], pcbZlid*-1])
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+      }
+      if (isTrue(yappAllCorners, pushdown) || isTrue(yappFrontLeft, pushdown))
+      {
+        translate([(pcbX+pcbLength)-pushdown[0], pcbY+pushdown[1], pcbZlid*-1])
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+      }
+      if (isTrue(yappAllCorners, pushdown) || isTrue(yappFrontRight, pushdown))
+      {
+        translate([(pcbX+pcbLength)-pushdown[0], (pcbY+pcbWidth)-pushdown[1], pcbZlid*-1])
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+      }
+      if (isTrue(yappAllCorners, pushdown) || isTrue(yappBackRight, pushdown))
+      {
+        translate([pcbX+pushdown[0], (pcbY+pcbWidth)-pushdown[1], pcbZlid*-1])
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+      }
+      if (!isTrue(yappAllCorners, pushdown) 
+            && !isTrue(yappBackLeft, pushdown) && !isTrue(yappFrontLeft, pushdown) 
+            && !isTrue(yappFrontRight, pushdown) && !isTrue(yappBackRight, pushdown))
+      {
+        translate([pcbX+pushdown[0], pcbY+pushdown[1], pcbZlid*-1])
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
+      }
+
+    }
+
+  }
+    
+} // pcbPushdowns()
+
+/**
 //===========================================================
 module pcbPushdowns() 
 {        
@@ -1012,25 +1161,26 @@ module pcbPushdowns()
     for ( pushdown = pcbStands )
     {
       //echo("pcb_pushdowns:", pcbX=pcbX, pcbY=pcbY, pcbZ=pcbZ);
-      //-- [0]posx, [1]posy, [2]{yappBoth|yappLidOnly|yappBaseOnly}
-      //--          , [3]{yappHole|YappPin}
+      //-- [0]posx, [1]posy, [2]flangeHeight, [3]flangeDiam 
+      //--          , [4]{yappBoth|yappLidOnly|yappBaseOnly}
+      //--          , [5]{yappHole|YappPin}
       //
       //-- stands in lid are alway's holes!
       posx=pcbX+pushdown[0];
       posy=(pcbY+pushdown[1]);
-      height=(baseWallHeight+lidWallHeight)
+      flangeH=pushdown[2];
+      flangeD=pushdown[3];
+      standHeight=(baseWallHeight+lidWallHeight)
                     -(standoffHeight+pcbThickness);
-      //echo("pcb_pushdowns:", posx=posx, posy=posy);
-      if (pushdown[2] != yappBaseOnly)
+      if (!isTrue(yappBaseOnly, pushdown))
       {
-//        translate([posx, posy, lidPlaneThickness])
         translate([posx, posy, pcbZlid*-1])
-          pcbStandoff("yellow", height, yappHole, "lid");
+          pcbStandoff("lid", standHeight, flangeH, flangeD, yappHole, "yellow");
       }
     }
     
 } // pcbPushdowns()
-
+**/
 
 //===========================================================
 module cutoutsInXY(type)
@@ -1100,90 +1250,152 @@ module cutoutsInXY(type)
       //--- make screw holes for connectors
       if (type=="base")
       {
+        // (0) = posx
+        // (1) = posy
+        // (2) = screwDiameter
+        // (3) = screwHeadDiameter
+        // (4) = insertDiameter
+        // (5) = outsideDiameter
+        // (6) = supportHeight
+        // (7) = supportDiam
+        // (8) = { yappConnWithPCB }
+        // (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
         for(conn = connectors)
         {
-          //-- screwHead Diameter = screwDiameter * 2.2
-          translate([conn[0], conn[1], (basePlaneThickness)*-1])
+          if (!isTrue(yappConnWithPCB, conn))
           {
-            linear_extrude((basePlaneThickness*2)+1)
+            //-- screwHead Diameter = screwDiameter * 2.2
+            if(isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
             {
-              circle(
-                d = conn[2]*2.2,
-                $fn = 20);
+              translate([conn[0], conn[1], (basePlaneThickness)*-1])
+              {
+                linear_extrude((basePlaneThickness*2)+1)
+                {
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+                }
+              }
             }
-          }
-          if (conn[5]==yappAllCorners)
-          {
-            //echo("Alle corners hole!");
-            translate([shellLength-conn[0], conn[1], (basePlaneThickness-1)*-1])
-            { 
-              linear_extrude(basePlaneThickness+3)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+            {
+              translate([shellLength-conn[0], conn[1], (basePlaneThickness-1)*-1])
+              { 
+                linear_extrude(basePlaneThickness+3)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-            translate([shellLength-conn[0], shellWidth-conn[1], (basePlaneThickness-1)*-1])
-            { 
-              linear_extrude(basePlaneThickness+3)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+            {
+              translate([shellLength-conn[0], shellWidth-conn[1], (basePlaneThickness-1)*-1])
+              { 
+                linear_extrude(basePlaneThickness+3)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-            translate([conn[0], shellWidth-conn[1], (basePlaneThickness-1)*-1])
-            { 
-              color("green")
-              linear_extrude(basePlaneThickness+3)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+            {
+              translate([conn[0], shellWidth-conn[1], (basePlaneThickness-1)*-1])
+              { 
+                color("green")
+                linear_extrude(basePlaneThickness+3)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-          }
-        } //  for ..
+            if (!isTrue(yappAllCorners, conn) 
+                  && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+                  && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+            {
+              translate([conn[0], conn[1], (basePlaneThickness)*-1])
+              {
+                linear_extrude((basePlaneThickness*2)+1)
+                {
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+                }
+              }
+            }
 
-        for(conn = connectorsPCB)
-        {
-          //-- [0] x-pos
-          //-- [1] y-pos
-          //-- [2] screwDiameter
-          //-- [3] insertDiameter 
-          //-- [4] outsideDiameter
-          //-- [5] yappAllCorners
-          //-- screwHead Diameter = screwDiameter * 2.2
-          translate([pcbX + conn[0], pcbY + conn[1], (basePlaneThickness*-1)])
+          } //-- connect Shells
+
+          if (isTrue(yappConnWithPCB, conn))
           {
-            linear_extrude((basePlaneThickness*2)+1)
-              circle(
-                d = conn[2]*2.2,
-                $fn = 20);
-          }
-          if (conn[5]==yappAllCorners)
-          {
-            //echo("Alle corners hole!");
-            translate([pcbX+pcbLength-conn[0], pcbY+conn[1], (basePlaneThickness*-1)])
-            { 
-              linear_extrude((basePlaneThickness*2)+1)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            // (0) = posx
+            // (1) = posy
+            // (2) = screwDiameter
+            // (3) = screwHeadDiameter
+            // (4) = insertDiameter
+            // (5) = outsideDiameter
+            // (6) = supportHeight
+            // (7) = supportDiam
+            // (8) = { yappConnWithPCB }
+            // (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
+            //-- screwHead Diameter = screwDiameter * 2.2
+            if (isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
+            {
+              translate([pcbX + conn[0], pcbY + conn[1], (basePlaneThickness*-1)])
+              {
+                linear_extrude((basePlaneThickness*2)+1)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-            translate([pcbX+pcbLength-conn[0], pcbY+pcbWidth-conn[1], (basePlaneThickness*-1)])
-            { 
-              linear_extrude((basePlaneThickness*2)+1)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+            {
+              translate([pcbX+pcbLength-conn[0], pcbY+conn[1], (basePlaneThickness*-1)])
+              { 
+                linear_extrude((basePlaneThickness*2)+1)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-            translate([pcbX + conn[0], pcbY + pcbWidth-conn[1], (basePlaneThickness*-1)])
-            { 
-              color("green")
-              linear_extrude((basePlaneThickness*2)+1)
-                circle(
-                  d = conn[2]*2.2,
-                  $fn = 20);
+            if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+            {
+              translate([pcbX+pcbLength-conn[0], pcbY+pcbWidth-conn[1], (basePlaneThickness*-1)])
+              { 
+                linear_extrude((basePlaneThickness*2)+1)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
             }
-          }
-        } //  for ..
-      } // if lid  
+            if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+            {
+              translate([pcbX + conn[0], pcbY + pcbWidth-conn[1], (basePlaneThickness*-1)])
+              { 
+                color("green")
+                linear_extrude((basePlaneThickness*2)+1)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
+            }
+            if (!isTrue(yappAllCorners, conn) 
+                  && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+                  && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+            {
+              translate([pcbX + conn[0], pcbY + conn[1], (basePlaneThickness*-1)])
+              {
+                linear_extrude((basePlaneThickness*2)+1)
+                  circle(
+                    d = conn[2]*2.2,
+                    $fn = 20);
+              }
+            }
+
+          } // connWithPCB ..
+      } // for conn ..  
+      
+    } //-- base
 
 } //  cutoutsInXY(type)
 
@@ -1552,8 +1764,7 @@ module cutoutsGrill(type, planeTckns)
           }
           else
           {
-            //translate([0,0,-1.5]) // for testing
-                color("gray") cube([grillL, grillW, planeTckns+0.5]);
+             color("gray") cube([grillL, grillW, planeTckns+0.5]);
           }
           //-- subtract actual grill
           oneGrill2(xCenter, yCenter, grillW, grillL, slotW, slotS, oneStep, newSl, xOverhang, newW, newA);
@@ -1998,14 +2209,14 @@ module lidShell()
 
         
 //===========================================================
-module pcbStandoff(color, height, type, plane) 
+module pcbStandoff(plane, standHeight, flangeHeight, flangeDiam, type, color) 
 {
     module standoff(color)
     {
       color(color,1.0)
         cylinder(
           d = standoffDiameter,
-          h = height,
+          h = standHeight,
           center = false,
           $fn = 20);
       //-- flange --
@@ -2013,41 +2224,53 @@ module pcbStandoff(color, height, type, plane)
       {
         translate([0,0,-0.3]) 
         {
-            if (standoffHeight > standoffSupportHeight)
+            //17 if (standoffHeight > flangeHeight)
+            if (standHeight > flangeHeight)
             {
-                cylinder(h=standoffSupportHeight, 
-                         r1=(standoffDiameter/2)+standoffSupportDiameter, 
-                         r2=standoffDiameter/2);
+                cylinder(h=flangeHeight, 
+                         d1=flangeDiam, 
+                         d2=standoffDiameter);
             }
             else
             {
-                cylinder(h=standoffHeight, 
-                         r1=(standoffDiameter/2)+standoffSupportDiameter, 
-                         r2=standoffDiameter/2);
+                //17 cylinder(h=standoffHeight, 
+                cylinder(h=standHeight, 
+                         d1=flangeDiam, 
+                         d2=standoffDiameter);
             }
         }
       }
       if (plane == "lid")
       {
-        if (standoffHeight > standoffSupportHeight)
+        if (standHeight > flangeHeight)
         {
-          echo(standoffHeight=standoffHeight, " > ",standoffSupportHeight=standoffSupportHeight);
-          //translate([0,0,height-1.8])
-          translate([0,0,height-standoffSupportHeight-1.8])
+          //17 translate([0,0,standoffHeight-flangeHeight-1.8])
+          if (lidPlaneThickness <= 2)
           {
-            cylinder(h=standoffSupportHeight, 
-                     r1=standoffDiameter/2, 
-                     r2=(standoffDiameter/2)+standoffSupportDiameter);
+            translate([0,0,standHeight-3.0])
+            {
+              cylinder(h=flangeHeight, 
+                       d1=standoffDiameter, 
+                       d2=flangeDiam);
+            }
+          }
+          else
+          {
+            translate([0,0,standHeight-(lidPlaneThickness/2)])
+            {
+              cylinder(h=flangeHeight, 
+                       d1=standoffDiameter, 
+                       d2=flangeDiam);
+            }
           }
         }
         else
         {
-          echo(standoffHeight=standoffHeight, " <= ",standoffSupportHeight=standoffSupportHeight);
-          translate([0,0,height-1.8])
+          translate([0,0,flangeHeight-1.8])
           {
             cylinder(h=standoffHeight, 
-                     r1=standoffDiameter/2, 
-                     r2=(standoffDiameter/2)+standoffSupportDiameter);
+                     d1=standoffDiameter/2, 
+                     d2=flangeDiam);
           }
         }
       }
@@ -2069,7 +2292,7 @@ module pcbStandoff(color, height, type, plane)
       color(color, 1.0)
         cylinder(
           d = pinDiameter+.2+pinHoleSlack,
-          h = (pcbThickness*2)+height+0.02,
+          h = (pcbThickness*2)+standHeight+0.02,
           center = false,
           $fn = 20);
     } // standhole()
@@ -2092,12 +2315,131 @@ module pcbStandoff(color, height, type, plane)
 
         
 //===========================================================
+//-- d1 = conn[2], screw Diameter
+//-- d2 = conn[3], screwHead Diameter
+//-- d3 = conn[4], insert Diameter
+//-- d4 = outD, outside diameter
+//-- fH = conn[6], flangeHeight
+//-- fD = conn[7], flangeDiameter
+//-- isPcb = do we need to substract pcbHeight because we are holding the PCB?
+module connectorNew(plane, isPcb, x, y, conn, outD) 
+{
+  d1 = conn[2];
+  d2 = conn[3];
+  d3 = conn[4];
+  d4 = outD;
+  fH = conn[6];
+  fD = conn[7];
+  function flangeHeight(baseH, flangeH) = ((flangeH) > (baseH-1)) ? (baseH-1) : flangeH;
+
+  if (plane=="base")
+  {
+    translate([x, y, 0])
+    {
+      hb = isPcb ? (standoffHeight+basePlaneThickness) : (baseWallHeight+basePlaneThickness);
+      fHm = flangeHeight(hb, fH);
+   
+      difference()
+      {
+        union()
+        {
+          //-- outerCylinder --
+          linear_extrude(hb)
+            circle(
+                d = d4, //-- outside Diam
+                $fn = 20);
+          //-- flange --
+          if (hb < fHm)
+          {
+            translate([0,0,(basePlaneThickness-0.5)]) 
+            {
+              cylinder(h=2, d1=fD, d2=d4);
+            }
+          }
+          else  
+          {
+            translate([0,0,(basePlaneThickness-0.5)]) 
+            {
+              cylinder(h=fHm, d1=fD, d2=d4);
+            }
+          }
+        }  
+        
+        //-- screw head Hole --
+        //linear_extrude(hb-(d2*0))
+        //  circle(
+        //        d = d2,
+        //        $fn = 20);
+        translate([0,0,-2]) cylinder(h=d2*1, d=d2, center=true);
+              
+        //-- screwHole --
+        //linear_extrude((hb+d1)*1)
+        //  circle(
+        //        d = d1*1.2,
+        //        $fn = 20);
+        translate([0,0,2])  cylinder(h=hb*2, d=d1, center=true);
+        
+      } //  difference
+    } //  translate
+  } //  if base
+  
+  if (plane=="lid")
+  {
+    // calculate the Z-position for the lid connector.
+    // for a PCB connector, start the connector on top of the PCB to push it down.
+    // calculation identical to the one used in pcbPushdowns()
+
+    zTemp      = isPcb ? ((pcbZlid)*-1) : ((lidWallHeight+lidPlaneThickness)*-1);
+    heightTemp = isPcb ? ((baseWallHeight+lidWallHeight) - (standoffHeight+pcbThickness)) : lidWallHeight;
+    
+    translate([x, y, zTemp])
+    {
+      ht=(heightTemp);
+
+      difference()
+      {
+        union()
+        {
+          //-- outside Diameter --
+          linear_extrude(ht)
+              circle(
+                d = d4,
+                $fn = 20);
+          //-- flange --
+          if (ht < fH)
+                translate([0,0,ht-(lidPlaneThickness/2)]) 
+                {
+                  cylinder(h=lidPlaneThickness, d1=d4, d2=fD);
+                }
+          else  translate([0,0,(ht-fH)+(lidPlaneThickness/2)]) 
+                {
+                  cylinder(h=fH, d1=d4, d2=fD);
+                }
+
+        }  
+        //-- insert --
+        linear_extrude(ht)
+          circle(
+                d = d3, 
+                $fn = 20);
+
+      } //  difference
+    } // translate
+    
+  } //  if lid
+        
+} // connectorNew()
+
+        
+//===========================================================
 //-- isPcb = do we need to substract pcbHeight because we are holding the PCB?
 //-- d1 = screw Diameter
 //-- d2 = insert Diameter
 //-- d3 = outside diameter
 module connector(plane, isPcb, x, y, d1, d2, d3) 
 {
+  //echo("TEST:", plane=plane, isPcb=isPcb, d1=d1, d2=d2, d3=d3);
+  
   if (plane=="base")
   {
     translate([x, y, 0])
@@ -2117,14 +2459,14 @@ module connector(plane, isPcb, x, y, d1, d2, d3)
                 $fn = 20);
           //-- flange --
           //translate([0,0,(basePlaneThickness-0.5)]) cylinder(h=2, r1=(d3/2)+3, r2=d3/2);
-          if (hb < standoffSupportHeight)
+          if (hb < standoffFlangeHeight)
                 translate([0,0,(basePlaneThickness-0.5)]) 
                 {
-                  cylinder(h=2, r1=(d3/2)+standoffSupportDiameter, r2=d3/2);
+                  cylinder(h=2, r1=(d3/2)+standoffFlangeDiameter, r2=d3/2);
                 }
           else  translate([0,0,(basePlaneThickness-0.5)]) 
                 {
-                  cylinder(h=standoffSupportHeight, r1=(d3/2)+standoffSupportDiameter, r2=d3/2);
+                  cylinder(h=standoffFlangeHeight, r1=(d3/2)+standoffFlangeDiameter, r2=d3/2);
                 }
         }  
         
@@ -2152,7 +2494,8 @@ module connector(plane, isPcb, x, y, d1, d2, d3)
 
     zTemp      = isPcb ? ((pcbZlid)*-1) : ((lidWallHeight+lidPlaneThickness)*-1);
     heightTemp = isPcb ? ((baseWallHeight+lidWallHeight) - (standoffHeight+pcbThickness)) : lidWallHeight;
-
+    
+    //echo("TEST:", plane=plane, zTemp=zTemp);
     translate([x, y, zTemp])
     {
       ht=(heightTemp);
@@ -2167,22 +2510,21 @@ module connector(plane, isPcb, x, y, d1, d2, d3)
                 d = d3,
                 $fn = 20);
           //-- flange --
-          //translate([0,0,(ht*1)-1.9]) cylinder(h=2, r1=(d3/2), r2=(d3/2)+3);
-          if (ht < standoffSupportHeight)
-                translate([0,0,(ht*1)-1.9]) 
+          if (ht < standoffFlangeHeight)
+                translate([0,0,ht-(lidPlaneThickness/2)]) 
                 {
-                  cylinder(h=2, r1=(d3/2), r2=(d3/2)+standoffSupportDiameter);
+                  cylinder(h=lidPlaneThickness, r1=(d3/2), r2=(d3/2)+standoffFlangeDiameter);
                 }
-          else  translate([0,0,(ht-standoffSupportHeight)-1.9]) 
+          else  translate([0,0,(ht-standoffFlangeHeight)+(lidPlaneThickness/2)]) 
                 {
-                  cylinder(h=standoffSupportHeight, r1=(d3/2), r2=(d3/2)+standoffSupportDiameter);
+                  cylinder(h=standoffFlangeHeight, r1=(d3/2), r2=(d3/2)+standoffFlangeDiameter);
                 }
 
         }  
         //-- insert --
         linear_extrude(ht)
           circle(
-                d = d2,
+                d = d2, 
                 $fn = 20);
 
       } //  difference
@@ -2199,92 +2541,151 @@ module shellConnectors(plane)
     
   for ( conn = connectors )
   {
-    //-- [0] x-pos
-    //-- [1] y-pos
-    //-- [2] screwDiameter
-    //-- [3] insertDiameter, 
-    //-- [4] outsideDiameter
+    // (0) = posx
+    // (1) = posy
+    // (2) = screwDiameter
+    // (3) = screwHeadDiameter
+    // (4) = insertDiameter
+    // (5) = outsideDiameter
+    // (6) = flangeHeight
+    // (7) = flangeDiam
+    // (8) = { yappConnWithPCB }
+    // (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
+
     
-    //-23/09-outD = minOutside(conn[4], conn[3]);
-    outD = minOutside(conn[3], conn[4]);
-    //echo("[connector]minOutside:", insert=conn[3], outside=conn[4], outD=outD);
-    
-    if (plane=="base")
+    outD = minOutside(conn[4], conn[5]);
+
+    if (!isTrue(yappConnWithPCB, conn))
     {
-      //echo("baseConnector:", conn, outD=outD);
-  //--connector(plane, x,       y,       scrwD,   rcvrD,   outD) --  
-      connector(plane, false, conn[0], conn[1], conn[2], conn[3], outD);
-      if (conn[5]==yappAllCorners)
+      if (plane=="base")
       {
-        //echo("allCorners:");
-        connector(plane, false, shellLength-conn[0], conn[1], 
-                          conn[2], conn[3], outD);
-        connector(plane, false, shellLength-conn[0], shellWidth-conn[1], 
-                          conn[2], conn[3], outD);
-        connector(plane, false, conn[0], shellWidth-conn[1], 
-                          conn[2], conn[3], outD);
-      }
-    }
-    
-    if (plane=="lid")
-    {
-      //echo("lidConnector:", conn);
-  //--connector(lid    pcb?,  x,       y,       scrwD,   rcvrD,   outD)  
-      connector(plane, false, conn[0], conn[1], conn[2], conn[3], outD);
-      if (conn[5]==yappAllCorners)
+        //echo("baseConnector:", conn, outD=outD);
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
+        {
+          connectorNew(plane, false, (conn[0]), (conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+        {
+          connectorNew(plane, false, shellLength-conn[0], conn[1], conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+        {
+          connectorNew(plane, false, shellLength-conn[0], shellWidth-conn[1], conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, false, conn[0], shellWidth-conn[1], conn, outD);
+        }
+        if (!isTrue(yappAllCorners, conn) 
+              && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+              && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, false, conn[0], conn[1], conn, outD);
+        }
+
+      } //-- Base - BaseLid
+      
+      if (plane=="lid")
       {
-        //echo("allCorners:");
-        connector(plane, false, shellLength-conn[0], conn[1],            conn[2], conn[3], outD);
-        connector(plane, false, shellLength-conn[0], shellWidth-conn[1], conn[2], conn[3], outD);
-        connector(plane, false, conn[0], shellWidth-conn[1],             conn[2], conn[3], outD);
-      }
-    }
-    
-  } // for ..
+        //echo("lidConnector:", conn);
+      //--connector(lid    pcb?,  x,       y,       scrwD,   rcvrD,   outD)  
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
+        {
+          connectorNew(plane, false, conn[0], conn[1], conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+        {
+          connectorNew(plane, false, shellLength-conn[0], conn[1], conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+        {
+          connectorNew(plane, false, shellLength-conn[0], shellWidth-conn[1], conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, false, conn[0], shellWidth-conn[1], conn, outD);
+        }
+        if (!isTrue(yappAllCorners, conn) 
+              && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+              && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, false, conn[0], conn[1], conn, outD);
+        }
+      } //-- Lid - BaseLid
+    } //-- conn Base & Lid
   
-  for ( conn = connectorsPCB  )
-  {
-    //-- [0] x-pos
-    //-- [1] y-pos
-    //-- [2] screwDiameter
-    //-- [3] insertDiameter 
-    //-- [4] outsideDiameter
-    //-- [5] yappAllCorners
-    //-23/09-outD = minOutside(conn[4], conn[3]);
-    outD = minOutside(conn[3], conn[4]);
-    echo("[connectorPCB]minOutside:", insert=conn[3],outside=conn[4], outD=outD);
-    
-    if (plane=="base")
+    if (isTrue(yappConnWithPCB, conn))
     {
-      //echo("baseConnector:", conn, outD=outD);
-      //-connector(plane, -b-    x,              y,             scrwD,   rcvrD,   outD) --  
-      //-23-09-connector(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn[2], conn[3], outD);
-      connector(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn[2], outD, outD);
-      if (conn[5]==yappAllCorners)
+      // (0) = posx
+      // (1) = posy
+      // (2) = screwDiameter
+      // (3) = screwHeadDiameter
+      // (4) = insertDiameter
+      // (5) = outsideDiameter
+      // (6) = flangeHeight
+      // (7) = flangeDiam
+      // (8) = { yappConnWithPCB }
+      // (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
+  
+      outD = minOutside(conn[4], conn[5]);
+      //echo("[connectorPCB]minOutside:", insert=conn[3],outside=conn[4], outD=outD);
+      
+      if (plane=="base")
       {
-        //echo("allCorners:");
-     //-connector(plane, -b-    x,                        y,                      scrwD,   rcvrD,   outD) --  
-        connector(plane, true, (pcbX+conn[0]),           (pcbY+pcbWidth-conn[1]), conn[2], conn[3], outD);
-        //connector(plane, true, (pcbX+conn[0]),           (pcbY+conn[1]),          conn[2], conn[3], outD);
-        connector(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+conn[1]),          conn[2], conn[3], outD);
-        connector(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+pcbWidth-conn[1]), conn[2], conn[3], outD);
-      }
-    }
-    
-    if (plane=="lid")
-    {
-      //echo("lidConnector:", conn);
-  //--connector(lid    pcb?,  x,              y,             scrwD,   rcvrD,   outD)  
-      connector(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn[2], conn[3], outD);
-      if (conn[5]==yappAllCorners)
+        echo("baseConnector:", conn, outD=outD);
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+        {
+          connectorNew(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+pcbWidth-conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+pcbWidth-conn[1]), conn, outD);
+        }
+        if (!isTrue(yappAllCorners, conn) 
+              && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+              && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+      } //-- Base WithPCB ..
+      
+      if (plane=="lid")
       {
-        //echo("allCorners:");
-        connector(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+conn[1]),          conn[2], conn[3], outD);
-        connector(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+pcbWidth-conn[1]), conn[2], conn[3], outD);
-        connector(plane, true, (pcbX+conn[0]),           (pcbY+pcbWidth-conn[1]), conn[2], conn[3], outD);
-      }
+        //echo("lidConnector:", conn);
+    //--connector(lid    pcb?,  x,              y,             scrwD,   rcvrD,   outD)  
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackLeft, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontLeft, conn))
+        {
+          connectorNew(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappFrontRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+pcbLength-conn[0]), (pcbY+pcbWidth-conn[1]), conn, outD);
+        }
+        if (isTrue(yappAllCorners, conn) || isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+pcbWidth-conn[1]), conn, outD);
+        }
+        if (!isTrue(yappAllCorners, conn) 
+              && !isTrue(yappBackLeft, conn)   && !isTrue(yappFrontLeft, conn)
+              && !isTrue(yappFrontRight, conn) && !isTrue(yappBackRight, conn))
+        {
+          connectorNew(plane, true, (pcbX+conn[0]), (pcbY+conn[1]), conn, outD);
+        }
+      } //-- Lid WithPCB..
     }
-    
+      
   } // for ..
   
 

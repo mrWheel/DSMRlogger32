@@ -7,6 +7,13 @@
 ** 
 ** tested with: Arduino IDE version 1.8.19
 **              ATTinyCore 1.5.2 (By Spence Kondo)
+*              
+** First: Burn Bootloader to set fuses
+** 
+** AVRfuses: Serial programdownloading (SPI) enabled
+** AVRfuses: Brown-out Detector trigger level: VCC=1.8 V
+** AVRfuses: Select Clock source: Int. RC Osc. 8MHz; Start-up time PWRDWN/RESET: 6 CK/1
+** Low 0xE2, High 0xDE, Extended 0xFF
 ** 
 ** Board              : "ATtiny25/45/85 (no bootloader)"
 ** Chip               : "ATtiny85"

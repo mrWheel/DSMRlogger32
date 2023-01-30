@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMRlogger32 v5.x PCB
 //
-//  Version 1.0 (13-02-2023)
+//  Version 1.0 (30-02-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -11,7 +11,7 @@
 
 //-- these parms need to be declared before including the YAPPgenerator
 //
-//-- these dimensions are for a 1.3" OLED display
+/*/- these dimensions are for a 1.3" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
 oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
@@ -24,13 +24,38 @@ oledScreenXe        = 26;       //       |_______________|            |
                                 //       |               |            |
                                 //       +---------------+            v
                                 //       <--- Width ----->
+
+*/
+
+//-- these dimensions are for a 0.9" OLED display
+//-- oled dimensions and Header position
+//                              //               V-------- HeaderY
+oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
+oledHeaderY         = 40;       //       |     ==o==     | HeaderX    ^
+oledPcbWidth        = 28;       //       +---------------+ ScreenXs   |
+oledPcbHeight       = 19;       //       |               |            |
+oledScreenXs        =  3;       //       |               |            > Height
+oledScreenXe        = 16;       //       |_______________|            |
+                                //       +---------------+ ScreenXe   |
+                                //       |               |            |
+                                //       +---------------+            v
+                                //       <--- Width ----->
+
+
+
 oledScreenWidth  = oledPcbWidth;
 oledScreenHeight = oledScreenXe - oledScreenXs;
 oledScreenX      = oledHeaderX + oledScreenXs;
 oledScreenY      = oledHeaderY - (oledScreenWidth/2);
 
+insertDiam  = 3.8;
+screwDiam   = 2.5;
+holeSlack   = 0.35;
+insertDiamS = insertDiam + holeSlack;
+screwDiamS  = screwDiam + holeSlack;
 
-include <./YAPP_Box/library/YAPPgenerator_v16.scad>
+
+include <./YAPP_Box/library/YAPPgenerator_v17.scad>
 
 include <./YAPP_Box/library/roundedCubes.scad>
 
@@ -136,8 +161,10 @@ inspectY            = 0;  // 0=none, >0 from left, <0 from right
 //-- pcb_standoffs  -- origin is pcb[0,0,0]
 // (0) = posx
 // (1) = posy
-// (2) = { yappBoth | yappLidOnly | yappBaseOnly }
-// (3) = { yappHole, yappPin }
+// (2) = flangeHeight
+// (3) = flangeDiam
+// (4) = { yappBoth | yappLidOnly | yappBaseOnly }
+// (5) = { yappHole, YappPin }
 pcbStands = [
             ];     
 
@@ -150,9 +177,9 @@ pcbStands = [
 // (5) = { yappRectangle | yappCircle }
 // (6) = { yappCenter }
 cutoutsLid =  [
-      [14, 6,  8, 8, 0, yappRectangle, yappCenter]      // Reset Button
+      [14, 6,  6.5, 6.5, 0, yappCircle, yappCenter]     // Reset Button
      ,[41, 6,  8, 8, 0, yappRectangle, yappCenter]      // Flash Button
-     ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
+//     ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
      ,[4, 18, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 1
      ,[4, 28, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 2
      ,[4, 40, 6, 6, 0, yappCircle]                      // NeoPixel 3
@@ -182,7 +209,7 @@ cutoutsBase =   [];
 // (8) = {polygon points}}
 
 cutoutsGrill = [
-                 [3, 15, 20, 30, 2, 3,  45, "base"]
+                 [22, 30, 20, 30, 2, 3,  45, "base"]
                ];
               
 //-- front plane  -- origin is pcb[0,0,0]
@@ -196,7 +223,7 @@ cutoutsGrill = [
 cutoutsFront =  [
                     [40.5, -0.5, 14, 17, 0, yappRectangle]  // RJ11
                   , [56.5, -0.5, 14, 17, 0, yappRectangle]  // RJ11
-                  , [24.5,  6,   11, 11, 0, yappCircle]     // PWR Jack
+                  , [24.5,  6,   12, 12, 0, yappCircle]     // PWR Jack
 
                 ];
 
@@ -233,27 +260,26 @@ cutoutsLeft =   [
 cutoutsRight =  [
                 ];
 
-//-- connectors -- origen = box[x0,y0]
+//-- connectors 
+//-- yappConnShells : origen = box[0,0,0]
+//-- yappConnWithPCB: origen = pcb[0,0,0]
 // (0) = posx
 // (1) = posy
 // (2) = screwDiameter
-// (3) = insertDiameter
-// (4) = outsideDiameter
-// (5) = { yappAllCorners }
-connectors   =  [
-                ];
+// (3) = screwHeadDiameter
+// (4) = insertDiameter
+// (5) = outsideDiameter
+// (6) = flangeHeight
+// (7) = flangeDiam
+// (8) = { yappConnShells | yappConnWithPCB }
+// (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
+connectors   = [
+                 [ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 6, 4, 12, yappConnWithPCB
+                                              , yappBackLeft, yappFrontLeft, yappBackRight]
+                ,[ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 6, 3, 9, yappConnWithPCB
+                                                                          , yappFrontRight]
+               ];
 
-//-- connectorsPCB -- origin = pcb[0,0,0]
-// (0) = posx
-// (1) = posy
-// (2) = screwDiameter
-// (3) = insertDiameter
-// (4) = outsideDiameter
-// (5) = { yappAllCorners }
-connectorsPCB   = [
-                    //[ 5,  5, 2.6, 3.4, 2, yappAllCorners]
-                    [ 5,  5, 2.6, 3.4, 2, yappAllCorners]
-                  ];
 
 //-- base mounts -- origen = box[x0,y0]
 // (0) = posx | posy
@@ -273,9 +299,9 @@ baseMounts   = [
 // (2..5) = yappLeft / yappRight / yappFront / yappBack (one or more)
 // (n) = { yappSymmetric }
 snapJoins   =  [
-                  [37, 3, yappFront]
-                , [(pcbLength/2)+2, 4, yappLeft, yappRight]
-                , [(pcbWidth/2)+2, 4, yappBack]
+                //  [37, 3, yappFront]
+                 [(pcbLength/2)+2, 4, yappLeft, yappRight]
+                //, [(pcbWidth/2)+2, 4, yappBack]
                ];
                
 //-- origin of labels is box [0,0,0]
@@ -360,58 +386,100 @@ module insideOledScreen(topPCB)
 
 
 //----------------------------------------------------------------------------
-module insideSwitch(x, y, s, d, topPcb)
+module insideSwitch(isReset, x, y, s, d, topPcb)
 {
-                      //          <-outside-->
-                      //           >-------< -- (s)
-  rX      = pcbX+x;   //        -+-+       +-+--  ^
-  rY      = pcbY+y;   //         | |       | |    | bH
-  inside  = 3.5;      //         |  +-+  +-+ |    v
-  outside = s+2;      //         +--+ | | +--+
-  bH      = 2+d;        //        ----+-+ +-+----
-  wall    = 2.0;
+                            //          <-outside-->
+                            //           >-------< -- (s)
+  rX            = pcbX+x;   //        -+-+       +-+--  ^
+  rY            = pcbY+y;   //         | |       | |    | bH
+  inside        = 4.5;      //         |  +-+  +-+ |    v
+  outsideFlash  = s+2;      //         +--+ | | +--+
+  outsideReset  = s+2;      //        ----+-+ +-+----
+  bH            = 2+d;
+  wall          = 3.0;
+  //outside = s+2;
   echo(pcbX=pcbX,x=x,rX=rX,pcbY=pcbY,y=y,rY=rY);
 
   translate([rX, rY, (topPcb*-1)-0.5])
   {
-    difference()
-    {
-      union()
+      if (isReset)
       {
-        translate([outside/-2,outside/-2,topPcb-bH]) 
+        difference()
         {
-          color("red") 
-          roundedCube([outside,outside, bH], false, radius = 1.0, apply_to = "");
-        }
-        translate([0, 0, 3])
+          union()
+          {
+            translate([outsideReset/-2,outsideReset/-2,topPcb-bH]) 
+            {
+              color("red") 
+                translate([outsideReset/2,outsideReset/2,0])
+                  cylinder(h=bH, d=outsideReset);
+            }
+            translate([0, 0, 4])
+            {
+              color("gray") cylinder(d=inside+wall, h=(topPcb-5));
+            }
+          } //-- union()
+          
+          translate([(s/-2),(s/-2),topPcb-d])
+          {
+            translate([s/2, s/2, 0])
+              //color("blue") cylinder(h=5, d=s/1.35);
+              color("blue") cylinder(h=5, d=6.5);
+          }
+          translate([0, 0, 15/2]) 
+          {
+            color("orange") cylinder(d=inside, h=15, center=true);
+          }
+        } // difference()
+      }
+      else
+      {
+        difference()
         {
-          color("gray") cylinder(d=inside+wall, h=(topPcb-5));
-        }
-      }
-    //translate([(s/-2),(s/-2),topPcb-2.5])
-      translate([(s/-2),(s/-2),topPcb-d])
-      {
-       color("blue") cube([s,s,5]);
-      }
-      translate([0, 0, 15/2]) 
-      {
-        color("orange") cylinder(d=inside, h=15, center=true);
-      }
-    }
-  }
-
+          union()
+          {
+            translate([outsideFlash/-2,outsideFlash/-2,topPcb-bH]) 
+            {
+              color("red") 
+                roundedCube([outsideFlash,outsideFlash, bH], false, radius = 1.0, apply_to = "");
+            }
+            translate([0, 0, 4])
+            {
+              color("gray") cylinder(d=inside+wall, h=(topPcb-5));
+            }
+          } //-- union()
+          
+          translate([(s/-2),(s/-2),topPcb-d])
+          {
+            color("blue") cube([s,s,5]);
+          }
+          translate([0, 0, 15/2]) 
+          {
+            color("orange") cylinder(d=inside, h=15, center=true);
+          }
+        } //-- difference()
+    } //--  if .. else
+  } //-- translate()
+  
 } //  insideSwitch()
 
 
 //----------------------------------------------------------------------------
-module insideNeoTube(x, y, topPcb)
+module insideNeoTube(isWatchdog, x, y, topPcb)
 {
   translate([x, y, (topPcb/-2)])
   {
     difference()
     {
       color("red") cube([9,9,topPcb], true);
-      translate([0,0,-0.6]) color("blue") cube([6,6,topPcb], true);
+      if (isWatchdog)
+      {
+        translate([0,0,-0.6]) color("blue") cylinder(h=topPcb, d=6, center=true);
+      }
+      else
+      {
+        translate([0,0,-0.6]) color("blue") cube([6,6,topPcb], true);
+      }
     }
   }
 
@@ -425,6 +493,12 @@ module baseHookOutside()
 
 module baseHookInside()
 {
+  //-- strengthening between RJ12's --
+  //translate([shellLength-24,58,0.5])
+  //  rotate([180,-90,90])
+  //    linear_extrude(1.8)
+  //      polygon(points=[[0,0],[0,23],[9,23]]);
+
 } //  baseHookInside()
 
 
@@ -436,29 +510,35 @@ module lidHookOutside()
 
 module lidHookInside()
 {
+  //-- strengthening between RJ12's --
+  //translate([shellLength-24,59.8,0])
+  //  rotate([90,90,0])
+  //    linear_extrude(1.8)
+  //      polygon(points=[[0,0],[0,23],[9,23]]);
+      
   topPCB = (baseWallHeight+lidWallHeight)-(standoffHeight+2);
-  //-- reset button
-  //-- [14,  6,  8, 8, 0, yappRectangle, yappCenter] 
+  //-- [14,  6,  8, 8, 0, yappRectangle, yappCenter]  //  [Reset] button
   // (0) = posx
   // (1) = posy
   // (2) = width
   // (3) = z-ax
-  insideSwitch(14, 6, 8, 4.5, topPCB);
+  //-- [Reset] button
+  insideSwitch(true, 14, 6, 8, 4.5, topPCB);
   
-  //-- Flash Button
-  //-- [41,  6,  8, 8, 0, yappRectangle, yappCenter]     // Flash Button
-  insideSwitch(41, 6, 8, 2.5, topPCB);
+  //-- [Flash] Button
+  //-- [41,  6,  8, 8, 0, yappRectangle, yappCenter]    // [Flash] Button
+  insideSwitch(false, 41, 6, 8, 2.5, topPCB);
 
   //-- NeoPixel
   //  [x=4, y=18]
-  insideNeoTube(pcbX+4, pcbY+18, topPCB);
+  insideNeoTube(false, pcbX+4, pcbY+18, topPCB);
   //-- NeoPixel
   //  [x=4, y=28]
-  insideNeoTube(pcbX+4, pcbY+28, topPCB);
+  insideNeoTube(false, pcbX+4, pcbY+28, topPCB);
 
-  //-- NeoPixel
+  //-- NeoPixel [WatchDog]
   //  [x=4, y=40]
-  insideNeoTube(pcbX+4, pcbY+40, topPCB);
+  insideNeoTube(true, pcbX+4, pcbY+40, topPCB);
   //-- OLED screen
   if (printInsideOLED) insideOledScreen(topPCB);
   
@@ -469,27 +549,28 @@ module lidHookInside()
 if (printSwitchExtenders)
 {
   extH        = -1.5;
-  poleDiam    = 3;
-  poleHeight  = 16;
+  poleDiam    = 4;
+  poleHeight1 = 16; //16;
+  poleHeight2 = 14; //15!;
   feetDiam    = 7.5;
-  feetHeight  = 1;
+  feetHeight  = 2;  //1;
 
   zeroExtend=shellHeight - (standoffHeight + basePlaneThickness + pcbThickness);
   echo(zeroExtend=zeroExtend);
      
-  //-- switch extender
-  translate([-10,175,0])
+  //-- switch extender [Flash] button
+  translate([-10,110,0])
   {
-    translate([0, 0, (poleHeight/2)]) 
-          cylinder(d=poleDiam,h=(poleHeight-feetHeight), center=true);  // above shell
+    translate([0, 0, (poleHeight1/2)]) 
+          cylinder(d=poleDiam,h=(poleHeight1-feetHeight), center=true);  // above shell
     translate([0, 0, (feetHeight/2)]) 
           cylinder(d=feetDiam, h=feetHeight, center=true);
   }
-  //-- switch extender
-  translate([-10,195,0])
+  //-- switch extender [Reset] button
+  translate([-10,180,0])
   {
-    translate([0, 0, (poleHeight/2)]) 
-          cylinder(d=poleDiam,h=(poleHeight-feetHeight), center=true);  // above shell
+    translate([0, 0, (poleHeight2/2)]) 
+          cylinder(d=poleDiam,h=(poleHeight2-feetHeight), center=true);  // above shell
     translate([0, 0, (feetHeight/2)]) 
           cylinder(d=feetDiam, h=feetHeight, center=true);
   }
@@ -497,37 +578,17 @@ if (printSwitchExtenders)
 } // .. printSwitchExtenders?
 
 
-//-- oled Stand -----------
-if (printOledStand)
-{
-    zeroExtend=shellHeight - (standoffHeight + basePlaneThickness + pcbThickness + 8);
-     
-    //-- oled Stand
-    translate([-15,125,0])
-    {
-      translate([1,0,0]) cube([2,36, 2]);
-      translate([-1,5,0])     color("green")  cube([11,3,2]); // stand
-      translate([-1,0,0])     color("blue")   cube([3,8,2]);  // 
-      translate([-2,2,0])     color("black")  cube([3,2,2]);  // centreer nop
-      translate([-1,28,0])    color("green")  cube([11,3,2]); // stand
-      translate([-1,33-5,0])  color("blue")   cube([3,8,2]);  //
-      translate([-2,32,0])    color("red")    cube([3,2,2]);  // centreer nop
-      //translate([-3,3,0]) cube([1,30,1]);
-    }
-    
-} // .. printOledStand?
-
 //-- switch Cap -----------
 if (printSwitchCap)
-{                         //      <------> ---- capRib
+{                         //      <------> ---- capRib / capDiam
   capRib      = 7.4;      //      +-+  +-+ ----------------------
-  capHeight   = 4;        //      | |__| |                ^
-  stingDiam   = 3.2;      //      |      | ^              |-- capHeight
-  topHeight   = 1;        //      |      | +-- topHeight  v 
-                          //      +------+ v --------------------
-                          //        >--<------ stingRib
-    //--- cap 1 ---
-    translate([-15,110,0])
+  capDiam     = 5.8;      //      | |__| |                ^
+                          //      |      | ^              |-- capHeight
+  capHeight   = 4;        //      |      | +-- topHeight  v 
+  stingDiam   = 4.2;      //      +------+ v --------------------
+  topHeight   = 1;        //        >--<------ stingRib
+    //--- cap 1 [Flash] ---
+    translate([-20,110,0])
     {
       difference()
       {
@@ -538,19 +599,45 @@ if (printSwitchCap)
       }
     }
 
-    //--- cap 2 ---
-    translate([-15,95,0])
+    //--- cap 2 [Reset] ---
+    translate([-20,180,0])
     {
       difference()
       {
         translate([0,0,(capHeight/2)]) color("red")
-            roundedCube([capRib, capRib, capHeight], true, radius = 1.0, apply_to = "all");
+          //cylinder(h=capHeight, d=capDiam, center=true);
+            cylinder(h=capHeight, d1=capDiam-0.5, d2=capDiam, center=true);
         translate([0, 0, (capHeight/2)+topHeight]) color("blue")
             cylinder(d=stingDiam, h=capHeight, center=true);
       }
     }
     
 } // .. printSwitchCap?
+
+
+//-- oled Stand -----------
+if (printOledStand)
+{
+    zeroExtend=shellHeight - (standoffHeight + basePlaneThickness + pcbThickness + 8);
+    //-- oledPcbWidth = 37
+    //-- oled Stand
+    translate([-15,125,0])
+    {
+      //translate([1,0,0]) cube([2,36, 2]);
+      translate([0,0,0])                     cube([2,oledPcbWidth, 2]);  // main balk
+      translate([0,5,0])                color("green")  cube([11,3,2]); // stand
+      //translate([0,29,0])    color("green")  cube([11,3,2]); // stand
+      translate([0,oledPcbWidth-8,0])   color("green")  cube([11,3,2]); // stand
+      
+      translate([0,0,0])                color("blue")   cube([3,8,2]);  // bigger
+      translate([0,oledPcbWidth-8,0])   color("blue")   cube([3,8,2]);  // bigger
+      
+      translate([-1,2,0])               color("black")  cube([3,2,2]);  // centreer nop
+      //translate([-1,33,0])    color("red")    cube([3,2,2]);  // centreer nop
+      translate([-1,oledPcbWidth0-4,0]) color("red")    cube([3,2,2]);  // centreer nop
+    }
+    
+} // .. printOledStand?
 
 
 //---- This is where the magic happens ----

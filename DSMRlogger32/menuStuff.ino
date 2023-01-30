@@ -93,7 +93,7 @@ void displayBoardInfo()
   Debug( ESP.getFlashChipSize() );
   //esp32 Debug("]\r\n   Chip Real Size (kB) [");
   //esp32 Debug( ESP.getFlashChipRealSize() / 1024 );
-#ifdef SPIFFS
+#ifdef _SPIFFS
   Debug("]\r\n         SPIFFS Size (kB) [");
 #else
   Debug("]\r\n       LittleFS Size (kB) [");

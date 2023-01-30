@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.4 (14-01-2023)"
+#define _FW_VERSION "v5.0.4 (23-01-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -266,7 +266,7 @@ void setup()
   {
     oled_Init();
     oled_Clear();  // clear the screen so we can paint the menu.
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     int8_t sPos = String(_FW_VERSION).indexOf(' ');
     snprintf(gMsg,  _GMSG_LEN, "(c)2022, 2023 [%s]", String(_FW_VERSION).substring(0, sPos).c_str());
     oled_Print_Msg(1, gMsg, 0);
@@ -288,7 +288,7 @@ void setup()
   {
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "<DSMRlogger32>", 0);
+      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
       oled_Print_Msg(3, "Filesystm mounted", 1500);
     }
   }
@@ -296,7 +296,7 @@ void setup()
   {
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "<DSMRlogger32>", 0);
+      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
       oled_Print_Msg(3, "MOUNT FS FAILED!", 2000);
     }
   }
@@ -318,9 +318,14 @@ void setup()
     //-- now wait for Watchdog to reset this module
     while(1) { delay(1000); }
   }
-  
-  snprintf(devSetting->Hostname, sizeof(devSetting->Hostname), "%s", _DEFAULT_HOSTNAME);
 
+/**
+  if (strlen(devSetting->Hostname) == 0)
+  {
+    snprintf(devSetting->Hostname, sizeof(devSetting->Hostname), "%s", _DEFAULT_HOSTNAME);
+  }
+**/
+  writeToSysLog("Hostname [%s]", devSetting->Hostname);
   //-- Press [Reset] -> "External System"
   //-- Software reset -> "Vbat power on reset"
   getLastResetReason(rtc_get_reset_reason(0), lastResetCPU0, 99);
@@ -337,7 +342,7 @@ void setup()
   {
     if (devSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
     oled_Clear();                       // clear the screen
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(1, "Verbinden met WiFi", 500);
   }
   digitalWrite(LED_BUILTIN, LED_ON);
@@ -353,7 +358,7 @@ void setup()
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(1, WiFi.SSID(), 0);
     snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
     oled_Print_Msg(2, gMsg, 1500);
@@ -362,7 +367,7 @@ void setup()
   startTelnet();
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(3, "telnet (poort 23)", 2500);
   }
   
@@ -420,7 +425,7 @@ void setup()
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(3, "NTP gestart", 1500);
   }
   //-- OK, WiFi connected, time set
@@ -441,7 +446,7 @@ void setup()
   {
     snprintf(gMsg,  _GMSG_LEN, "DT: %02d%02d%02d%02d0101x", thisYear
                                             , thisMonth, thisDay, thisHour);
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(3, gMsg, 1500);
   }
 
@@ -450,7 +455,7 @@ void setup()
   connectMQTT();
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(3, "MQTT server set!", 1500);
   }
 
@@ -461,7 +466,7 @@ void setup()
     DebugTln(F("Filesystem correct populated -> normal operation!\r"));
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "<DSMRlogger32>", 0);
+      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
       oled_Print_Msg(1, "OK, FS correct", 0);
       oled_Print_Msg(2, "Verder met normale", 0);
       oled_Print_Msg(3, "Verwerking ;-)", 2500);
@@ -509,7 +514,7 @@ void setup()
   {
     //HAS_OLED
     oled_Clear();                                           //HAS_OLED
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);              //HAS_OLED
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);              //HAS_OLED
     oled_Print_Msg(2, "HTTP server ..", 0);                 //HAS_OLED
     oled_Print_Msg(3, "gestart (poort 80)", 0);             //HAS_OLED
   }                  
@@ -523,7 +528,7 @@ void setup()
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(1, "Startup complete", 0);
     oled_Print_Msg(2, "Wait for first", 0);
     oled_Print_Msg(3, "telegram .....", 500);

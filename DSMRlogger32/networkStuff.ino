@@ -51,7 +51,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
   if (devSetting->OledType > 0)
   {
     oled_Clear();
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(1, "AP mode active", 0);
     oled_Print_Msg(2, "Connect to:", 0);
     oled_Print_Msg(3, myWiFiManager->getConfigPortalSSID(), 0);
@@ -93,7 +93,7 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
     if (devSetting->OledType > 0)
     {
       oled_Clear();
-      oled_Print_Msg(0, "<DSMRlogger32>", 0);
+      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
       oled_Print_Msg(1, "Failed to connect", 0);
       oled_Print_Msg(2, "and hit TimeOut", 0);
       oled_Print_Msg(3, "**** NO WIFI ****", 0);

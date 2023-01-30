@@ -65,7 +65,7 @@ void checkFlashButton()
       DebugTln(F("Switching display off.."));
     }
     oled.clear();
-    oled_Print_Msg(0, "<DSMRlogger32>", 0);
+    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
     oled_Print_Msg(2, "Wacht ...", 5);
     msgMode = 0; //reset the display loop
     RESTART_TIMER(oledSleepTimer);

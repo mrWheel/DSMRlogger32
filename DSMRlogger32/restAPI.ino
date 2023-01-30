@@ -210,38 +210,6 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
     writeLastStatus();
     return;
   }
-/*****
-  if (strcmp(apiId, "settings") == 0)
-  {
-    DebugTln("Handle /api/v2/dev/settings..");
-    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
-    {
-      //------------------------------------------------------------
-      // json string: {"name":"Interval","value":9}
-      // json string: {"name":"TelegramInterval","value":123.45}
-      // json string: {"name":"mBus1Type","value":"3"}
-      //------------------------------------------------------------
-      DebugTln(httpServer.arg(0));
-      //-- Allocate the JsonDocument
-      SpiRamJsonDocument  doc(3000);
-      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
-      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-      //Debugln(jsonBuff);
-      char field[30]     = {0};
-      char newValue[101] = {0};
-      strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
-      strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
-      updateSmSettings(field, newValue);
-      httpServer.send(200, "application/json", httpServer.arg(0));
-      writeToSysLog("DSMReditor: Slimme Meter Field[%s] changed to [%s]", field, newValue);
-    }
-    else
-    {
-      sendSMsettings();
-    }
-    return;
-  }
-****/
 
   if (strcmp(apiId, "settings") == 0)
   {

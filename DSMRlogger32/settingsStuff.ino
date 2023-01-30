@@ -385,7 +385,6 @@ void readDevSettings(bool show)
 
   //--- this will take some time to settle in
   //--- probably need a reboot before that to happen :-(
-  //MDNS.begin(devSetting->Hostname);    // start advertising with new(?) devSetting->Hostname
   startMDNS(devSetting->Hostname);
 
 

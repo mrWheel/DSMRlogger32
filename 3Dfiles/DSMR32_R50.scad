@@ -11,7 +11,7 @@
 
 //-- these parms need to be declared before including the YAPPgenerator
 //
-/*/- these dimensions are for a 1.3" OLED display
+//- these dimensions are for a 1.3" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
 oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
@@ -25,10 +25,10 @@ oledScreenXe        = 26;       //       |_______________|            |
                                 //       +---------------+            v
                                 //       <--- Width ----->
 
-*/
+
 
 //-- these dimensions are for a 0.9" OLED display
-//-- oled dimensions and Header position
+/*/-- oled dimensions and Header position
 //                              //               V-------- HeaderY
 oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
 oledHeaderY         = 40;       //       |     ==o==     | HeaderX    ^
@@ -40,7 +40,7 @@ oledScreenXe        = 16;       //       |_______________|            |
                                 //       |               |            |
                                 //       +---------------+            v
                                 //       <--- Width ----->
-
+*/
 
 
 oledScreenWidth  = oledPcbWidth;
@@ -103,8 +103,8 @@ if (false)
 printBaseShell        = false;
 printLidShell         = true;
 printSwitchExtenders  = true;
-printInsideOLED       = true;
-printOledStand        = true;
+printInsideOLED       = false;
+printOledStand        = false;
 printSwitchCap        = true;
 
 // Edit these parameters for your own board dimensions
@@ -179,7 +179,7 @@ pcbStands = [
 cutoutsLid =  [
       [14, 6,  6.5, 6.5, 0, yappCircle, yappCenter]     // Reset Button
      ,[41, 6,  8, 8, 0, yappRectangle, yappCenter]      // Flash Button
-//     ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
+ //  ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
      ,[4, 18, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 1
      ,[4, 28, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 2
      ,[4, 40, 6, 6, 0, yappCircle]                      // NeoPixel 3
@@ -619,22 +619,20 @@ if (printSwitchCap)
 if (printOledStand)
 {
     zeroExtend=shellHeight - (standoffHeight + basePlaneThickness + pcbThickness + 8);
-    //-- oledPcbWidth = 37
     //-- oled Stand
     translate([-15,125,0])
     {
-      //translate([1,0,0]) cube([2,36, 2]);
-      translate([0,0,0])                     cube([2,oledPcbWidth, 2]);  // main balk
-      translate([0,5,0])                color("green")  cube([11,3,2]); // stand
-      //translate([0,29,0])    color("green")  cube([11,3,2]); // stand
-      translate([0,oledPcbWidth-8,0])   color("green")  cube([11,3,2]); // stand
+      translate([0,0,0])  cube([2,oledPcbWidth, 2]);                    // main balk
+      translate([0,5,0])                 color("green") cube([11,3,2]);   // stand
+      translate([0,oledPcbWidth-8,0])    color("green") cube([11,3,2]);   // stand
       
-      translate([0,0,0])                color("blue")   cube([3,8,2]);  // bigger
-      translate([0,oledPcbWidth-8,0])   color("blue")   cube([3,8,2]);  // bigger
+      translate([0,0,0])                 color("blue")  cube([3,8,2]);    // bigger
+      translate([0,oledPcbWidth-8,0])    color("blue")  cube([3,8,2]);    // bigger
       
-      translate([-1,2,0])               color("black")  cube([3,2,2]);  // centreer nop
-      //translate([-1,33,0])    color("red")    cube([3,2,2]);  // centreer nop
-      translate([-1,oledPcbWidth0-4,0]) color("red")    cube([3,2,2]);  // centreer nop
+      translate([-1,2,0])                color("black") cube([3,1.5,1.5]);  // centreer nop
+      translate([-1,oledPcbWidth-3.4,0]) color("red")   cube([3,1.5,1.5]);  // centreer nop
+      //-- meet balk
+      //translate([-3,2,0]) cube([2,oledPcbWidth-4.0, 2]);
     }
     
 } // .. printOledStand?

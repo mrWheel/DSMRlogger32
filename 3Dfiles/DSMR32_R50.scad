@@ -50,7 +50,7 @@ oledScreenY      = oledHeaderY - (oledScreenWidth/2);
 
 insertDiam  = 3.8;
 screwDiam   = 2.5;
-holeSlack   = 0.35;
+holeSlack   = 0.5;
 insertDiamS = insertDiam + holeSlack;
 screwDiamS  = screwDiam + holeSlack;
 
@@ -274,9 +274,9 @@ cutoutsRight =  [
 // (8) = { yappConnShells | yappConnWithPCB }
 // (9) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 connectors   = [
-                 [ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 6, 4, 12, yappConnWithPCB
+                 [ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 7, 4, 12, yappConnWithPCB
                                               , yappBackLeft, yappFrontLeft, yappBackRight]
-                ,[ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 6, 3, 9, yappConnWithPCB
+                ,[ 5,  5, screwDiamS, screwDiamS*2, insertDiamS, 7, 3, 9, yappConnWithPCB
                                                                           , yappFrontRight]
                ];
 

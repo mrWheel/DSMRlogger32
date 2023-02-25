@@ -41,7 +41,7 @@ void processSlimmemeterRaw()
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(1, "-------------------------", 0);
     oled_Print_Msg(2, "Raw Format", 0);
     snprintf(gMsg,  _GMSG_LEN, "Raw Count %4d", showRawCount);

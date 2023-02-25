@@ -110,7 +110,8 @@ void displayBoardInfo()
 
   Debugln("==================================================================\r");
   Debug(" \r\n                     SSID [");
-  Debug( WiFi.SSID() );
+  if (runAPmode)  Debug(devSetting->Hostname);
+  else            Debug( WiFi.SSID() );
 #ifdef _SHOW_PASSWRDS
   Debug("]\r\n                  PSK key [");
   Debug( WiFi.psk() );
@@ -118,7 +119,8 @@ void displayBoardInfo()
   Debug("]\r\n                  PSK key [**********");
 #endif
   Debug("]\r\n               IP Address [");
-  Debug( WiFi.localIP().toString() );
+  if (runAPmode)  Debug(WiFi.softAPIP());
+  else            Debug( WiFi.localIP() );
   Debug("]\r\n                 Hostname [");
   Debug( devSetting->Hostname );
   //esp32 Debug("]\r\n     Last reset reason [");

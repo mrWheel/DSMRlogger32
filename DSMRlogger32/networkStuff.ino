@@ -45,13 +45,13 @@ void configModeCallback (WiFiManager *myWiFiManager)
   neoPixOff(1);
   
   DebugTln(F("Entered config mode\r"));
-  DebugTln(WiFi.softAPIP().toString());
+  DebugTln(WiFi.softAPIP());
   //if you used auto generated SSID, print it
   DebugTln(myWiFiManager->getConfigPortalSSID());
   if (devSetting->OledType > 0)
   {
     oled_Clear();
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(1, "AP mode active", 0);
     oled_Print_Msg(2, "Connect to:", 0);
     oled_Print_Msg(3, myWiFiManager->getConfigPortalSSID(), 0);
@@ -93,7 +93,7 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
     if (devSetting->OledType > 0)
     {
       oled_Clear();
-      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+      oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
       oled_Print_Msg(1, "Failed to connect", 0);
       oled_Print_Msg(2, "and hit TimeOut", 0);
       oled_Print_Msg(3, "**** NO WIFI ****", 0);
@@ -115,11 +115,11 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
   strlcpy(myWiFi.password, manageWiFi.getWiFiPass().c_str(), _MY_PASSWD_LEN);
 
   if (WiFi.softAPdisconnect(true))
-        Serial.println("WiFi Access Point disconnected and closed");
-  else  Serial.println("Hm.. could not disconnect WiFi Access Point! (maybe there was none?)");
-  Serial.flush();
+        DebugTln("WiFi Access Point disconnected and closed");
+  else  DebugTln("Hm.. could not disconnect WiFi Access Point! (maybe there was none?)\r\n");
+  DebugFlush();
   
-  DebugTf(" took [%d] milli-seconds => OK!\r\n", (millis() - lTime));
+  DebugTf("startWiFi() took [%d] milli-seconds => OK!\r\n", (millis() - lTime));
 
   myWiFi.ipGateway = WiFi.gatewayIP();
 
@@ -134,7 +134,8 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
 void startTelnet()
 {
   TelnetStream.begin();
-  DebugTln(F("\nTelnet server started .."));
+  Debugln("\r\n");
+  DebugTln("Telnet server started ..\r\n");
   TelnetStream.flush();
 
 } // startTelnet()
@@ -143,6 +144,8 @@ void startTelnet()
 //=======================================================================
 void startMDNS(const char *Hostname)
 {
+  if (lostWiFiConnection) return;
+  
   MDNS.end(); //-- end service
   DebugTf("[1] mDNS setup as [%s.local]\r\n", Hostname);
   if (MDNS.begin(Hostname))               // Start the mDNS responder for Hostname.local

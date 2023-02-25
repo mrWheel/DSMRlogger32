@@ -265,6 +265,7 @@ void writeDevSettings(bool show)
   doc["hostname"]         = devSetting->Hostname;
   doc["indexPage"]        = devSetting->IndexPage;
   doc["dailyReboot"]      = devSetting->DailyReboot;
+  doc["runAPmode"]        = devSetting->runAPmode;
   doc["noHourSlots"]      = devSetting->NoHourSlots;  //-- don't change directly
   doc["noDaySlots"]       = devSetting->NoDaySlots;   //-- don't change directly
   doc["noMonthSlots"]     = devSetting->NoMonthSlots; //-- don't change directly
@@ -327,6 +328,7 @@ void readDevSettings(bool show)
     strlcpy(devSetting->Hostname, _DEFAULT_HOSTNAME, (_HOSTNAME_LEN -1));
     strlcpy(devSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
     devSetting->DailyReboot       = 0;
+    devSetting->runAPmode         = 0;
     devSetting->OledType          = 1;
     devSetting->NeoBrightness     = 75;
     devSetting->TelegramInterval  = 10;
@@ -360,13 +362,14 @@ void readDevSettings(bool show)
 
   file.close();
 
-  //serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
-  //Debugln(jsonBuff);
+  serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
+  //-dbg-Debugln(jsonBuff);
   
   //-- Extract devSetting settings from the JSON document
   if (doc["hostname"])      { strlcpy(devSetting->Hostname,   doc["hostname"], (_HOSTNAME_LEN -1)); }
   if (doc["indexPage"])     { strlcpy(devSetting->IndexPage,  doc["indexPage"], (_INDEXPAGE_LEN -1)); }
   if (doc["dailyReboot"])   { devSetting->DailyReboot         = doc["dailyReboot"].as<int>(); }
+  if (doc["runAPmode"])     { devSetting->runAPmode           = doc["runAPmode"].as<int>(); }
   if (doc["oledType"])      { devSetting->OledType            = doc["oledType"].as<int>(); }
   if (doc["oledSleep"])     { devSetting->OledSleep           = doc["oledSleep"].as<int>(); }
   if (doc["oledFlip"])      { devSetting->OledFlip            = doc["oledFlip"].as<int>(); }
@@ -413,7 +416,8 @@ void showDevSettings()
     Debugln("\r\n==== System settings ============================================\r");
     Debugf("                    Hostname : %s\r\n",     devSetting->Hostname);
     Debugf("                  Index Page : %s\r\n",     devSetting->IndexPage);
-    Debugf("  Daily Reboot (0=No, 1=Yes) : %s\r\n",     devSetting->DailyReboot ? "Yes":"No");
+    Debugf("  Daily Reboot (0=Nee, 1=Ja) : %s\r\n",     devSetting->DailyReboot ? "Ja":"Nee");
+    Debugf("    run als AP (0=Nee, 1=Ja) : %s\r\n",     devSetting->runAPmode ? "Ja":"Nee");
     Debugf("               Hours History : %d\r\n",     devSetting->NoHourSlots);
     Debugf("                Days History : %d\r\n",     devSetting->NoDaySlots);
     Debugf("              Months History : %d\r\n",     devSetting->NoMonthSlots);
@@ -463,6 +467,7 @@ void updateDevSettings(const char *field, const char *newValue)
 
   if (!strcasecmp(field, "index_page"))        strlcpy(devSetting->IndexPage, newValue, (sizeof(devSetting->IndexPage) -1));
   if (!strcasecmp(field, "daily_reboot"))      devSetting->DailyReboot  = String(newValue).toInt();
+  if (!strcasecmp(field, "run_as_ap"))         devSetting->runAPmode    = String(newValue).toInt();
   //-- don't change the devSettings .. yet!
   if (!strcasecmp(field, "no_hour_slots"))     tmpNoHourSlots  = String(newValue).toInt();
   if (!strcasecmp(field, "no_day_slots"))      tmpNoDaySlots   = String(newValue).toInt();

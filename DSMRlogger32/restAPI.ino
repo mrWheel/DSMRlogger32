@@ -131,7 +131,7 @@ void processApiV2Sm(const char* apiId, const char* oneField)
       SpiRamJsonDocument  doc(3000);
       DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
       serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-      //Debugln(jsonBuff);
+      //-dbg-Debugln(jsonBuff);
       char field[30]     = {0};
       char newValue[101] = {0};
       strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
@@ -228,7 +228,7 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       SpiRamJsonDocument  doc(3000);
       DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
       serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-      //Debugln(jsonBuff);
+      //-dbg-Debugln(jsonBuff);
       char field[30]     = {0};
       char newValue[101] = {0};
       strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
@@ -386,7 +386,8 @@ void sendDeviceInfo()
   doc["devinfo"]["compiled"] = gMsg;
 
   doc["devinfo"]["hostname"]        = devSetting->Hostname;
-  doc["devinfo"]["ipaddress"]       = WiFi.localIP().toString();
+  if (runAPmode)  doc["devinfo"]["ipaddress"] = WiFi.softAPIP().toString();
+  else            doc["devinfo"]["ipaddress"] = WiFi.localIP().toString();
   doc["devinfo"]["macaddress"]      = String(WiFi.macAddress());
   doc["devinfo"]["indexfile"]       = devSetting->IndexPage;
   doc["devinfo"]["free_heap"]       = ESP.getFreeHeap();
@@ -411,7 +412,8 @@ void sendDeviceInfo()
   doc["devinfo"]["filesystem_type"] = "ERROR! NO FILESYSTEM?!";
 #endif
   doc["devinfo"]["compile_options"] = compileOptions;
-  doc["devinfo"]["ssid"] = WiFi.SSID();
+  if (runAPmode)  doc["devinfo"]["ssid"] = devSetting->Hostname;
+  else            doc["devinfo"]["ssid"] = WiFi.SSID();
 #ifdef _SHOW_PASSWRDS
   doc["devinfo"]["pskkey"] = (String)WiFi.psk();
 #endif
@@ -420,6 +422,7 @@ void sendDeviceInfo()
   doc["devinfo"]["uptime"]          = upTime();
   doc["devinfo"]["uptime_sec"]      = upTimeSeconds;
   doc["devinfo"]["daily_reboot"]    = (int)devSetting->DailyReboot;
+  doc["devinfo"]["run_as_ap"]       = (int)devSetting->runAPmode;
   doc["devinfo"]["oled_type"]       = (int)devSetting->OledType;
   doc["devinfo"]["oled_flip_screen"] = (int)devSetting->OledFlip;
   doc["devinfo"]["neo_brightness"]  = (int)devSetting->NeoBrightness;
@@ -440,12 +443,9 @@ void sendDeviceInfo()
   doc["devinfo"]["last_reset_cpu1"] = lastResetCPU1;
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
-  //serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+  //-dbg-DebugTln(jsonBuff);
 
-  //DebugTln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
-  
-  //httpServer.sendContent("\r\n]}\r\n");
 
 } // sendDeviceInfo()
 
@@ -581,8 +581,8 @@ void sendSMsettings()
   nestedRec["min"] = 0; nestedRec["max"] = 1;
   
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
-  //serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-  //Debugln(jsonBuff);
+  //-dbg-serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+  //-dbg-Debugln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
 } // sendSMsettings()
@@ -604,7 +604,7 @@ void sendDevSettings()
   nestedRec["type"]     = "s"; 
   nestedRec["maxlen"]   = sizeof(devSetting->Hostname) -1; 
 
-  nestedRec  = doc["system"].createNestedObject();
+  nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "index_page";
   nestedRec["value"]    =  devSetting->IndexPage;
   nestedRec["type"]     = "s"; 
@@ -614,7 +614,13 @@ void sendDevSettings()
   nestedRec["name"]   = "daily_reboot";
   nestedRec["value"]  =  devSetting->DailyReboot;
   nestedRec["type"]   = "i"; 
-  nestedRec["min"] = 1; nestedRec["max"] = 1; 
+  nestedRec["min"] = 0; nestedRec["max"] = 1; 
+  
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]   = "run_as_ap";
+  nestedRec["value"]  =  devSetting->runAPmode;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 1; 
   
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]   = "no_hour_slots";
@@ -707,8 +713,8 @@ void sendDevSettings()
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
-  //serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-  //Debugln(jsonBuff);
+  serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+  //-dbg-Debugln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
 } // sendDevSettings()

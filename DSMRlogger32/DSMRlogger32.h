@@ -289,6 +289,7 @@ struct settingDevStruct
   uint8_t   OledFlip;
   uint8_t   NeoBrightness;
   uint8_t   DailyReboot;
+  uint8_t   runAPmode;
   uint16_t  NoHourSlots;
   uint16_t  NoDaySlots;
   uint16_t  NoMonthSlots;
@@ -434,6 +435,7 @@ static PubSubClient MQTTclient(wifiClient);
 
 char      lastResetCPU0[100]    = {0};
 char      lastResetCPU1[100]    = {0};
+bool      runAPmode             = false;
 bool      filesysMounted        = false;
 bool      filesysNotPopulated   = false;
 bool      hasAlternativeIndex   = false;

@@ -2528,8 +2528,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
           ,[ "current_l3",                "Current l3" ]
           ,[ "daily_reboot",               "Dagelijkse Reboot (0=Nee, 1=Ja)" ]
           
-          ,[ "ed_tariff1",                "Energy Verbruik Tarief-1/kWh" ]
-          ,[ "ed_tariff2",                "Energy Verbruik Tarief-2/kWh" ]
+          ,[ "ed_tariff1",                "Energie Verbruik Tarief-1/kWh" ]
+          ,[ "ed_tariff2",                "Energie Verbruik Tarief-2/kWh" ]
           ,[ "electr_netw_costs",         "Netwerkkosten Energie/maand" ]
           ,[ "electricity_failure_log",   "Electricity Failure log" ]
           ,[ "electricity_failures",      "Electricity Failures" ]
@@ -2547,8 +2547,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
           ,[ "energy_delivered_tariff2",  "Energie Gebruikt tarief 2" ]
           ,[ "energy_returned_tariff1",   "Energie Opgewekt tarief 1" ]
           ,[ "energy_returned_tariff2",   "Energie Opgewekt tarief 2" ]
-          ,[ "er_tariff1",                "Energy Opgewekt Tarief-1/kWh" ]
-          ,[ "er_tariff2",                "Energy Opgewekt Tarief-2/kWh" ]
+          ,[ "er_tariff1",                "Energie Opgewekt Tarief-1/kWh" ]
+          ,[ "er_tariff2",                "Energie Opgewekt Tarief-2/kWh" ]
           
           ,[ "filesystem_type",           "File Systeem" ]
           ,[ "filesystem_size",           "Grootte littleFS [bytes]" ]
@@ -2645,6 +2645,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
           ,[ "psram_size",                "Psram size [bytes]" ]
           
           ,[ "reboots",                   "Aantal keer opnieuw opgestart" ]
+          ,[ "run_as_ap",                 "run als AccessPoint (0=Nee, 1=Ja)" ]
           ,[ "sdk_version",               "SDK versie" ]
           ,[ "sketch_size",               "Sketch Size [bytes]" ]
           ,[ "sm_has_fase_info",          "SM Has Fase Info (0=Nee, 1=Ja)" ]

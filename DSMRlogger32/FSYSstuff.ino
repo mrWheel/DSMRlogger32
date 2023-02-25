@@ -140,7 +140,7 @@ uint16_t buildDataRecordFromJson(char *recIn, int recLen, String jsonIn)
   DynamicJsonDocument  doc(3000);
   DeserializationError err = deserializeJson(doc, jsonIn);
   serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
-  Debugln(jsonBuff);
+  //-dbg-Debugln(jsonBuff);
 
   strlcpy(uKey, doc["recid"], sizeof(uKey));
   uEDT1 = doc["edt1"];

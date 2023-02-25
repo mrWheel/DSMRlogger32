@@ -218,7 +218,7 @@ void sendMQTTData()
     int maxBuff = MQTT_MAX_PACKET_SIZE - MQTT_MAX_HEADER_SIZE - 2  - strlen(devSetting->MQTTtopTopic);
     if (jsonBuff[maxBuff] != 0)
     {
-      //-tst-Debugln(jsonBuff);
+      //-dbg-Debugln(jsonBuff);
       jsonBuff[maxBuff-5] = '+';
       jsonBuff[maxBuff-4] = '+';
       jsonBuff[maxBuff-3] = '+';

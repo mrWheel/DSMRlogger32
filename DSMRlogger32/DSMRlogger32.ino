@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.4 (23-01-2023)"
+#define _FW_VERSION "v5.0.5 (25-02-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -15,9 +15,9 @@
 **
 **    - Board             : "ESP32 Wrover Module" [ESP32-WROVER-E]
 **    - Upload Speed      : "230400" to "460800" (max. with FTDI programmer)
-**    - Flash Frequency   : "40MHz" (sometimes 80MHz to fast)
+**    - Flash Frequency   : "80MHz" or "40MHz" (sometimes 80MHz to fast)
 **    // Flash Size       : "4MB (32Mb)"
-**    - Flash Mode        : "DIO" (sometimes "QIO" is too fast)
+**    - Flash Mode        : "QIO" or "DIO" (sometimes "QIO" is too fast)
 **    - Partition Scheme  : "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
 **    - Core Debug Level  : "None" ??
 **    - Erase All Flash   : "Disabled"
@@ -47,6 +47,8 @@
 **   https://willem.aandewiel.nl/index.php/2020/02/28/restapis-zijn-hip-nieuwe-firmware-voor-de-dsmr-logger/
 **   https://mrwheel-docs.gitbook.io/DSMRloggerAPI/
 **   https://mrwheel.github.io/DSMRloggerWS/
+**   
+**   https://mrwheel-docs.gitbook.io/DSMRlogger32/
 */
 /******************** compiler options  ********************************************/
 //#define _SHOW_PASSWRDS             // well .. show the PSK key and MQTT password, what else?
@@ -160,18 +162,34 @@ void displayStatus()
     switch(msgMode)
     {
       case 1:
-        snprintf(gMsg, _GMSG_LEN, "Up:%-15.15s", upTime().c_str());
+        {
+          memset(fChar, 0, _FCHAR_LEN);
+          //----- _FW_VERSION format "vx.y.z (dd-mm-eeyy)"
+          //-----                     012345  8901234567
+          snprintf(fChar, _FCHAR_LEN, "%s", _FW_VERSION);
+          int d=0, s=0;
+          for (s=0; s<6; s++) {gMsg[d++] = fChar[s];}
+          gMsg[d++] = ' ';  gMsg[d++] = ' ';
+          for (s=8; s<18; s++) {gMsg[d++] = fChar[s];}
+          gMsg[d++] = 0;
+          snprintf(gMsg, _GMSG_LEN, "%s", gMsg);
+        }
         break;
       case 2:
-        snprintf(gMsg, _GMSG_LEN, "WiFi RSSI:%4d dBm", WiFi.RSSI());
+        snprintf(gMsg, _GMSG_LEN, "Up:%-15.15s", upTime().c_str());
         break;
       case 3:
-        snprintf(gMsg, _GMSG_LEN, "Heap:%7d Bytes", ESP.getFreeHeap());
+        if (runAPmode)  snprintf(gMsg, _GMSG_LEN, "** ACCESS POINT **");
+        else            snprintf(gMsg, _GMSG_LEN, "WiFi RSSI:%4d dBm", WiFi.RSSI());
         break;
       case 4:
-        if (WiFi.status() != WL_CONNECTED)
-              snprintf(gMsg, _GMSG_LEN, "**** NO  WIFI ****");
-        else  snprintf(gMsg, _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
+        if (runAPmode)  snprintf(gMsg, _GMSG_LEN, "SSID: %s", devSetting->Hostname);
+        else
+        {
+          if (WiFi.status() != WL_CONNECTED)
+                snprintf(gMsg, _GMSG_LEN, "**** NO  WIFI ****");
+          else  snprintf(gMsg, _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
+        }
         break;
       default:
         snprintf(gMsg, _GMSG_LEN, "Telgrms:%6d/%3d", telegramCount, telegramErrors);
@@ -208,7 +226,7 @@ void setup()
   
   pinMode(LED_BUILTIN,    OUTPUT);
   pinMode(_DTR_ENABLE,    OUTPUT);
-  //pinMode(_FLASH_BUTTON,  INPUT);
+  pinMode(_FLASH_BUTTON,  INPUT_PULLUP);
   pinMode(_PIN_HEARTBEAT, OUTPUT);
   pinMode(_PIN_WD_RESET,  OUTPUT);
   
@@ -228,6 +246,9 @@ void setup()
   pulseHeart(true);
   neoPixOn(0, neoPixRed);
   neoPixOff(1);
+
+  runAPmode = !digitalRead(_FLASH_BUTTON);
+  if (runAPmode) DebugTln("run in AP mode requested by user!");
   
   //------ initialize File System --------------------------
   setupFileSystem();
@@ -237,6 +258,12 @@ void setup()
 
   readDevSettings(true);
 
+  if (devSetting->runAPmode > 0)
+  {
+    runAPmode = true;
+    DebugTln("device setting: run as AP!");
+  }
+  
   //------ read status file for last Timestamp --------------------
   strlcpy(lastTlgrmTime.Timestamp, "040302010101X", _TIMESTAMP_LEN);
   //==========================================================//
@@ -266,7 +293,7 @@ void setup()
   {
     oled_Init();
     oled_Clear();  // clear the screen so we can paint the menu.
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     int8_t sPos = String(_FW_VERSION).indexOf(' ');
     snprintf(gMsg,  _GMSG_LEN, "(c)2022, 2023 [%s]", String(_FW_VERSION).substring(0, sPos).c_str());
     oled_Print_Msg(1, gMsg, 0);
@@ -288,7 +315,7 @@ void setup()
   {
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+      oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
       oled_Print_Msg(3, "Filesystm mounted", 1500);
     }
   }
@@ -296,7 +323,7 @@ void setup()
   {
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+      oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
       oled_Print_Msg(3, "MOUNT FS FAILED!", 2000);
     }
   }
@@ -342,32 +369,46 @@ void setup()
   {
     if (devSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
     oled_Clear();                       // clear the screen
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(1, "Verbinden met WiFi", 500);
   }
   digitalWrite(LED_BUILTIN, LED_ON);
-  startWiFi(devSetting->Hostname, 240, false);  // timeout 4 minuten
-  myWiFi.ipWiFi    = WiFi.localIP();
-  myWiFi.ipGateway = WiFi.gatewayIP();
+  if (!runAPmode)
+  {
+    startWiFi(devSetting->Hostname, 240, false);  // timeout 4 minuten
+    myWiFi.ipWiFi    = WiFi.localIP();
+    myWiFi.ipGateway = WiFi.gatewayIP();
   
-  WiFi.onEvent(WiFiEvent);
-
+    WiFi.onEvent(WiFiEvent);
+  }
+  else
+  {
+    if (devSetting->runAPmode)
+          writeToSysLog("run in AP mode by system setting!");
+    else  writeToSysLog("run in AP mode requested by user!");
+    WiFi.softAP(devSetting->Hostname);
+    DebugT("AP IP address: ");
+    Debugln(WiFi.softAPIP());
+    lostWiFiConnection = false;
+  }
   //--- setup randomseed the right way (??)
   //--- Read more: http://www.esp32learning.com/code/esp32-true-random-number-generator-example.php
   esp_random();
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
-    oled_Print_Msg(1, WiFi.SSID(), 0);
-    snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
+    if (runAPmode)  oled_Print_Msg(1, devSetting->Hostname, 0);
+    else            oled_Print_Msg(1, WiFi.SSID(), 0);
+    if (runAPmode)  snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.softAPIP().toString().c_str());
+    else            snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
     oled_Print_Msg(2, gMsg, 1500);
   }
   
   startTelnet();
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(3, "telnet (poort 23)", 2500);
   }
   
@@ -375,11 +416,16 @@ void setup()
 
   Debugln();
   DebugT ("Connected to " );
-  Debugln (myWiFi.SSID);
+  if (runAPmode)  Debugln(devSetting->Hostname);
+  else            Debugln(myWiFi.SSID);
   DebugT ("IP address: " );
-  Debugln (myWiFi.ipWiFi);
-  DebugT ("IP gateway: " );
-  Debugln (myWiFi.ipGateway);
+  if (runAPmode)  Debugln(WiFi.softAPIP());
+  else            Debugln(myWiFi.ipWiFi);
+  if (!runAPmode)
+  {
+    DebugT ("IP gateway: " );
+    Debugln (myWiFi.ipGateway);
+  }
   Debugln();
 
   for (int L=0; L < 4; L++)
@@ -397,37 +443,40 @@ void setup()
 
   //=============end Networkstuff======================================
 
-  //================ startNTP =========================================
-  if (devSetting->OledType > 0)
+  if (!runAPmode)
   {
-    oled_Print_Msg(3, "setup NTP server", 100);
-  }
+    //================ startNTP =========================================
+    if (devSetting->OledType > 0)
+    {
+      oled_Print_Msg(3, "setup NTP server", 100);
+    }
 
-  DebugT("Wait for NTP sync ...");
-  while (!waitForSync(2)) { Debug('.'); delay(500); }
-  Debugln("Done!");
-  updateNTP();
-  DebugT("UTC: ");
-  Debugln(UTC.dateTime());
+    DebugT("Wait for NTP sync ...");
+    while (!waitForSync(2)) { Debug('.'); delay(500); }
+    Debugln("Done!");
+    updateNTP();
+    DebugT("UTC: ");
+    Debugln(UTC.dateTime());
   
-  tzEurope.setLocation("Europe/Amsterdam");
-  DebugTf("Amsterdam time: ");
-  Debugln(tzEurope.dateTime());
-  DebugT("Timezone: "); Debugln(getTimezoneName());
+    tzEurope.setLocation("Europe/Amsterdam");
+    DebugTf("Amsterdam time: ");
+    Debugln(tzEurope.dateTime());
+    DebugT("Timezone: "); Debugln(getTimezoneName());
 
-  DebugTln(F("NTP server set!\r\n\r"));
-  DebugTf("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d\r\n", tzEurope.day()
+    DebugTln(F("NTP server set!\r\n\r"));
+    DebugTf("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d\r\n", tzEurope.day()
                                              , tzEurope.month()
                                              , tzEurope.year()
                                              , tzEurope.hour()
                                              , tzEurope.minute()
                                              , tzEurope.second());
 
-  if (devSetting->OledType > 0)
-  {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
-    oled_Print_Msg(3, "NTP gestart", 1500);
-  }
+    if (devSetting->OledType > 0)
+    {
+      oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
+      oled_Print_Msg(3, "NTP gestart", 1500);
+    }
+  } //-- !runAPmode
   //-- OK, WiFi connected, time set
   neoPixOn(0, neoPixGreen);
   
@@ -436,7 +485,8 @@ void setup()
   //writeToSysLog(lastReset);                         
   
   Serial.print("\nGebruik 'telnet ");
-  Serial.print (WiFi.localIP());
+  if (runAPmode)  Serial.print (WiFi.softAPIP());
+  else            Serial.print (WiFi.localIP());
   Serial.println("' voor verdere debugging\r\n");
 
   //=============now test if FS is correct populated!============
@@ -446,7 +496,7 @@ void setup()
   {
     snprintf(gMsg,  _GMSG_LEN, "DT: %02d%02d%02d%02d0101x", thisYear
                                             , thisMonth, thisDay, thisHour);
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(3, gMsg, 1500);
   }
 
@@ -455,7 +505,7 @@ void setup()
   connectMQTT();
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(3, "MQTT server set!", 1500);
   }
 
@@ -466,7 +516,7 @@ void setup()
     DebugTln(F("Filesystem correct populated -> normal operation!\r"));
     if (devSetting->OledType > 0)
     {
-      oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+      oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
       oled_Print_Msg(1, "OK, FS correct", 0);
       oled_Print_Msg(2, "Verder met normale", 0);
       oled_Print_Msg(3, "Verwerking ;-)", 2500);
@@ -514,7 +564,7 @@ void setup()
   {
     //HAS_OLED
     oled_Clear();                                           //HAS_OLED
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);              //HAS_OLED
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);              //HAS_OLED
     oled_Print_Msg(2, "HTTP server ..", 0);                 //HAS_OLED
     oled_Print_Msg(3, "gestart (poort 80)", 0);             //HAS_OLED
   }                  
@@ -528,7 +578,7 @@ void setup()
 
   if (devSetting->OledType > 0)
   {
-    oled_Print_Msg(0, "  <DSMR-logger32>", 0);
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     oled_Print_Msg(1, "Startup complete", 0);
     oled_Print_Msg(2, "Wait for first", 0);
     oled_Print_Msg(3, "telegram .....", 500);
@@ -568,6 +618,8 @@ void setup()
   
   delay(100);
   slimmeMeter.enable(true); 
+
+  DebugTln("reached end of setup()!");
 
 } // setup()
 
@@ -628,7 +680,7 @@ void doSystemTasks()
     neoPixOn(1, neoPixGreenLow);
   }
 
-  events(); //-- update ezTime every 30? minutes
+  //--events(); //-- update ezTime every 30? minutes
   yield();
 
 } // doSystemTasks()

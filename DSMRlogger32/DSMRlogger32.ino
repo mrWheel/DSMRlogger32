@@ -2,14 +2,14 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.5 (25-02-2023)"
+#define _FW_VERSION "v5.0.5 (01-03-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
 **
-**  Tested with: ESP32 core 2.0.5 by Espressif Systems
+**  Tested with: ESP32 core 2.0.7 by Espressif Systems
 **
 **  Arduino-IDE settings for DSMR-logger32 Revision 5 (ESP32):
 **
@@ -717,7 +717,7 @@ void loop ()
     neoPixOn(0, neoPixRed);
     if (firstConnectionLost)
     {
-      writeToSysLog("Reset Watchdog ...");
+      writeToSysLog("Watchdog timer reset ...");
       firstConnectionLost = false;
       resetWatchdog();
     }

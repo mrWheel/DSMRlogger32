@@ -61,6 +61,15 @@ HardwareSerial SMserial (1);
 
 #include <WiFiUdp.h>        // part of ESP32 Core https://github.com/ESP32/Arduino
 //------ [HTTPUpdateServer@2.0.0] - part of ESP32 Core https://github.com/ESP32/Arduino
+//----------------------------------------------------------------------------------------------
+//-- Change in HTTPUpdateServer.h to make SPIFFS upload possible!
+//-- You can find this file here:
+//-- ~/Library/Arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/HTTPUpdateServer/src/
+//-- change line 107 
+//--    if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {
+//-- into
+//--    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {
+//----------------------------------------------------------------------------------------------
 #include <HTTPUpdateServer.h>  
 //------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
 #include <WiFiManager.h>        // version 0.15.0 - https://github.com/tzapu/WiFiManager

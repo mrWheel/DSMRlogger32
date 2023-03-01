@@ -57,31 +57,6 @@ const char HELPER[]  PROGMEM = R"(
   </form>
 )";
 
-/***
-//---------------------------------------------------------
-const char noUpdateServer[] PROGMEM =
-  R"(<html charset="UTF-8">
-     <style type='text/css'>
-        body {background-color: lightblue;}
-     </style>
-     <body>
-     <h1>UpdateServer is not available</h1>
-          </body>
-     <br/><span style='font-size: 1.3em;' id="waitSeconds">5</span>
-     </body>
-     <script>
-         var seconds = document.getElementById("waitSeconds").textContent;
-         var countdown = setInterval(function() {
-           seconds--;
-           document.getElementById('waitSeconds').textContent = seconds;
-           if (seconds <= 0) {
-              clearInterval(countdown);
-              window.location.assign("/")
-           }
-         }, 1000);
-     </script>
-     </html>)";
-***/
 
 //===========================================================================================
 //-- Funktionsaufruf "setupFS();" muss im Setup eingebunden werden

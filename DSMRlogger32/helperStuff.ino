@@ -49,7 +49,7 @@ void resetWatchdog()
     digitalWrite(_PIN_WD_RESET, HIGH);
     delay(100);
   }
-  if (filesysMounted)  writeToSysLog("Watchdog reset!");
+  if (filesysMounted)  writeToSysLog("Watchdog timer reset!");
     
 } //  resetWatchdog()
 

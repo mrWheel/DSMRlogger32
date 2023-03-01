@@ -1,3 +1,7 @@
+/*
+** part of ATtiny85 Watch Dog 
+*/ 
+
 //-- How many NeoPixels are attached to the Arduino?
 #define _NEO_PIXELS_COUNT         2
 

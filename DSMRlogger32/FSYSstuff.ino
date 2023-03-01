@@ -1177,6 +1177,9 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
 
   if (!_FSYS.exists(fName) )
   {
+    pulseHeart(true);
+    neoPixOn(1, neoPixRed);
+    glowTimer1 = millis() + 3000;
     if (doDisplay)
     {
       //Debugln(F("NO! Error!!"));

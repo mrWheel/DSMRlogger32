@@ -11,6 +11,7 @@ static int  lostWiFiCount       = -1;
 //----------------------------------------------------------------------------
 void WiFiEvent(WiFiEvent_t event)
 {
+    Debugln();
     DebugTf("[WiFi-event] event: [%d] ", event);
 
     switch (event) 

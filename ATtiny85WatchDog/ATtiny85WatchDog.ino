@@ -2,7 +2,7 @@
 ** ATtiny85 Watch Dog for an ESP8266/ESP32
 ** 
 ** Copyright 2022, 2023 Willem Aandewiel
-** Version 3.0  29-12-2022
+** Version 3.0  30-12-2022
 ** 
 ** 
 ** tested with: Arduino IDE version 1.8.19
@@ -84,6 +84,7 @@
 // https://github.com/GreyGnome/EnableInterrupt
 #include <EnableInterrupt.h>
 
+//-- part of ATTinyCore by SpenceKonde
 #include <tinyNeoPixel_Static.h>
 
 #define _PIN_NEOPIXELS        0       // GPIO-00 ==> DIL-6 ==> PB0

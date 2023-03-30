@@ -2,14 +2,15 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.5 (01-03-2023)"
+#define _FW_VERSION "v5.0.5 (30-03-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
 **
-**  Tested with: ESP32 core 2.0.7 by Espressif Systems
+**  Tested with: ESP32 core 2.0.5 by Espressif Systems
+**               core 2.0.7 gives all kind of problems with SPIFF
 **
 **  Arduino-IDE settings for DSMR-logger32 Revision 5 (ESP32):
 **
@@ -20,7 +21,7 @@
 **    - Flash Mode        : "QIO" or "DIO" (sometimes "QIO" is too fast)
 **    - Partition Scheme  : "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
 **    - Core Debug Level  : "None" ??
-**    - Erase All Flash   : "Disabled"
+**    - Erase All Flash   : "Disabled" (maybeEnable only first Flash!)
 **    // PSRAM            : "Enabled"
 **    // Arduino Runs On  : "Core 1"
 **    // Events Run On    : "Core 0"
@@ -450,7 +451,8 @@ void setup()
     {
       oled_Print_Msg(3, "setup NTP server", 100);
     }
-
+    events();
+    setDebug(INFO);
     DebugT("Wait for NTP sync ...");
     while (!waitForSync(2)) { Debug('.'); delay(500); }
     Debugln("Done!");
@@ -458,13 +460,22 @@ void setup()
     DebugT("UTC: ");
     Debugln(UTC.dateTime());
   
-    tzEurope.setLocation("Europe/Amsterdam");
+    //--tzEurope.setLocation("Europe/Amsterdam");
+    tzEurope.setPosix(AMSTERDAM_POSIX);
     DebugTf("Amsterdam time: ");
     Debugln(tzEurope.dateTime());
-    DebugT("Timezone: "); Debugln(getTimezoneName());
+    DebugT("Timezone: "); Debugln(tzEurope.getTimezoneName());
+    writeToSysLog("Timezone: %s", tzEurope.getTimezoneName().c_str());  
 
     DebugTln(F("NTP server set!\r\n\r"));
     DebugTf("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d\r\n", tzEurope.day()
+                                             , tzEurope.month()
+                                             , tzEurope.year()
+                                             , tzEurope.hour()
+                                             , tzEurope.minute()
+                                             , tzEurope.second());
+    writeToSysLog("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d"
+                                             , tzEurope.day()
                                              , tzEurope.month()
                                              , tzEurope.year()
                                              , tzEurope.hour()
@@ -476,10 +487,16 @@ void setup()
       oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
       oled_Print_Msg(3, "NTP gestart", 1500);
     }
+    
+    //if (timeSet) { ntpEventId = setEvent(logNtpTime, nextLogTime(120)); }
+    if (timeSet) { ntpEventId = setEvent(logNtpTime,now()+3600); }
+    
   } //-- !runAPmode
+  
   //-- OK, WiFi connected, time set
   neoPixOn(0, neoPixGreen);
   
+
   //================ end NTP =========================================
 
   //writeToSysLog(lastReset);                         
@@ -679,8 +696,11 @@ void doSystemTasks()
   {
     neoPixOn(1, neoPixGreenLow);
   }
-
-  //--events(); //-- update ezTime every 30? minutes
+  if (ntpEventId == 0)
+  {
+    if (timeSet) { ntpEventId = setEvent(logNtpTime, now()+3600); }
+  }
+  events(); //-- update ezTime every 30? minutes
   yield();
 
 } // doSystemTasks()
@@ -717,13 +737,13 @@ void loop ()
     neoPixOn(0, neoPixRed);
     if (firstConnectionLost)
     {
-      writeToSysLog("Watchdog timer reset ...");
+      //writeToSysLog("Watchdog timer reset ...");
       firstConnectionLost = false;
       resetWatchdog();
     }
 
     glowTimer0 = millis() + 2000;
-    if ((lostWiFiCount % 10) == 0)
+    if ((lostWiFiCount % 25) == 0)
     {
       DebugTf("Reconnect wifi with [%s]...\r\n", devSetting->Hostname);
       writeToSysLog("Reconnect wifi with [%s]...", devSetting->Hostname);
@@ -735,7 +755,7 @@ void loop ()
     delay(1000);
     if (WiFi.status() != WL_CONNECTED)
     {
-      if (lostWiFiConnection && (lostWiFiCount % 10) == 0)
+      if (lostWiFiConnection && (lostWiFiCount % 25) == 0)
       {
         DebugTln("Wifi still not connected!");
         writeToSysLog("Wifi still not connected!");

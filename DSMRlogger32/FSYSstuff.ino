@@ -1170,6 +1170,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
 
   if (devSetting->OledType > 0)
   {
+    neoPixOff(1);
     oled_Print_Msg(1, "Bestaat:", 10);
     oled_Print_Msg(2, fName, 10);
     oled_Print_Msg(3, "op FileSystem?", 250);
@@ -1179,13 +1180,13 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
   {
     pulseHeart(true);
     neoPixOn(1, neoPixRed);
-    glowTimer1 = millis() + 3000;
+    glowTimer1 = millis() + 1000;
     if (doDisplay)
     {
       //Debugln(F("NO! Error!!"));
       if (devSetting->OledType > 0)
       {
-        oled_Print_Msg(3, "Nee! FOUT!", 6000);
+        oled_Print_Msg(3, "Nee! FOUT!", 2000);
       }
       writeToSysLog("Error! File [%s] not found!", fName);
       return false;
@@ -1195,7 +1196,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
       //Debugln(F("NO! "));
       if (devSetting->OledType > 0)
       {
-        oled_Print_Msg(3, "Nee! ", 6000);
+        oled_Print_Msg(3, "Nee! ", 2000);
       }
       writeToSysLog("File [%s] not found! in [%-15.15s]", fName, funcName);
       return false;

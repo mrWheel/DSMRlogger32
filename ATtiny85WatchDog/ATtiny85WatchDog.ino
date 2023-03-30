@@ -2,7 +2,7 @@
 ** ATtiny85 Watch Dog for an ESP8266/ESP32
 ** 
 ** Copyright 2022, 2023 Willem Aandewiel
-** Version 3.0  30-12-2022
+** Version 3.1  23-03-2023
 ** 
 ** 
 ** tested with: Arduino IDE version 1.8.19
@@ -145,7 +145,7 @@ void setup()
     neoPixel.show();            
     neoPixel.setBrightness(_NEO_BRIGHTNESS);
 
-    pinMode(_PIN_HEARTBEAT, INPUT); //_PULLUP);
+    pinMode(_PIN_HEARTBEAT, INPUT); 
     
     digitalWrite(_PIN_RESET_MYSELF, HIGH);
     pinMode(_PIN_RESET_MYSELF,  OUTPUT); 
@@ -229,6 +229,7 @@ void loop()
     neoPixOn(0, neoPixWhite);
     //-- reset myself in case the Master does not do 
     //-- this (Connect DIL-1 (Reset) to DIL-3 (PB4)!
+    pinMode(_PIN_RESET_MYSELF, OUTPUT);
     digitalWrite(_PIN_RESET_MYSELF, LOW);
     delay(100);
     digitalWrite(_PIN_RESET_MYSELF, HIGH);

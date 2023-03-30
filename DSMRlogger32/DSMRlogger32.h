@@ -66,9 +66,9 @@ HardwareSerial SMserial (1);
 //-- You can find this file here:
 //-- ~/Library/Arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/HTTPUpdateServer/src/
 //-- change line 107 
-//--    if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {
+//-->>    if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {
 //-- into
-//--    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {
+//-->>    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {
 //----------------------------------------------------------------------------------------------
 #include <HTTPUpdateServer.h>  
 //------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
@@ -81,6 +81,7 @@ WebServer        httpServer (80);
 HTTPUpdateServer httpUpdater(true);
 
 //------ [ezTime@0.8.3]
+#define AMSTERDAM_POSIX  "CET-1CEST,M3.5.0,M10.5.0/3"    // Time in Amsterdam
 #include <ezTime.h>
 Timezone    tzEurope;
 
@@ -452,6 +453,7 @@ bool      mqttIsConnected       = false;
 bool      doLog = false, Verbose1 = false, Verbose2 = false;
 int8_t    thisHour = -1, prevNtpHour = 0, thisDay = -1, thisMonth = -1, lastMonth, thisYear = 15;
 uint32_t  unixTimestamp;
+uint8_t   ntpEventId = 0;
 uint64_t  upTimeStart, upTimeSeconds;
 uint32_t  actualStoreCount = 0;
 uint16_t  actualStoreSlot  = 0;

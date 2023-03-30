@@ -38,7 +38,21 @@ struct _catStruct
   int fSize;
 } catStruct;
 
-const char WARNING[] PROGMEM = R"(<h2>Check! Sketch is compiled with "FS:none"!)";
+//-aaw-const char WARNING[] PROGMEM = R"(<h2>Check! Sketch is compiled with "FS:none"!)";
+const char WARNING[] PROGMEM = R"(
+  <h2>Check! Sketch is compiled with "FS:none"!</h2>
+  <br>Do you want to format the filesystem (YOU WILL LOOSE ALL DATA ON IT!)?
+  <hr>
+  <form method="POST" action="/format" enctype="multipart/form-data">
+    <input type='submit' name='SUBMIT' value='Yes (and loose all data)'/>
+  </form>
+  <br>
+  <form method="POST" action="/ReBoot" enctype="multipart/form-data">
+    <input type='submit' name='SUBMIT' value='No (reboot)'/>
+  </form>
+  <hr>
+)";
+
 const char HELPER[]  PROGMEM = R"(
   <br>You first need to upload these two files:
   <ul>
@@ -77,14 +91,6 @@ void setupFSmanager()
   {
     if (Verbose1) DebugTf("in 'onNotFound()'!! [%s] => \r\n", String(httpServer.uri()).c_str());
 
-/**
-#ifndef _USE_UPDATE_SERVER
-    if (httpServer.uri()=="/update")
-    {
-      httpServer.send(200, "text/html", noUpdateServer);
-    } else
-#endif
-**/
     if (httpServer.uri().indexOf("/api/") == 0) 
     {
       if (Verbose1) DebugTf("next: processAPI(%s)\r\n", String(httpServer.uri()).c_str());
@@ -327,9 +333,10 @@ void handleUpload()
 
     if (httpServer.arg(0) == "/") //-- root!
     {
-      fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
-      DebugTf("FileUpload Name: /%s\r\n",  upload.filename.c_str());
-      writeToSysLog("FileUpload: [/%s]",  upload.filename.c_str());
+      //-aaw-fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
+      fsUploadFile = _FSYS.open(httpServer.urlDecode(upload.filename), "w");
+      DebugTf("FileUpload Name: %s\r\n",  upload.filename.c_str());
+      writeToSysLog("FileUpload: [%s]",  upload.filename.c_str());
     }
     else
     {

@@ -30,7 +30,7 @@ void WiFiEvent(WiFiEvent_t event)
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             Debugln("Connected to access point");
-            if ((lostWiFiCount % 10) == 0)
+            if ((lostWiFiCount % 25) == 0)
             {
               writeToSysLog("Connected to AP successfully!");    
             }                    
@@ -39,7 +39,7 @@ void WiFiEvent(WiFiEvent_t event)
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             lostWiFiCount++;
             if (disconnectWiFiStart == 0) { disconnectWiFiStart = millis(); }
-            if ((lostWiFiCount % 10) == 0)
+            if ((lostWiFiCount % 25) == 0)
             {
               Debugln("Disconnected from WiFi access point");
               writeToSysLog("Disconnected from WiFi access point"); 

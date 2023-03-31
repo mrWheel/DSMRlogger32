@@ -1,7 +1,7 @@
 //---------------------------------------------------------
 // Yet Another Parameterized Projectbox generator
 //
-//  This is a box for a DSMRlogger32 v5.x PCB
+//  This is a box for a DSMR-logger32 v5.0 PCB
 //
 //  Version 1.0 (25-02-2023)
 //
@@ -71,7 +71,7 @@ insertDiamS = insertDiam + holeSlack;
 screwDiamS  = screwDiam + holeSlack;
 
 
-include <./YAPP_Box/library/YAPPgenerator_v18.scad>
+include <./YAPP_Box/library/YAPPgenerator_v19.scad>
 
 include <./YAPP_Box/library/roundedCubes.scad>
 
@@ -116,12 +116,12 @@ if (false)
                           LEFT
 */
 
-printBaseShell        = false;
-printLidShell         = false;
-printSwitchExtenders  = false;
-printInsideOLED       = false;
+printBaseShell        = true;
+printLidShell         = true;
+printSwitchExtenders  = true;
+printInsideOLED       = true;
 printOledStand        = true;
-printSwitchCap        = false;
+printSwitchCap        = true;
 
 // Edit these parameters for your own board dimensions
 wallThickness       = 2.4;
@@ -515,12 +515,13 @@ module baseHookOutside()
 
 module baseHookInside()
 {
+  /**
   //-- strengthening between RJ12's --
   translate([shellLength-24,58,0.5])
     rotate([180,-90,90])
       linear_extrude(1.8)
         polygon(points=[[0,0],[0,23],[9,23]]);
-
+  **/
 } //  baseHookInside()
 
 

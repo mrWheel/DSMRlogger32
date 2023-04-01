@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //
-//  Version 1.0 (31-03-2023)
+//  Version 1.0 (01-04-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -143,7 +143,8 @@ inspectY            = 0;  // 0=none, >0 from left, <0 from right
 // (6) = { yappHole, YappPin }
 // (7) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 pcbStands = [
-                [ 5, 5, 4, 0, 0, yappBoth, yappFrontRight]
+                [ 5, 4, 4, 3, 6, yappBoth, yappFrontRight]
+              , [ 5, 5, 4, 4, 8, yappBoth, yappBackLeft]
             ];     
 
 //-- Lid plane    -- origin is pcb[0,0,0]
@@ -157,6 +158,7 @@ pcbStands = [
 cutoutsLid =  [
       [14, 6,  6.5, 6.5, 0, yappCircle, yappCenter]     // Reset Button
      ,[41, 6,  8, 8, 0, yappRectangle, yappCenter]      // Flash Button
+     //-- if no OLED screen remove next line
      ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
      ,[4, 18, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 1
      ,[4, 28, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 2
@@ -253,7 +255,7 @@ cutoutsRight =  [
 // (9) = { yappConnWithPCB }
 // (10) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 connectors   =  [
-                   [ 5, 5, 4, 2.9, 5.2, 4.1, 4, 3, 12, yappConnWithPCB, yappFrontLeft, yappBackLeft, yappBackRight]
+                   [ 5, 5, 4, 2.9, 5.2, 4.1, 4, 3, 12, yappConnWithPCB, yappFrontLeft, yappBackRight]
                 ];
 
 
@@ -277,8 +279,9 @@ baseMounts   = [
 snapJoins   =  [
                   [36, 3, yappFront]
                 , [78, 4, yappFront]
-                , [(pcbLength/2)+2, 4, yappLeft, yappRight]
-                , [(pcbWidth/2)+2, 4, yappBack]
+                , [15, 4, yappLeft]
+                , [70, 4, yappRight]
+                , [15, 4, yappBack]
                ];
                
 //-- origin of labels is box [0,0,0]
@@ -528,7 +531,7 @@ if (printSwitchExtenders)
   echo(zeroExtend=zeroExtend);
      
   //-- switch extender [Flash] button
-  translate([-10,175,0])
+  translate([-10,75,0])
   {
     translate([0, 0, (poleHeight1/2)]) 
           cylinder(d=poleDiam,h=(poleHeight1-feetHeight), center=true);  // above shell
@@ -536,7 +539,7 @@ if (printSwitchExtenders)
           cylinder(d=feetDiam, h=feetHeight, center=true);
   }
   //-- switch extender [Reset] button
-  translate([-10,195,0])
+  translate([-10,55,0])
   {
     translate([0, 0, (poleHeight2/2)]) 
           cylinder(d=poleDiam,h=(poleHeight2-feetHeight), center=true);  // above shell

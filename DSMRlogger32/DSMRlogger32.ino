@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.5 (30-03-2023)"
+#define _FW_VERSION "v5.0.5 (01-04-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -488,8 +488,7 @@ void setup()
       oled_Print_Msg(3, "NTP gestart", 1500);
     }
     
-    //if (timeSet) { ntpEventId = setEvent(logNtpTime, nextLogTime(120)); }
-    if (timeSet) { ntpEventId = setEvent(logNtpTime,now()+3600); }
+    if (timeSet) { ntpEventId = setEvent(logNtpTime, now()+3600); }
     
   } //-- !runAPmode
   

@@ -20,13 +20,16 @@ void logNtpTime()
                                              , tzEurope.hour()
                                              , tzEurope.minute()
                                              , tzEurope.second());
-  writeToSysLog("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d"
+  if ((tzEurope.hour() == 12) || (ntpEventId == 0))
+  {
+    writeToSysLog("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d"
                                              , tzEurope.day()
                                              , tzEurope.month()
                                              , tzEurope.year()
                                              , tzEurope.hour()
                                              , tzEurope.minute()
                                              , tzEurope.second());
+  }
   ntpEventId = setEvent(logNtpTime, now()+3600);
 
 } //  logNtpTime()

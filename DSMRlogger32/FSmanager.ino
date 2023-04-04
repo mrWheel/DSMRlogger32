@@ -333,8 +333,8 @@ void handleUpload()
 
     if (httpServer.arg(0) == "/") //-- root!
     {
-      //-aaw-fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
-      fsUploadFile = _FSYS.open(httpServer.urlDecode(upload.filename), "w");
+      fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
+      //-aaw-fsUploadFile = _FSYS.open(httpServer.urlDecode(upload.filename), "w");
       DebugTf("FileUpload Name: %s\r\n",  upload.filename.c_str());
       writeToSysLog("FileUpload: [%s]",  upload.filename.c_str());
     }
@@ -347,6 +347,7 @@ void handleUpload()
     if (!fsUploadFile)
     {
       DebugTf("Failed to open [%s] in [%s]\r\n", upload.filename, httpServer.arg(0));
+      writeToSyslog("Failed to open [%s] in [%s]", upload.filename, httpServer.arg(0));
       //-- poke WatchDog
       pulseHeart(true);
       return;

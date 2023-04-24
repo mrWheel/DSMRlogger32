@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //
-//  Version 1.0 (01-04-2023)
+//  Version 1.0 (24-04-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -11,23 +11,59 @@
 
 //-- these parms need to be declared before including the YAPPgenerator
 //
-//-- these dimensions are for a 1.3" OLED display
+
+//-- default is 0.9" oled -----
+oled_13_inch          = false;
+
+//
+//- these dimensions are for a 1.3" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
-oledHeaderX         = 16;       //       +~~~~~~~~~~~~~~~+            
-oledHeaderY         = 40;       //       |     ==o==     | HeaderX    ^
-oledPcbWidth        = 37;       //       +---------------+ ScreenXs   |
-oledPcbHeight       = 24;       //       |               |            |
-oledScreenXs        =  3;       //       |               |            > Height
-oledScreenXe        = 26;       //       |_______________|            |
+oledHeader13X       = 16;       //       +~~~~~~~~~~~~~~~+            
+oledHeader13Y       = 40;       //       |     ==o==     | HeaderX    ^
+oledPcb13Width      = 37;       //       +---------------+ ScreenXs   |
+oledPcb13Height     = 24;       //       |               |            |
+oledScreen13Xs      =  3;       //       |               |            > Height
+oledScreen13Xe      = 26;       //       |_______________|            |
                                 //       +---------------+ ScreenXe   |
                                 //       |               |            |
                                 //       +---------------+            v
                                 //       <--- Width ----->
-oledScreenWidth  = oledPcbWidth;
-oledScreenHeight = oledScreenXe - oledScreenXs;
-oledScreenX      = oledHeaderX + oledScreenXs;
-oledScreenY      = oledHeaderY - (oledScreenWidth/2);
+
+
+//-- these dimensions are for a 0.9" OLED display
+//-- oled dimensions and Header position
+//                              //               V-------- HeaderY
+oledHeader09X       = 16;       //       +~~~~~~~~~~~~~~~+            
+oledHeader09Y       = 40;       //       |     ==o==     | HeaderX    ^
+oledPcb09Width      = 28;       //       +---------------+ ScreenXs   |
+oledPcb09Height     = 19;       //       |               |            |
+oledScreen09Xs      =  3;       //       |               |            > Height
+oledScreen09Xe      = 16;       //       |_______________|            |
+                                //       +---------------+ ScreenXe   |
+                                //       |               |            |
+                                //       +---------------+            v
+                                //       <--- Width ----->
+
+
+
+oledScreen09Width  = oledPcb09Width;
+oledScreen09Height = oledScreen09Xe - oledScreen09Xs;
+oledScreen09X      = oledHeader09X + oledScreen09Xs;
+oledScreen09Y      = oledHeader09Y - (oledScreen09Width/2);
+
+oledScreen13Width  = oledPcb13Width;
+oledScreen13Height = oledScreen13Xe - oledScreen13Xs;
+oledScreen13X      = oledHeader13X + oledScreen13Xs;
+oledScreen13Y      = oledHeader13Y - (oledScreen13Width/2);
+
+//-- normalize params -----
+oledHeaderX       = (oled_13_inch) ? oledHeader13X : oledHeader09X;
+oledHeaderY       = (oled_13_inch) ? oledHeader13Y : oledHeader09Y;
+oledScreenXs      = (oled_13_inch) ? oledScreen13Xs : oledScreen09Xs;
+oledScreenXe      = (oled_13_inch) ? oledScreen13Xe : oledScreen09Xe;
+oledScreenWidth   = (oled_13_inch) ? oledScreen13Width : oledScreen09Width;
+oledScreenHeight  = (oled_13_inch) ? oledScreen13Height : oledScreen09Height;
 
 
 include <./YAPP_Box/library/YAPPgenerator_v19.scad>
@@ -39,7 +75,7 @@ include <./YAPP_Box/library/roundedCubes.scad>
 see https://polyd.com/en/conversione-step-to-stl-online
 */
 
-myPcb = "./STL/DSMR-logger32_PCB_R52.stl";
+myPcb = "./STL/MODELS/DSMR-logger32_MODEL_R52.stl";
 
 if (false)
 {
@@ -90,7 +126,7 @@ lidPlaneThickness   = 1.2;
 //-- total height = 14 + pcbThickness + standoffHeight
 //--         19.6 = 14 + 1.6 + 4
 baseWallHeight      = 13; 
-lidWallHeight       =  8;
+lidWallHeight       = 11; //-- was 8;
 
 // ridge where base and lid off box can overlap
 // Make sure this isn't less than lidWallHeight
@@ -159,12 +195,14 @@ cutoutsLid =  [
       [14, 6,  6.5, 6.5, 0, yappCircle, yappCenter]     // Reset Button
      ,[41, 6,  8, 8, 0, yappRectangle, yappCenter]      // Flash Button
      //-- if no OLED screen remove next line
-     ,[oledScreenX, oledScreenY, oledScreenWidth, oledScreenHeight, 0, yappRectangle]  // OLED
+     ,[oledScreenXs+oledHeaderX, oledHeaderY-(oledScreenWidth/2)
+                        , oledScreenWidth, oledScreenHeight
+                        , 0, yappRectangle]  // OLED
      ,[4, 18, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 1
      ,[4, 28, 6, 6, 0, yappRectangle, yappCenter]       // NeoPixel 2
      ,[4, 40, 6, 6, 0, yappCircle]                      // NeoPixel 3
-     ,[pcbLength-16, 37.5, 15, 18, 0,  yappRectangle]   // RJ12
-     ,[pcbLength-16, 56.0, 15, 18, 0,  yappRectangle]   // RJ12
+   //,[pcbLength-16, 37.5, 15, 18, 0,  yappRectangle]   // RJ12
+   //,[pcbLength-16, 56.0, 15, 18, 0,  yappRectangle]   // RJ12
               ];
 
 //-- base plane    -- origin is pcb[0,0,0]
@@ -522,8 +560,10 @@ if (printSwitchExtenders)
 {
   extH        = -1.5;
   poleDiam    = 4;
-  poleHeight1 = 16; //16;
-  poleHeight2 = 14; //15!;
+  //--poleHeight1 = 16; 
+  poleHeight1 = (baseWallHeight + lidWallHeight) -5;
+  //--poleHeight2 = 14; 
+  poleHeight2 = (baseWallHeight + lidWallHeight) -7;
   feetDiam    = 7.5;
   feetHeight  = 2;  //1;
 

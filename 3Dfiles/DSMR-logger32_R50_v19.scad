@@ -80,7 +80,7 @@ include <./YAPP_Box/library/roundedCubes.scad>
 see https://polyd.com/en/conversione-step-to-stl-online
 */
 
-myPcb = "./STL/DSMRloggerESP32_PCB_R50.stl";
+myPcb = "./STL/MODELS/DSMRloggerESP32_MODEL_R50.stl";
 
 if (false)
 {

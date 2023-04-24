@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-#define _FW_VERSION "v5.0.5 (04-04-2023)"
+#define _FW_VERSION "v5.0.5 (24-04-2023)"
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **

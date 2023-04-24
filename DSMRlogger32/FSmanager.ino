@@ -347,7 +347,7 @@ void handleUpload()
     if (!fsUploadFile)
     {
       DebugTf("Failed to open [%s] in [%s]\r\n", upload.filename, httpServer.arg(0));
-      writeToSyslog("Failed to open [%s] in [%s]", upload.filename, httpServer.arg(0));
+      writeToSysLog("Failed to open [%s] in [%s]", upload.filename, httpServer.arg(0));
       //-- poke WatchDog
       pulseHeart(true);
       return;

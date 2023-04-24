@@ -11,7 +11,7 @@
 
 let TimerActual;
 let actPoint        = 0;
-let maxPoints       = 150;
+let maxPoints       = 501;  //-- was: 150
 var actLabel        = "-";
 var gasDelivered    = 0;
 

@@ -115,7 +115,7 @@ Timezone    tzEurope;
 #define _DTR_ENABLE              5
 #define LED_BUILTIN             15    //-- esp32
 #define _TLGRM_LEN           10000    //-- probably a bit to long
-#define _JSONBUFF_LEN        60000    //-- needed for 190 Hour History
+#define _JSONBUFF_LEN       200000    //-- 60000 is needed for 190 Hour History
 #define _GMSG_LEN              512
 #define _FCHAR_LEN              50
 #define _HOSTNAME_LEN           30
@@ -311,7 +311,7 @@ struct settingDevStruct
   int16_t   MQTTbrokerPort;
 };
 
-#define _MAX_ACTUAL_STORE  155
+#define _MAX_ACTUAL_STORE  500 //--155
 struct actualDataStruct
 {
   uint32_t  count;

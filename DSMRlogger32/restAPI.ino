@@ -805,7 +805,7 @@ void sendJsonActualHist()
 {
   char cRecnr[10] = {0};
   
-  SpiRamJsonDocument  doc(70000); 
+  SpiRamJsonDocument  doc(200000); 
   memset(jsonBuff, 0, _JSONBUFF_LEN);
   
   DebugTf("(2) Total Psram [%d bytes], Used [%d bytes], Psram Free [%d bytes]\r\n"

@@ -13,6 +13,8 @@ Documentation can be found [here](https://mrwheel-docs.gitbook.io/dsmrlogger32/)
   <tr>
     <td valign="top">5.0.5</td>
     <td>Nieuwe functionaliteit
+        <br>24-04-2023: Uitbreiding "Actual Tabel" naar 500 punten.
+        Hiervoor is ook DSMRgraphics.js aangepast
         <br>Het is nu mogelijk de DSMR-logger32 in zgn. "Access Point"
         mode op te starten. De DSMR-logger32 wordt dan zelf een Access
         Point waar je je computer of tablet aan kunt koppelen.

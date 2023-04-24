@@ -269,8 +269,12 @@ void handleKeyInput(char inChar)
         break;
         
       case 'y': skipHeartbeats = false;
+                writeToSysLog("User: Restart sending heart Beats..");
                 break;
       case 'Y': skipHeartbeats = !skipHeartbeats;
+                if (skipHeartbeats)
+                      writeToSysLog("User: Stopped sending heart Beats..");
+                else  writeToSysLog("User: Restart sending heart Beats..");
                 break;
                 
       case 'Z':

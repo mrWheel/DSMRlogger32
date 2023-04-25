@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //
-//  Version 1.0 (24-04-2023)
+//  Version 1.0 (25-04-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -38,8 +38,8 @@ oledHeader09X       = 16;       //       +~~~~~~~~~~~~~~~+
 oledHeader09Y       = 40;       //       |     ==o==     | HeaderX    ^
 oledPcb09Width      = 28;       //       +---------------+ ScreenXs   |
 oledPcb09Height     = 19;       //       |               |            |
-oledScreen09Xs      =  3;       //       |               |            > Height
-oledScreen09Xe      = 16;       //       |_______________|            |
+oledScreen09Xs      =  1.5;     //       |               |            > Height
+oledScreen09Xe      = 16.5;     //       |_______________|            |
                                 //       +---------------+ ScreenXe   |
                                 //       |               |            |
                                 //       +---------------+            v
@@ -414,7 +414,7 @@ module insideSwitch(isReset, x, y, s, d, topPcb)
   bH            = 2+d;
   wall          = 3.0;
   //outside = s+2;
-  echo(pcbX=pcbX,x=x,rX=rX,pcbY=pcbY,y=y,rY=rY);
+  echo("insideSwitch():",pcbX=pcbX,x=x,rX=rX,pcbY=pcbY,y=y,rY=rY);
 
   translate([rX, rY, (topPcb*-1)-0.5])
   {
@@ -471,7 +471,7 @@ module insideSwitch(isReset, x, y, s, d, topPcb)
           }
           translate([0, 0, 15/2]) 
           {
-            color("orange") cylinder(d=inside, h=15, center=true);
+            color("orange") cylinder(d=inside, h=17, center=true);
           }
         } //-- difference()
     } //--  if .. else
@@ -630,20 +630,40 @@ if (printSwitchCap)
 //-- oled Stand -----------
 if (printOledStand)
 {
-    zeroExtend=shellHeight - (standoffHeight + basePlaneThickness + pcbThickness + 8);
-     
-    //-- oled Stand
-    translate([-15,125,0])
+    standHeight = 11;
+  
+    if (oled_13_inch)
     {
-      translate([1,0,0]) cube([2,36, 2]);
-      translate([-1,5,0])     color("green")  cube([11,3,2]); // stand
-      translate([-1,0,0])     color("blue")   cube([3,8,2]);  // 
-      translate([-2,2,0])     color("black")  cube([3,2,2]);  // centreer nop
-      translate([-1,28,0])    color("green")  cube([11,3,2]); // stand
-      translate([-1,33-5,0])  color("blue")   cube([3,8,2]);  //
-      translate([-2,32,0])    color("red")    cube([3,2,2]);  // centreer nop
-      //translate([-3,3,0]) cube([1,30,1]);
+      //-- oled Stand 1.3"
+      translate([-15,125,0])
+      {
+        translate([1,0,0])      cube([2,36, 2]);
+        translate([-1,5,0])     color("green")  cube([standHeight,3,2]); // stand
+        translate([-1,0,0])     color("blue")   cube([3,8,2]);  // 
+        translate([-2.5,2,0])   color("black")  cube([4,1.5,1.5]);  // centreer nop
+        translate([-1,28,0])    color("green")  cube([standHeight,3,2]); // stand
+        translate([-1,33-5,0])  color("blue")   cube([3,8,2]);  //
+        translate([-2.5,32,0])  color("red")    cube([4,1.5,1.5]);  // centreer nop
+        //translate([-3,3,0]) cube([1,30,1]);
+      }
     }
+    else  //-- 0.95"
+    {
+      //-- oled Stand 0.95"
+      translate([-15,125,0])
+      {
+        translate([1,0,0])      cube([2,oledScreenWidth-2, 2]);
+        translate([-1,0,0])     color("green")  cube([standHeight,3,2]); // stand
+        translate([-1,0,0])     color("blue")   cube([3,8,2]);  // 
+        translate([-2.5,2,0])   color("black")  cube([4,1.5,1.5]);  // centreer nop
+        translate([-1,oledScreenWidth-2,0])     color("green")  cube([standHeight,3,2]); // stand
+        translate([-1,oledScreenWidth-7,0])     color("blue")   cube([3,8,2]);  //
+        translate([-2.5,oledScreenWidth-3,0])   color("red")    cube([4,1.5,1.5]);  // centreer nop
+        //translate([-3,3,0]) cube([1,30,1]);
+      }
+      //translate([-3,3,0]) color("black") cube([1,23,1]);
+    }
+      
     
 } // .. printOledStand?
 

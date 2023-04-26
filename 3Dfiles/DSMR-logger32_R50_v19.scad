@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.0 PCB
 //
-//  Version 1.0 (25-02-2023)
+//  Version 1.0 (26-04-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -141,10 +141,15 @@ roundRadius         = 1.0;
 
 // How much the PCB needs to be raised from the base
 // to leave room for solderings and whatnot
-standoffHeight      = 4.0;
-pinDiameter         = 2.5;
-pinHoleSlack        = 0.3;
+//standoffHeight      = 4.0;
+//pinDiameter         = 2.5;
+//pinHoleSlack        = 0.3;
 standoffDiameter    = 6;
+standoffHeight      = 4.0;  //-- only used for showPCB
+standoffPinDiameter = 2.5;
+standoffHoleSlack   = 0.3;
+//standoffDiameter    = 4;
+
 
 // Total height of box = basePlaneThickness + lidPlaneThickness 
 //                     + baseWallHeight + lidWallHeight
@@ -184,6 +189,8 @@ inspectY            = 0;  // 0=none, >0 from left, <0 from right
 // (6) = { yappHole, YappPin }
 // (7) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 pcbStands = [
+               [ 5, 5, 4, 4, 6, yappBoth, yappFrontRight]
+              ,[ 5, 5, 4, 4, 8, yappBoth, yappBackLeft]
             ];     
 
 //-- Lid plane    -- origin is pcb[0,0,0]
@@ -296,10 +303,8 @@ cutoutsRight =  [
 // (9) = { yappConnWithPCB }
 // (10) = { yappAllCorners | yappFrontLeft | yappFrondRight | yappBackLeft | yappBackRight }
 connectors   = [
-                 [ 5,  5, 4, screwDiamS, screwDiamS*2, insertDiamS, 6, 4, 12, yappConnWithPCB
-                                              , yappBackLeft, yappFrontLeft, yappBackRight]
-                ,[ 5,  5, 4, screwDiamS, screwDiamS*2, insertDiamS, 6, 3, 9, yappConnWithPCB
-                                                                          , yappFrontRight]
+                 [5, 5, 4, screwDiamS, screwDiamS*2, insertDiamS, 6, 4, 12, yappConnWithPCB
+                                              , yappFrontLeft, yappBackRight]
                ];
 
 
@@ -311,8 +316,8 @@ connectors   = [
 // (4..7) = yappLeft / yappRight / yappFront / yappBack (one or more)
 // (5) = { yappCenter }
 baseMounts   = [
-                    [10, 3.5, 45, 3, yappRight, yappCenter]
-                  , [shellLength-25, 3.5, 45, 3, yappLeft, yappCenter]
+                    [10,             3.5, 20, 3, yappRight, yappCenter]
+                  , [shellLength-25, 3.5, 20, 3, yappLeft, yappCenter]
                ];
                
 //-- snap Joins -- origen = box[x0,y0]
@@ -321,9 +326,9 @@ baseMounts   = [
 // (2..5) = yappLeft / yappRight / yappFront / yappBack (one or more)
 // (n) = { yappSymmetric }
 snapJoins   =  [
-                //  [37, 3, yappFront]
-                 [(pcbLength/2)+2, 4, yappLeft, yappRight]
-                //, [(pcbWidth/2)+2, 4, yappBack]
+               //  [(pcbLength/2)+2, 4, yappLeft, yappRight]
+                 [10, 4, yappLeft]
+                ,[70, 4, yappRight]
                ];
                
 //-- origin of labels is box [0,0,0]
@@ -643,7 +648,7 @@ if (printOledStand)
 {
   if (!oled_13_inch)
   {
-    //-- oled Stand
+    //-- oled Stand 0.96"
     translate([-15,125,0])
     {
       translate([1,0,0])  cube([1,oledPcb09Width, 2]);                      // main balk
@@ -661,7 +666,7 @@ if (printOledStand)
   }
   else  //-- 1.3"
   {
-    //-- oled Stand
+    //-- oled Stand 1.3"
     translate([-15,125,0])
     {
       translate([1,0,0])  cube([1,oledPcb13Width, 2]);                      // main balk

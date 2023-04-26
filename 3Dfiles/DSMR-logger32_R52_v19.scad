@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //
-//  Version 1.0 (25-04-2023)
+//  Version 1.0 (26-04-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -12,7 +12,7 @@
 //-- these parms need to be declared before including the YAPPgenerator
 //
 
-//-- default is 0.9" oled -----
+//-- default is 0.96" oled -----
 oled_13_inch          = false;
 
 //
@@ -136,10 +136,11 @@ roundRadius         = 1.0;
 
 // How much the PCB needs to be raised from the base
 // to leave room for solderings and whatnot
-standoffHeight      = 4.0;
-pinDiameter         = 2.0;
-pinHoleSlack        = 0.3;
+standoffHeight      = 4.0;  //-- only used to position PCB
 standoffDiameter    = 5;
+standoffPinDiameter = 2.0;
+standoffHoleSlack   = 0.4;
+
 
 // Total height of box = basePlaneThickness + lidPlaneThickness 
 //                     + baseWallHeight + lidWallHeight
@@ -170,6 +171,7 @@ inspectY            = 0;  // 0=none, >0 from left, <0 from right
 
 
 //-- pcb_standoffs  -- origin is pcb[0,0,0]
+//-- uses "standoffXYZ" values
 // (0) = posx
 // (1) = posy
 // (2) = standoffHeight
@@ -647,9 +649,9 @@ if (printOledStand)
         //translate([-3,3,0]) cube([1,30,1]);
       }
     }
-    else  //-- 0.95"
+    else  //-- 0.96"
     {
-      //-- oled Stand 0.95"
+      //-- oled Stand 0.96"
       translate([-15,125,0])
       {
         translate([1,0,0])      cube([2,oledScreenWidth-2, 2]);

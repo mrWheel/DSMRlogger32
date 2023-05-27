@@ -61,7 +61,7 @@
 
 /******************** don't change anything below this comment **********************/
 
-#include <esp_heap_caps.h>
+#include <esp_heap_caps.h>  // part of ESP32 Core https://github.com/ESP32/Arduino 
 
 #include "DSMRlogger32.h"
 

@@ -16,10 +16,13 @@
   #error "Only one of these: LITTLEFS or SPIFFS can be used!"
 #endif
 
-#include <FS.h>                 
+//------[FS@2.0.0]
+#include <FS.h>       // part of ESP32 Core https://github.com/ESP32/Arduino          
 
 #ifdef _SPIFFS
   #define _FSYS SPIFFS
+  //------[SPIFFS@2.0.0] // part of ESP32 Core https://github.com/ESP32/Arduino
+  //------[SPIFFS_SysLogger-2.0.1@2.0.1]
   #include <SPIFFS_SysLogger.h>
 #endif
 #ifdef _LITTLEFS
@@ -44,16 +47,15 @@ ESPSL     sysLog;
                              })
 #define _SYSLOG_LINES       150
 #define _SYSLOG_LINE_LEN    120
-//-- part of ESP32 Core https://github.com/ESP32/Arduino
-#include <HardwareSerial.h>
-//-- part of ESP32 Core https://github.com/ESP32/Arduino
+
+#include <HardwareSerial.h>   // part of ESP32 Core https://github.com/ESP32/Arduino
 //#include <esp32/rom/rtc.h>
 #include <rom/rtc.h>      // low-level 'C'???
 
 //-- use UART1 for SMserial
 HardwareSerial SMserial (1);
 //------ [WiFi@1.2.7 WiFi@2.0.0]
-#include <WiFi.h>           // part of ESP32 Core https://github.com/ESP32/Arduino
+#include <WiFi.h>          // part of ESP32 Core https://github.com/ESP32/Arduino
 //------ [WebServer@2.0.0]  - part of ESP32 Core https://github.com/ESP32/Arduino
 #include <WebServer.h>   
 //------ [ESPmDNS@2.0.0]    - part of ESP32 Core https://github.com/ESP32/Arduino
@@ -61,15 +63,6 @@ HardwareSerial SMserial (1);
 
 #include <WiFiUdp.h>        // part of ESP32 Core https://github.com/ESP32/Arduino
 //------ [HTTPUpdateServer@2.0.0] - part of ESP32 Core https://github.com/ESP32/Arduino
-//----------------------------------------------------------------------------------------------
-//-- Change in HTTPUpdateServer.h to make SPIFFS upload possible!
-//-- You can find this file here:
-//-- ~/Library/Arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/HTTPUpdateServer/src/
-//-- change line 107 
-//-->>    if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {
-//-- into
-//-->>    if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {
-//----------------------------------------------------------------------------------------------
 #include <HTTPUpdateServer.h>  
 //------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
 #include <WiFiManager.h>        // version 0.15.0 - https://github.com/tzapu/WiFiManager
@@ -85,11 +78,12 @@ HTTPUpdateServer httpUpdater(true);
 #include <ezTime.h>
 Timezone    tzEurope;
 
-//-- https://github.com/jandrassy/TelnetStream/commit/1294a9ee5cc9b1f7e51005091e351d60c8cddecf
+//-- https://github.com/jandrassy/TelnetStream
 //------ [TelnetStream@1.2.2]
 #include <TelnetStream.h>
 #include "safeTimers.h"
 
+//------ [Adafruit_NeoPixel@1.10.6]
 #include "neoPixelStuff.h"
 
 //------ [ArduinoJson@6.19.3]
@@ -166,7 +160,7 @@ Timezone    tzEurope;
 //enum    { PERIOD_UNKNOWN, HOURS, DAYS, MONTHS, YEARS };
 
 #include "Debug.h"
-#include "wifiEvents.h"
+#include "wifiEvents.h"   // part of ESP32 Core https://github.com/ESP32/Arduino
 
 /**
  * Define the tlgrmData we're interested in, as well as the tlgrmDatastructure to

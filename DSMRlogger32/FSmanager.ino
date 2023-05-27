@@ -23,7 +23,7 @@
   Lesser General Public License for more details.
 *******************************************************************/
 // Diese Version von LittleFS sollte als Tab eingebunden werden.
-// #include <LittleFS.h> #include <ESP8266WebServer.h> müssen im Haupttab aufgerufen werden
+// #include <LittleFS.h> #include <WebServer.h> müssen im Haupttab aufgerufen werden
 // Die Funktionalität des ESP8266 Webservers ist erforderlich.
 // "httpServer.onNotFound()" darf nicht im Setup des ESP8266 Webserver stehen.
 // Die Funktion "setupFS();" muss im Setup aufgerufen werden.

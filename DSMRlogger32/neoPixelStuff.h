@@ -9,6 +9,7 @@
 ***************************************************************************
 */
 
+//------ [Adafruit_NeoPixel@1.10.6]
 #include <Adafruit_NeoPixel.h>
 
 #define _NEO_PIXELS_COUNT      2

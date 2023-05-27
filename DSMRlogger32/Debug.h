@@ -45,7 +45,7 @@
 
 /*---- einde macro's ------------------------------------------------------------------*/
 
-//-- Version 0.0.1 - https://github.com/jandrassy/TelnetStream
+//-- [TelnetStream@1.2.2] - https://github.com/jandrassy/TelnetStream
 //-- needs #include <TelnetStream.h>
 char _bol[128];
 void _debugBOL(const char *fn, int line)

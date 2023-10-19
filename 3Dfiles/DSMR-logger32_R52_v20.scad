@@ -3,7 +3,7 @@
 //
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //
-//  Version 1.0 (25-05-2023)
+//  Version 1.0 (12-07-2023)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -12,14 +12,24 @@
 //-- these parms need to be declared before including the YAPPgenerator
 //
 
-//-- default is 0.96" oled -----
+//-- select oled size (both 'false' for none) -----
+oled_09_inch          = false;
 oled_13_inch          = false;
 
+if (oled_09_inch && oled_13_inch)
+{
+  for (i = [0 : 1 : 20])
+  {
+    echo("====================================");
+    echo("Select (only one!) OLED screen size");
+    echo("====================================");
+  }
+}
 //
 //- these dimensions are for a 1.3" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
-oledHeader13X       = 14;       //       +~~~~~~~~~~~~~~~+            
+oledHeader13X       = 16;       //       +~~~~~~~~~~~~~~~+            
 oledHeader13Y       = 40;       //       |     ==o==     | HeaderX    ^
 oledPcb13Width      = 37;       //       +---------------+ ScreenXs   |
 oledPcb13Height     = 24;       //       |               |            |
@@ -34,12 +44,12 @@ oledScreen13Xe      = 26;       //       |_______________|            |
 //-- these dimensions are for a 0.9" OLED display
 //-- oled dimensions and Header position
 //                              //               V-------- HeaderY
-oledHeader09X       = 14;       //       +~~~~~~~~~~~~~~~+            
+oledHeader09X       = 17;       //       +~~~~~~~~~~~~~~~+            
 oledHeader09Y       = 40;       //       |     ==o==     | HeaderX    ^
 oledPcb09Width      = 28;       //       +---------------+ ScreenXs   |
 oledPcb09Height     = 19;       //       |               |            |
 oledScreen09Xs      =  1.5;     //       |               |            > Height
-oledScreen09Xe      = 16.5;     //       |_______________|            |
+oledScreen09Xe      = 19.0;     //       |_______________|            |
                                 //       +---------------+ ScreenXe   |
                                 //       |               |            |
                                 //       +---------------+            v
@@ -64,6 +74,12 @@ oledScreenXs      = (oled_13_inch) ? oledScreen13Xs : oledScreen09Xs;
 oledScreenXe      = (oled_13_inch) ? oledScreen13Xe : oledScreen09Xe;
 oledScreenWidth   = (oled_13_inch) ? oledScreen13Width : oledScreen09Width;
 oledScreenHeight  = (oled_13_inch) ? oledScreen13Height : oledScreen09Height;
+
+oledRecess = (oled_09_inch || oled_13_inch) ? [oledScreenXs+oledHeaderX, oledHeaderY-(oledScreenWidth/2)
+                      , oledScreenWidth, oledScreenHeight
+                      , 0, -1] //-- "-1" == yappRectangle
+                      : [];
+
 
 
 include <./YAPP_Box/library/YAPPgenerator_v20.scad>
@@ -115,7 +131,7 @@ printBaseShell        = true;
 printLidShell         = true;
 printSwitchExtenders  = true;
 printInsideOLED       = true;
-printOledStand        = true;
+printOledStand        = false;
 
 // Edit these parameters for your own board dimensions
 wallThickness       = 2.4;
@@ -197,10 +213,7 @@ pcbStands = [
 // (5) = { yappRectangle | yappCircle }
 // (6) = { yappCenter }
 cutoutsLid =  [
-                //-- if no OLED screen remove next line
-                [oledScreenXs+oledHeaderX, oledHeaderY-(oledScreenWidth/2)
-                        , oledScreenWidth, oledScreenHeight
-                        , 0, yappRectangle]  // OLED
+                oledRecess
               ];
 
 //-- base plane    -- origin is pcb[0,0,0]

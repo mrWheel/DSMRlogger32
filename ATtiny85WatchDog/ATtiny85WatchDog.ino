@@ -4,6 +4,9 @@
 ** Copyright 2022, 2023 Willem Aandewiel
 ** Version 3.1  23-03-2023
 ** 
+** ==============================================
+** ===>>> further development in PlatformIO !!
+** ==============================================
 ** 
 ** tested with: Arduino IDE version 1.8.19
 **              ATTinyCore 1.5.2 (By Spence Kondo)
@@ -13,7 +16,8 @@
 ** AVRfuses: Serial programdownloading (SPI) enabled
 ** AVRfuses: Brown-out Detector trigger level: VCC=1.8 V
 ** AVRfuses: Select Clock source: Int. RC Osc. 8MHz; Start-up time PWRDWN/RESET: 6 CK/1
-** Low 0xE2, High 0xDE, Extended 0xFF
+** //Low 0xE2, High 0xDE, Extended 0xFF
+** Low 0xC2, High 0xDE, Extended 0xFF
 ** 
 ** Board              : "ATtiny25/45/85 (no bootloader)"
 ** Chip               : "ATtiny85"

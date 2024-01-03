@@ -4,7 +4,7 @@
 //  This is a box for a DSMR-logger32 v5.2 PCB
 //  for use with the YAPP_generator_v30 lbrary
 //
-//  Version 3.0 (02-01-2024)
+//  Version 3.0 (03-01-2024)
 //
 // This design is parameterized based on the size of a PCB.
 //---------------------------------------------------------
@@ -185,17 +185,17 @@ renderQuality             = 6;          //-> from 1 to 32, Default = 8
 
 // --Preview --
 previewQuality            = 5;          //-> from 1 to 32, Default = 5
-showSideBySide            = false;       //-> Default = true
+showSideBySide            = true;       //-> Default = true
 onLidGap                  = 0;  // tip don't override to animate the lid opening
 colorLid                  = "YellowGreen";   
-alphaLid                  = 0.6;
+alphaLid                  = 0.9;
 colorBase                 = "BurlyWood";
-alphaBase                 = 0.6;
+alphaBase                 = 0.9;
 hideLidWalls              = false;      //-> Remove the walls from the lid : only if preview and showSideBySide=true 
 hideBaseWalls             = false;      //-> Remove the walls from the base : only if preview and showSideBySide=true  
 showOrientation           = true;       //-> Show the Front/Back/Left/Right labels : only in preview
 showPCB                   = false;      //-> Show the PCB in red : only in preview 
-showSwitches              = true;      //-> Show the switches (for pushbuttons) : only in preview 
+showSwitches              = false;      //-> Show the switches (for pushbuttons) : only in preview 
 showButtonsDepressed      = false;      //-> Should the buttons in the Lid On view be in the pressed position
 showOriginCoordBox        = false;      //-> Shows red bars representing the origin for yappCoordBox : only in preview 
 showOriginCoordBoxInside  = false;      //-> Shows blue bars representing the origin for yappCoordBoxInside : only in preview 
@@ -345,7 +345,6 @@ cutoutsLid =
 cutoutsBase =  
 [
 //--           0,          1,       2,  3, 4, 5
-//  [shellLength/2, shellWidth/2 , 35, 35, 2, yappRoundedRect, shapeHexagon, maskHoneycomb, yappCenter, yappCoordBox]
     [shellLength/2, shellWidth/2 , 35, 35, 2, yappRoundedRect, [maskHoneycomb, 0, 2.5, 0], yappCenter, yappCoordBox]
 ];
 
@@ -392,7 +391,7 @@ cutoutsBase =
 //-------------------------------------------------------------------
 cutoutsFront =  
 [
-  [23.5,  4,   11, 11, 1, yappRoundedRect, yappCenter]    // PWR Jack
+  [23.5,  5,   11, 13, 1, yappRoundedRect, yappCenter]    // PWR Jack
  ,[37.5, -0.5, 15, 17, 1, yappRoundedRect]  // RJ11
  ,[56.0, -0.5, 15, 17, 1, yappRoundedRect]  // RJ11
 ];
@@ -444,11 +443,11 @@ boxMounts   =
 //-------------------------------------------------------------------
 snapJoins   =  
 [
-  [36, 3, yappFront]
- ,[78, 4, yappFront]
- ,[15, 4, yappLeft]
- ,[70, 4, yappRight]
- ,[15, 4, yappBack]
+  [36, 3, yappFront, yappRectangle]
+ ,[78, 4, yappFront, yappRectangle]
+ ,[15, 4, yappLeft,  yappRectangle]
+ ,[70, 4, yappRight, yappRectangle]
+ ,[15, 4, yappBack,  yappRectangle]
 ];
                
 //===================================================================
@@ -513,37 +512,32 @@ lightTubes =
 //-------------------------------------------------------------------
 pushButtons = 
 [
-// [14, 6,  6.5, 6.5, 0, 2, 1, 3.5, yappCircle]       // Reset Button
-//,[41, 6,  4,   8,   2, 2, 1, 3.5, yappRectangle]    // Flash Button
-//-- 0, 1,  2,   3,   4, 5, 6, 7,           8
-//   [14, 6,  6.5, 6.5, 3, 5, 1, yappDefault, yappCircle]       // Reset Button
-// ,[41, 6,  4,   8,   0, 5, 1, 3.5, yappRectangle]    // Flash Button
 //-- RESET button -----------------
-  [14, 6 // [0,1] posX, posY
-    ,0    // [2] Width
-    ,0    // [3] Length
-    ,3    // [4] Radius
-    ,0    // [5] Cap above Lid
-    ,2.5    // [6] Switch Height
-    ,1    // [7] Switch travel
-    ,3    // [8] Pole Diameter
+  [14, 6          // [0,1] posX, posY
+    ,0            // [2] Width
+    ,0            // [3] Length
+    ,3            // [4] Radius
+    ,-0.5         // [5] Cap above Lid
+    ,2.5          // [6] Switch Height
+    ,0.6          // [7] Switch travel
+    ,3.5          // [8] Pole Diameter
     ,yappDefault  // [9]  Height to top of PCB
     ,yappCircle   // [10] Shape
-    , yappDefault // [11]
-    , yappDefault // [12]
-    , 1           // [13]
+    ,yappDefault  // [11]
+    ,yappDefault  // [12]
+    ,2            // [13]
   ]
 //-- FLASH button -----------------
-  ,[41,6,  // posX, posY
-    8,    // Width
-    8,    // Length
-    2,    // Radius
-    1.5,   // Cap above Lid
-    2.5,    // Switch Height
-    1,    // Switch travel
-    3,    // Pole Diameter
-    yappDefault, // Height to top of PCB
-    yappRoundedRect // Shape
+  ,[41,6          // [0,1] posX, posY
+    ,8            // [2] Width
+    ,8            // [3] Length
+    ,2            // [4] Radius
+    ,1.0          // [5] Cap above Lid
+    ,2.5          // [6] Switch Height
+    ,0.6          // [7] Switch travel
+    ,3.5          // [8] Pole Diameter
+    ,yappDefault  // [9] Height to top of PCB
+    ,yappRoundedRect // [10] Shape
   ]
 
 ];     
@@ -573,20 +567,20 @@ labelsPlane =
 ];
 
                
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 module insideOledScreen(topPCB)
 {
-  zVal          = (baseWallHeight+lidWallHeight)-(standoffHeight-pcbThickness)-1;
-  zeroX         = pcbX+oledHeaderX;
-  zeroY         = pcbY+oledHeaderY;
+  zVal          = (baseWallHeight+lidWallHeight)-(standoffHeight-pcbThickness)-2;
+  zeroX         = pcbX+oledHeaderX-2.2;
+  zeroY         = pcbY+oledHeaderY-2.2;
   
   rimWidth      = 2;
   rimXin        = oledScreenXs;
   rimYin        = (oledScreenWidth/2)*-1;
   rimXout       = rimXin-(rimWidth/2);
   rimYout       = rimYin-(rimWidth/2);
-  wallFromRim   = 2.5;
-  wallThickness = 2;
+  wallFromRim   = 4.5;
+  wallThickness = 4;
   wallInW       = oledScreenWidth+wallFromRim;
   wallInH       = oledScreenHeight+8;
   wallXin       = 0; //oledScreenXs-(wallFromRim/2);
@@ -642,35 +636,35 @@ module insideOledScreen(topPCB)
 
 
 
-module baseHookOutside()
+module hookBaseOutside()
 {
-} //  baseHookOutside()
+} //  hookBaseOutside()
 
 
-module baseHookInside()
+module hookBaseInside()
 {
-} //  baseHookInside()
+} //  hookBaseInside()
 
 
-module lidHookOutside()
+module hookLidOutside()
 {
   
-} //  lidHookOutside()
+} //  hookLidOutside()
 
 
-module lidHookInside()
+module hookLidInside()
 {
   //-- strengthening between RJ12's --
-  translate([shellLength-24,58.5,0])
-    rotate([90,90,0])
-      linear_extrude(1.8)
+  translate([shellLength-24, 56.0, 0])
+    rotate([90, 90, 0])
+      linear_extrude(1.5)
         polygon(points=[[0,0],[0,23],[12,23]]);
       
   topPCB = (baseWallHeight+lidWallHeight)-(standoffHeight+2);
 
   if (printInsideOLED) insideOledScreen(topPCB);
   
-} //  lidHookInside()
+} //  hookLidInside()
 
 
 //-- oled Stand -----------
@@ -693,7 +687,7 @@ if (printOledStand)
         //translate([-3,3,0]) cube([1,30,1]);
       }
     }
-    else  //-- 0.96"
+    if (oled_09_inch)
     {
       //-- oled Stand 0.96"
       translate([-15,125,0])

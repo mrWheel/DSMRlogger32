@@ -17,8 +17,13 @@
 transparentFilament = true;  //-- {false|true}
 
 //-- select oled size (both 'false' for none) -----
-oled_09_inch          = true;
-oled_13_inch          = false;
+oled_09_inch          = false;
+oled_13_inch          = true;
+
+makeBaseShell        = false;
+makeLidShell         = false;
+makeSwitchExtenders  = false;
+makeOledStand        = true;
 
 
 if (oled_09_inch && oled_13_inch)
@@ -89,9 +94,9 @@ oledRecess = (oled_09_inch || oled_13_inch)
 lensThickness = (transparentFilament) ? 0.5 : 0;
 
 
-include <./YAPP_Box/library/YAPPgenerator_v30.scad>
+include <./YAPPgenerator_v3.scad>
 
-include <./YAPP_Box/library/roundedCubes.scad>
+//include <./roundedCubes.scad>
 
 
 /*
@@ -134,16 +139,19 @@ if (true)
                           LEFT
 */
 
-printBaseShell        = true;
-printLidShell         = true;
-printSwitchExtenders  = true;
-printInsideOLED       = true;
-printOledStand        = true;
+printBaseShell        = makeBaseShell;
+printLidShell         = makeLidShell;
+printSwitchExtenders  = makeSwitchExtenders; 
+//printInsideOLED       = makeInsideOled;  
+printOledStand        = makeOledStand; 
 
 // Edit these parameters for your own board dimensions
-wallThickness       = 2.2; //-aaw-2.4;
+wallThickness       = 2.2; 
 basePlaneThickness  = 1.0;
 lidPlaneThickness   = 1.2;
+// Set the ratio between the wall thickness and the ridge height. 
+//    Recommended to be left at 1.8 but for strong snaps.
+wallToRidgeRatio = 1.5;
 
 //-- total height = 14 + pcbThickness + standoffHeight
 //--         19.6 = 14 + 1.6 + 4
@@ -185,14 +193,14 @@ renderQuality             = 6;          //-> from 1 to 32, Default = 8
 
 // --Preview --
 previewQuality            = 5;          //-> from 1 to 32, Default = 5
-showSideBySide            = true;       //-> Default = true
+showSideBySide            = false;       //-> Default = true
 onLidGap                  = 0;  // tip don't override to animate the lid opening
 colorLid                  = "YellowGreen";   
 alphaLid                  = 0.9;
 colorBase                 = "BurlyWood";
 alphaBase                 = 0.9;
-hideLidWalls              = false;      //-> Remove the walls from the lid : only if preview and showSideBySide=true 
-hideBaseWalls             = false;      //-> Remove the walls from the base : only if preview and showSideBySide=true  
+hideLidWalls              = true;      //-> Remove the walls from the lid : only if preview and showSideBySide=true 
+hideBaseWalls             = true;      //-> Remove the walls from the base : only if preview and showSideBySide=true  
 showOrientation           = true;       //-> Show the Front/Back/Left/Right labels : only in preview
 showPCB                   = false;      //-> Show the PCB in red : only in preview 
 showSwitches              = false;      //-> Show the switches (for pushbuttons) : only in preview 
@@ -246,28 +254,31 @@ pcbStands =
 //  *** Connectors ***
 //  Standoffs with hole through base and socket in lid for screw type connections.
 //-------------------------------------------------------------------
-//  Default origin = yappCoordBox: box[0,0,0]
+//  Default origin =  yappCoordPCB : pcb[0,0,0]
 //  
 //  Parameters:
 //   Required:
 //    p(0) = posx
 //    p(1) = posy
-//    p(2) = pcbStandHeight
+//    p(2) = StandHeight : From specified origin 
 //    p(3) = screwDiameter
 //    p(4) = screwHeadDiameter (don't forget to add extra for the fillet)
 //    p(5) = insertDiameter
 //    p(6) = outsideDiameter
 //   Optional:
-//    p(7) = PCB Gap : Default = -1 : Default for yappCoordPCB=pcbThickness, yappCoordBox=0
-//    p(8) = filletRadius : Default = 0/Auto(0 = auto size)
-//    n(a) = { <yappAllCorners>, yappFrontLeft | yappFrontRight | yappBackLeft | yappBackRight }
-//    n(b) = { <yappCoordBox> | yappCoordPCB |  yappCoordBoxInside }
+//    p(7) = insert Depth : default to entire connector
+//    p(8) = PCB Gap : Default if yappCoordPCB then pcbThickness else 0
+//    p(9) = filletRadius : Default = 0/Auto(0 = auto size)
+//    n(a) = { yappAllCorners, yappFrontLeft | <yappBackLeft> | yappFrontRight | yappBackRight }
+//    n(b) = { <yappCoordPCB> | yappCoordBox | yappCoordBoxInside }
 //    n(c) = { yappNoFillet }
+//    n(d) = { yappCountersink }
+//    n(e) = [yappPCBName, "XXX"] : Specify a PCB. Defaults to [yappPCBName, "Main"]
+//-------------------------------------------------------------------
 connectors   =  
 [
-// [ 5, 5, 4, 2.9, 5.2, 4.1, 4, 3, 12, yappConnWithPCB, yappFrontLeft, yappBackRight]
-//-- 0, 1, 2,              3,   4,   5,   6, 7,         , n
-   [ 5, 5, 0, 2.9, 5.2, 4.1, 4, yappDefault, yappDefault, yappCoordPCB, yappFrontLeft, yappBackRight]
+//-- 0, 1, 2, 3,   4,   5,   6, 7,           8,           9
+   [ 5, 5, 2, 2.9, 5.2, 4.1, 4, yappDefault, yappDefault, yappDefault, yappFrontLeft, yappBackRight]
 ];
 
 
@@ -571,8 +582,10 @@ labelsPlane =
 module insideOledScreen(topPCB)
 {
   zVal          = (baseWallHeight+lidWallHeight)-(standoffHeight-pcbThickness)-2;
-  zeroX         = pcbX+oledHeaderX-2.2;
-  zeroY         = pcbY+oledHeaderY-2.2;
+  //zeroX         = pcbX+oledHeaderX-2.2;
+  //zeroY         = pcbY+oledHeaderY-2.2;
+  zeroX         = wallThickness+paddingBack+oledHeaderX-2.2;
+  zeroY         = wallThickness+paddingLeft+oledHeaderY-2.2;
   
   rimWidth      = 2;
   rimXin        = oledScreenXs;
@@ -662,7 +675,7 @@ module hookLidInside()
       
   topPCB = (baseWallHeight+lidWallHeight)-(standoffHeight+2);
 
-  if (printInsideOLED) insideOledScreen(topPCB);
+  if (printLidShell && (oled_09_inch || oled_13_inch )) insideOledScreen(topPCB);
   
 } //  hookLidInside()
 

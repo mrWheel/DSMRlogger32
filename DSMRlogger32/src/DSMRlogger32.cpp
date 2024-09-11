@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.1.0 (11-09-2024)";
+const char* _FW_VERSION = "v5.1.1 (11-09-2024)";
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -581,6 +581,7 @@ void doSystemTasks()
   pulseHeart();
   time(&now);
  
+  slimmeMeter.loop();
   MQTTclient.loop();
   httpServer.handleClient();
 

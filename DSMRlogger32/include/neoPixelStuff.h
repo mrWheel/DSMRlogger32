@@ -14,31 +14,7 @@
 //============ Includes ====================
 #include "arduinoGlue.h"
 
-//============ Added by Convertor ==========
-
-
-//------ [Adafruit_NeoPixel@1.10.6]
-//#include <Adafruit_NeoPixel.h>                    		//-- moved to arduinoGlue.h
-
-	//-- moved to arduinoGlue.h // #define _NEO_PIXELS_COUNT      2
-	//-- moved to arduinoGlue.h // #define _NEO_PIN              23
-	//-- moved to arduinoGlue.h // #define _NEO_CHANNEL           0
-
-//---- moved to arduinoGlue.h ---
 Adafruit_NeoPixel neoPixels = Adafruit_NeoPixel(_NEO_PIXELS_COUNT, _NEO_PIN, NEO_GRB + NEO_KHZ800);
-
-/*				*** enum moved to arduinoGlue.h ***
-enum neoPixColor {
-        neoPixWhiteLow
-      , neoPixWhite
-      , neoPixRed
-      , neoPixGreenLow
-      , neoPixGreen
-      , neoPixBlue
-      , neoPixFade
-      , neoPixBlink
-};
-*/
 
 //----------------------------------------------------------------
 void neoPixOff(int neoPixNr) 

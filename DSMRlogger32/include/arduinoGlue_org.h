@@ -17,26 +17,25 @@
 #include <HardwareSerial.h>
 #include <rom/rtc.h>
 #include <HTTPUpdateServer.h>
+//--pio- #include <ezTime.h>
 #include <TelnetStream.h>
 #include <ArduinoJson.h>
 #include <dsmr2.h>
 #include <PubSubClient.h>
 #include <TimeSyncLib.h>
 
-//-- used in DSMRlogger32.cpp
-extern struct tm    timeinfo;                                          //-- from timeStuff
-//-- used in handleTestdata.cpp, DSMRlogger32.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, handleSlimmeMeter.cpp
-extern time_t       now;                                               //-- from timeStuff
+extern TimeSync     timeSync;
+extern struct tm    timeinfo;
+extern time_t       now;
 
 //============ Defines & Macros====================
 #define   MAXLINELENGTH     500   // longest normal line is 47 char (+3 for \r\n\0)
 #define I2C_ADDRESS 0x3C
 #define RST_PIN -1
-//#define _FW_VERSION "v5.0.5 (24-04-2023)"
+#define _FW_VERSION "v5.0.5 (24-04-2023)"
 #define _SPIFFS
 #define FORMAT_SPIFFS_IF_FAILED true
 //-- from Debug.h -----------
-//-- not used anywhere
 void _debugBOL(const char *fn, int line);                   
 
 #define Debug(...)      ({ Serial.print(__VA_ARGS__);         \
@@ -184,6 +183,7 @@ void _debugBOL(const char *fn, int line);
 #define _NO_MONTH_SLOTS_  (24 +1)
 #define SECS_PER_HOUR         3600
 #define SECS_PER_DAY         86400
+#define SECS_PER_MONTH     2592000
 #define _MAX_ACTUAL_STORE  500 //--155
 
 //============ Structs, Unions & Enums ============
@@ -200,8 +200,7 @@ struct myWiFiStruct
   IPAddress ipDNS; 
   IPAddress ipSubnet;
 };
-//-- used in DSMRlogger32.cpp
-extern myWiFiStruct myWiFi;                                            //-- from networkStuff
+extern myWiFiStruct myWiFi;
 
 //-- from DSMRlogger32.h
 union t
@@ -311,8 +310,7 @@ enum neoPixColor {
 };
 
 
-//-- used in DSMRlogger32.cpp
-extern Adafruit_NeoPixel neoPixels;               //-- from settingsStuff
+extern Adafruit_NeoPixel neoPixels;
 
 //-- from FSYSstuff.ino
 struct listFileStruct
@@ -338,23 +336,14 @@ struct showValues
   }
 };
 
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp
 bool isInFieldsArray(const char *lookUp, int elemts);       
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 void addToTable(const char *cName, const char *cValue);     
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 void addToTable(const char *cName, String sValue);          
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 void addToTable(const char *cName, uint32_t uValue);        
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 void addToTable(const char *cName, int32_t iValue);         
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 void addToTable(const char *cName, float fValue);           
-//-- Used in: DSMRlogger32.cpp, helperStuff.cpp
 void pushToActualStore(const char *cName, String sValue);   
-//-- Used in: DSMRlogger32.cpp, helperStuff.cpp
 void pushToActualStore(const char *cName, float fValue);    
-//-- Used in: helperStuff.cpp, processTelegram.cpp
 void pushTlgrmToActualStore();                              
 
 //=======================================================================
@@ -364,17 +353,12 @@ Item &typecastValue(Item &i)
   return i;
 }
 
-//-- Used in: DSMRlogger32.cpp
 float typecastValue(TimestampedFixedValue i);               
-//-- Used in: DSMRlogger32.cpp
 float typecastValue(FixedValue i);                          
 
-//-- not used extern char            fieldName[40];                     		//-- from DSMRlogger32
-//-- used in restAPI.cpp, helperStuff.cpp
+extern char            fieldName[40];                     		//-- from DSMRlogger32
 extern uint16_t        fieldTableCount;                   		//-- from DSMRlogger32
-//-- used in restAPI.cpp
 extern char            fieldsArray[50][35];                   		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern int             fieldsElements;                    		//-- from DSMRlogger32
 
 //-- from DSMRlogger32.ino
@@ -432,7 +416,6 @@ struct SpiRamAllocator
 {
   void* allocate(size_t size) 
   {
-//-- Used in: helperStuff.cpp
     return heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
   }
 
@@ -443,10 +426,17 @@ struct SpiRamAllocator
 
   void* reallocate(void* ptr, size_t new_size) 
   {
-//-- Used in: helperStuff.cpp
     return heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM);
   }
 };
+
+//-- from FSmanager.ino
+//struct _catStruct
+//{
+//  char fDir[35];
+//  char fName[35];
+//  int fSize;
+//};
 
 //-- from handleTestdata.ino
 enum runStates { SInit, SMonth, SDay, SHour, SNormal };
@@ -522,152 +512,164 @@ using MyData = ParsedData<
                /* TimestampedFixedValue */, mbus4_delivered_dbl
                >;
 
-//-- not used extern MyData      DSMRdata;
+extern MyData      DSMRdata;
 
 using SpiRamJsonDocument = BasicJsonDocument<SpiRamAllocator>;
 
 //============ Extern Variables ============
-//-- used in DSMRlogger32.cpp, settingsStuff.cpp
-extern const char*     _FW_VERSION;                           //-- from DSMRlogger32.cpp
-//-- used in DSMRlogger32.cpp
 extern PubSubClient    MQTTclient;                        		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, MQTTstuff.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, FSmanager.cpp, settingsStuff.cpp
+extern HardwareSerial  SMserial;                          		//-- from DSMRlogger32
 extern bool            Verbose1;                          		//-- from DSMRlogger32
-//-- used in handleTestdata.cpp, MQTTstuff.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, handleSlimmeMeter.cpp
 extern bool            Verbose2;                          		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
+extern time_t          actT;                              		//-- from DSMRlogger32
 extern int             actualElements;                    		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
 extern uint32_t        actualStoreCount;                  		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
 extern uint16_t        actualStoreSlot;                   		//-- from DSMRlogger32
+extern int             actualTableElements;               		//-- from DSMRlogger32
 extern char            actualTableArray[][35];
 extern char            actualArray[][35];
 extern char            infoArray[][35];
+extern uint32_t        antiWearTimer;                     		//-- from DSMRlogger32
 extern bool            boolDisplay;                       		//-- from DSMRlogger32
 extern bool            buttonState;                       		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, helperStuff.cpp, DSMRsetupStuff.cpp
+extern bool            doLog;                             		//-- from DSMRlogger32
 extern bool            filesysMounted;                    		//-- from DSMRlogger32
-//-- used in handleTestdata.cpp, DSMRlogger32.cpp, networkStuff.cpp, MQTTstuff.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, FSmanager.cpp, settingsStuff.cpp, processTelegram.cpp, helperStuff.cpp, DSMRsetupStuff.cpp, handleSlimmeMeter.cpp
+extern bool            filesysNotPopulated;               		//-- from DSMRlogger32
 extern const char*     flashMode[];                       		//-- from DSMRlogger32
-//-- used in handleTestdata.cpp, restAPI.cpp, FSYSstuff.cpp, helperStuff.cpp, handleSlimmeMeter.cpp
 extern float           gasDelivered;                      		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
 extern uint32_t        glowTimer0;                        		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, handleSlimmeMeter.cpp, FSYSstuff.cpp
 extern uint32_t        glowTimer1;                        		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern bool            hasAlternativeIndex;               		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, networkStuff.cpp
 extern HTTPUpdateServer httpUpdater;                       		//-- from DSMRlogger32
 extern int             infoElements;                      		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
+//extern bool            isInFieldsArray;                   		//-- from DSMRlogger32
+extern int8_t          lastMonth;                         		//-- from DSMRlogger32
 extern char            lastResetCPU0[100];                		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern char            lastResetCPU1[100];                		//-- from DSMRlogger32
-//-- used in handleTestdata.cpp, DSMRlogger32.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, processTelegram.cpp
+extern uint16_t        lastResetCount;                    		//-- from DSMRlogger32
 extern timeStruct      lastTlgrmTime;                     		//-- from DSMRlogger32
-//-- used in settingsStuff.cpp, restAPI.cpp
+extern uint32_t        loopCount;                         		//-- from DSMRlogger32
 extern bool            mqttIsConnected;                   		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern uint8_t         msgMode;                           		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, FSYSstuff.cpp, menuStuff.cpp
+extern char            newTimestamp[_TIMESTAMP_LEN];      		//-- from DSMRlogger32
 extern uint32_t        nrReboots;                         		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern uint8_t         ntpEventId;                        		//-- from DSMRlogger32
-//-- used in restAPI.cpp, helperStuff.cpp
 extern bool            onlyIfPresent;                     		//-- from DSMRlogger32
-//-- used in processTelegram.cpp, FSYSstuff.cpp
+extern String          pTimestamp;                        		//-- from DSMRlogger32
+extern int8_t          prevNtpHour;                       		//-- from DSMRlogger32
 extern timeStruct      prevTlgrmTime;                     		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, settingsStuff.cpp, menuStuff.cpp
 extern bool            runAPmode;                         		//-- from DSMRlogger32
-//-- used in menuStuff.cpp
 extern bool            showRaw;                           		//-- from DSMRlogger32
-//-- used in menuStuff.cpp
 extern int8_t          showRawCount;                      		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
 extern bool            skipHeartbeats;                    		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern P1Reader        slimmeMeter;                       		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, FSYSstuff.cpp, menuStuff.cpp
 extern uint32_t        slotErrors;                        		//-- from DSMRlogger32
-//-- used in DSMRsetupStuff.cpp, menuStuff.cpp
 extern ESPSL           sysLog;                            		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, restAPI.cpp, menuStuff.cpp, FSYSstuff.cpp, processTelegram.cpp, handleSlimmeMeter.cpp
 extern uint32_t        telegramCount;                     		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp, restAPI.cpp, menuStuff.cpp, processTelegram.cpp, handleSlimmeMeter.cpp
 extern uint32_t        telegramErrors;                    		//-- from DSMRlogger32
-//-- used in FSYSstuff.cpp
 extern uint32_t        telegramsAtStart;                  		//-- from DSMRlogger32
-//-- used in handleTestdata.cpp, restAPI.cpp, FSYSstuff.cpp, processTelegram.cpp, helperStuff.cpp, handleSlimmeMeter.cpp
+extern int8_t          thisDay;                           		//-- from DSMRlogger32
+extern int8_t          thisHour;                          		//-- from DSMRlogger32
+extern int8_t          thisMonth;                         		//-- from DSMRlogger32
+extern int8_t          thisYear;                          		//-- from DSMRlogger32
 extern MyData          tlgrmData;                         		//-- from DSMRlogger32
-//-- used in FSYSstuff.cpp
 extern bool            tmpAlterRingSlots;                 		//-- from DSMRlogger32
-//-- used in FSYSstuff.cpp
 extern uint8_t         tmpNoDaySlots;                     		//-- from DSMRlogger32
-//-- used in FSYSstuff.cpp
 extern uint8_t         tmpNoHourSlots;                    		//-- from DSMRlogger32
-//-- used in FSYSstuff.cpp
 extern uint8_t         tmpNoMonthSlots;                   		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
+extern uint32_t        unixTimestamp;                     		//-- from DSMRlogger32
 extern uint64_t        upTimeSeconds;                     		//-- from DSMRlogger32
-//-- used in helperStuff.cpp
 extern uint64_t        upTimeStart;                       		//-- from DSMRlogger32
-//-- used in DSMRlogger32.cpp
 extern bool            updatedRINGfiles;                  		//-- from DSMRlogger32
-//-- used in restAPI.cpp, FSYSstuff.cpp
+extern char            _bol[128];                         		//-- from Debug
 extern char            buffer[100];                       		//-- from FSYSstuff
-//-- used in FSYSstuff.cpp
 extern int16_t         bytesRead;                         		//-- from FSYSstuff
-//-- used in DSMRlogger32.cpp, FSYSstuff.cpp
+extern int16_t         bytesWritten;                      		//-- from FSYSstuff
+//extern char            dummy[50];                         		//-- from FSYSstuff
+extern char            dumpRec[];          		//-- from FSYSstuff
 extern char            key[10];                           		//-- from FSYSstuff
-//-- used in FSYSstuff.cpp
 extern timeStruct      newTime;                           		//-- from FSYSstuff
-//-- used in FSYSstuff.cpp
+extern uint16_t        noSlots;                           		//-- from FSYSstuff
 extern uint16_t        recSlot;                           		//-- from FSYSstuff
-//-- used in restAPI.cpp, processTelegram.cpp, FSYSstuff.cpp
-extern char            record[];           		                //-- from FSYSstuff
-//-- used in restAPI.cpp, processTelegram.cpp, FSYSstuff.cpp
-extern char            record[];           		                //-- from FSYSstuff
-//-- used in restAPI.cpp, FSYSstuff.cpp
+extern char            record[];           		//-- from FSYSstuff
+extern char            record[];           		//-- from FSYSstuff
+extern char            spiffsTimestamp[20];               		//-- from FSYSstuff
+extern timeStruct      tmpTime;                           		//-- from FSYSstuff
+extern uint16_t        useSlot;                           		//-- from FSYSstuff
+extern char            cBuff[100];                        		//-- from FSmanager
 extern char            fName[33];                         		//-- from FSmanager
-//-- used in FSYSstuff.cpp
+extern char            mName[33];                         		//-- from FSmanager
 extern String          temp;                              		//-- from FSmanager
-//-- used in restAPI.cpp, handleSlimmeMeter.cpp
+extern IPAddress       MQTTbrokerIP;                      		//-- from MQTTstuff
+extern char            MQTTbrokerIPchar[20];              		//-- from MQTTstuff
+extern String          MQTTclientId;                      		//-- from MQTTstuff
+extern char            lastMQTTtimestamp[15];             		//-- from MQTTstuff
+extern char            mqttBuff[100];                     		//-- from MQTTstuff
+extern int8_t          reconnectAttempts;                 		//-- from MQTTstuff
 extern char            crcChar[10];                       		//-- from handleSlimmeMeter
-//-- used in handleTestdata.cpp
+extern float           CUR_l1;                            		//-- from handleTestdata
+extern float           CUR_l2;                            		//-- from handleTestdata
+extern float           CUR_l3;                            		//-- from handleTestdata
+extern double          C_l1;                              		//-- from handleTestdata
+extern double          C_l2;                              		//-- from handleTestdata
+extern double          C_l3;                              		//-- from handleTestdata
+extern double          ED_T1;                             		//-- from handleTestdata
+extern double          ED_T2;                             		//-- from handleTestdata
+extern double          ER_T1;                             		//-- from handleTestdata
+extern double          ER_T2;                             		//-- from handleTestdata
+extern uint8_t         ETariffInd;                        		//-- from handleTestdata
+extern float           GDelivered;                        		//-- from handleTestdata
+extern float           IPD_l1;                            		//-- from handleTestdata
+extern float           IPD_l2;                            		//-- from handleTestdata
+extern float           IPD_l3;                            		//-- from handleTestdata
+extern float           IPR_l1;                            		//-- from handleTestdata
+extern float           IPR_l2;                            		//-- from handleTestdata
+extern float           IPR_l3;                            		//-- from handleTestdata
+extern float           PDelivered;                        		//-- from handleTestdata
+extern float           PReturned;                         		//-- from handleTestdata
 extern int8_t          State;                             		//-- from handleTestdata
-//-- used in menuStuff.cpp
+extern double          V_l1;                              		//-- from handleTestdata
+extern double          V_l2;                              		//-- from handleTestdata
+extern double          V_l3;                              		//-- from handleTestdata
+extern char            actDSMR[3];                        		//-- from handleTestdata
+extern int16_t         actDay;                            		//-- from handleTestdata
+extern int16_t         actHour;                           		//-- from handleTestdata
+extern uint32_t        actInterval;                       		//-- from handleTestdata
+extern int16_t         actMinute;                         		//-- from handleTestdata
+extern int16_t         actMonth;                          		//-- from handleTestdata
+extern int16_t         actSec;                            		//-- from handleTestdata
+extern int16_t         actSpeed;                          		//-- from handleTestdata
+extern int16_t         actYear;                           		//-- from handleTestdata
+extern int16_t         calcCRC;                           		//-- from handleTestdata
+extern uint16_t        currentCRC;                        		//-- from handleTestdata
+extern int16_t         forceBuildRecs;                    		//-- from handleTestdata
 extern bool            forceBuildRingFiles;               		//-- from handleTestdata
-//-- used in FSmanager.cpp, FSYSstuff.cpp, menuStuff.cpp
+extern uint32_t        nextESPcheck;                      		//-- from handleTestdata
+extern uint32_t        nextGuiUpdate;                     		//-- from handleTestdata
+extern uint32_t        nextMinute;                        		//-- from handleTestdata
+extern char            savDSMR[3];                        		//-- from handleTestdata
+extern char            telegramLine[MAXLINELENGTH];       		//-- from handleTestdata
+extern int16_t         testTlgrmLines;                    		//-- from handleTestdata
 extern char            dummy[DATA_RECLEN];                		//-- from menuStuff
-//-- used in handleTestdata.cpp, restAPI.cpp, networkStuff.cpp, DSMRlogger32.cpp
 extern WebServer       httpServer;                        		//-- from networkStuff
-//-- used in DSMRlogger32.cpp
+extern bool            isConnected;                       		//-- from networkStuff
 extern SSD1306AsciiWire oled;                              		//-- from oledStuff
-//-- used in restAPI.cpp, processTelegram.cpp, FSYSstuff.cpp
-extern char            record[];           		                //-- from processTelegram
-//-- used in settingsStuff.cpp, FSYSstuff.cpp
+//extern void            oled_Print_Msg;                    		//-- from oledStuff
+extern char            record[];           		//-- from processTelegram
 extern float           EDT1;                              		//-- from restAPI
-//-- used in settingsStuff.cpp, FSYSstuff.cpp
 extern float           EDT2;                              		//-- from restAPI
-//-- used in settingsStuff.cpp, FSYSstuff.cpp
 extern float           ERT1;                              		//-- from restAPI
-//-- used in settingsStuff.cpp, FSYSstuff.cpp
 extern float           ERT2;                              		//-- from restAPI
-//-- used in settingsStuff.cpp, FSYSstuff.cpp
 extern float           GDT;                               		//-- from restAPI
-//-- used in restAPI.cpp, FSYSstuff.cpp
-extern char            buffer[];            		              //-- from restAPI
-//-- used in restAPI.cpp, handleSlimmeMeter.cpp
+extern char            buffer[];            		//-- from restAPI
 extern char            crcChar[10];                       		//-- from restAPI
-//-- used in settingsStuff.cpp
+extern char            lLine[_SYSLOG_LINE_LEN];           		//-- from restAPI
 extern char            newValue[101];                     		//-- from restAPI
-//-- used in DSMRlogger32.cpp
+extern char            recID[10];                         		//-- from restAPI
+extern char            typeApi[10];                       		//-- from restAPI
+extern uint32_t        disconnectWiFiStart;               		//-- from wifiEvents
 extern bool            firstConnectionLost;               		//-- from wifiEvents
-//-- used in DSMRlogger32.cpp, helperStuff.cpp, networkStuff.cpp
 extern bool            lostWiFiConnection;                		//-- from wifiEvents
-//-- used in DSMRlogger32.cpp
 extern int             lostWiFiCount;                     		//-- from wifiEvents
 
 extern char              *tlgrmTmpData;
@@ -683,151 +685,145 @@ extern actualDataStruct  *actualStore;
 
 //============ Function Prototypes =========
 //-- from MQTTstuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, MQTTstuff.cpp
 void connectMQTT();                                         
-//-- Used in: MQTTstuff.cpp
 bool connectMQTT_FSM();                                     
-//-- Used in: processTelegram.cpp, MQTTstuff.cpp
 void sendMQTTData();                                        
+//-- from handleTestdata.ino -----------
+void handleTestdata();                                      
+int16_t buildTelegram(int16_t line, char telegramLine[]);   
+int16_t buildTelegram30(int16_t line, char telegramLine[]); 
+void updateMeterValues(uint8_t period);                     
+String Format(double x, int len, int d);                    
+int FindCharInArrayRev(unsigned char array[], char c, int len);
+int16_t decodeTelegram(int len);                            
 //-- from handleSlimmeMeter.ino -----------
-//-- Used in: DSMRlogger32.cpp, handleSlimmeMeter.cpp
 void handleSlimmemeter();                                   
-//-- Used in: handleSlimmeMeter.cpp
 void processSlimmemeterRaw();                               
-//-- Used in: handleSlimmeMeter.cpp
 void processSlimmemeter();                                  
-//-- Used in: handleTestdata.cpp, handleSlimmeMeter.cpp
 void modifySmFaseInfo();                                    
-//-- Used in: handleTestdata.cpp, handleSlimmeMeter.cpp
 float modifyMbusDelivered();                                
 //-- from timeStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, timeStuff.cpp
 void logNtpTime();                                          
-//-- Used in: DSMRlogger32.cpp, processTelegram.cpp, timeStuff.cpp
 void saveTimestamp(const char *timeStamp);                  
-//-- Used in: timeStuff.cpp, FSYSstuff.cpp
 timeStruct buildTimeStruct(const char *timeStamp, uint16_t hourSlots , uint16_t daySlots , uint16_t monthSlots);
-//-- Used in: timeStuff.cpp, FSYSstuff.cpp
 timeStruct calculateTime(timeStruct useTime, int16_t units, int8_t ringType);
-//-- Used in: processTelegram.cpp, timeStuff.cpp
 String buildDateTimeString(const char *timeStamp, int len); 
-//-- Used in: handleTestdata.cpp, timeStuff.cpp
 void epochToTimestamp(time_t t, char *ts, int8_t len);      
+int8_t MinuteFromTimestamp(const char *timeStamp);          
+//int8_t HourFromTimestamp(const char *timeStamp);            
+//int8_t DayFromTimestamp(const char *timeStamp);             
+//int8_t MonthFromTimestamp(const char *timeStamp);           
+//int8_t YearFromTimestamp(const char *timeStamp);            
+time_t epoch(const char *timeStamp, int8_t len, bool syncTime);
 //-- from FSmanager.ino -----------
-//-- Used in: FSmanager.cpp, DSMRlogger32.cpp
 void setupFSmanager();                                      
-//-- Used in: FSmanager.cpp, FSYSstuff.cpp
+bool handleList();                                          
+void deleteRecursive(const char *path);                     
+bool handleFile(String &&path);                             
+void handleUpload();                                        
+void formatFS();                                            
+void listFS();                                              
+void sendResponce();                                        
+const String formatBytes(size_t const &bytes);              
+void reBootESP();                                           
+void doRedirect(String msg, int wait, const char *URL, bool reboot);
+String getContentType(String filename);                     
 int sortFunction(const void *cmp1, const void *cmp2);       
 //-- from oledStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, oledStuff.cpp
 void checkFlashButton();                                    
-//-- Used in: DSMRlogger32.cpp, settingsStuff.cpp, oledStuff.cpp
 void oled_Init();                                           
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, oledStuff.cpp
 void oled_Clear();                                          
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, FSYSstuff.cpp, oledStuff.cpp, processTelegram.cpp, handleSlimmeMeter.cpp
 void oled_Print_Msg(uint8_t line, String message, uint16_t wait);
 //-- from processTelegram.ino -----------
-//-- Used in: handleTestdata.cpp, processTelegram.cpp, handleSlimmeMeter.cpp
 void processTelegram();                                     
 //-- from settingsStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, settingsStuff.cpp, menuStuff.cpp
+void writeSmSettings();                                     
 void readSmSettings(bool show);                             
-//-- Used in: settingsStuff.cpp, restAPI.cpp
 void updateSmSettings(const char *field, const char *newValue);
-//-- Used in: settingsStuff.cpp, FSYSstuff.cpp
 void writeDevSettings(bool show);                           
-//-- Used in: DSMRlogger32.cpp, settingsStuff.cpp, menuStuff.cpp
 void readDevSettings(bool show);                            
-//-- Used in: settingsStuff.cpp, restAPI.cpp
+void showDevSettings();                                     
 void updateDevSettings(const char *field, const char *newValue);
 //-- from restAPI.ino -----------
-//-- Used in: FSmanager.cpp, restAPI.cpp, DSMRlogger32.cpp
 void processAPI();                                          
-//-- Used in: restAPI.cpp, helperStuff.cpp
+void processApiV2Sm(const char* apiId, const char* oneField);
+void processApiV2Dev(const char *URI, const char *apiId, const char *word5, const char *word6);
+void processApiV2Hist(const char *URI, const char *apiId, const char *word5, const char *word6);
+void sendDeviceInfo();                                      
+void sendDeviceTime();                                      
+void sendSMsettings();                                      
+void sendDevSettings();                                     
+void sendDeviceDebug(const char *URI, String tail);         
+void sendJsonV2smApi(const char *firstLevel);               
+void sendJsonActualHist();                                  
+void sendJsonHist(int8_t ringType, const char *fileName, timeStruct useTime, uint8_t limit, bool sortDesc);
 void copyToFieldsArray(const char inArray[][35], int elemts);
+void listFieldsArray(char inArray[][35]);                   
+void sendApiNotFound(const char *URI);                      
 //-- from networkStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, menuStuff.cpp
+void configModeCallback (WiFiManager *myWiFiManager);       
 void startWiFi(const char *hostname, int timeOut, bool eraseCredentials);
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp
 void startTelnet();                                         
-//-- Used in: DSMRlogger32.cpp, settingsStuff.cpp, networkStuff.cpp
 void startMDNS(const char *Hostname);                       
 //-- from helperStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, FSYSstuff.cpp, FSmanager.cpp, helperStuff.cpp
 void pulseHeart(bool force);                                
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, FSYSstuff.cpp, FSmanager.cpp, helperStuff.cpp
 void pulseHeart();                                          
-//-- Used in: DSMRlogger32.cpp, helperStuff.cpp, networkStuff.cpp, menuStuff.cpp
 void resetWatchdog();                                       
-//-- Used in: helperStuff.cpp, MQTTstuff.cpp
 boolean isValidIP(IPAddress ip);                            
-//-- Used in: restAPI.cpp, helperStuff.cpp, FSYSstuff.cpp
 bool isValidTimestamp(const char *timeStamp, int8_t len);   
-//-- Used in: restAPI.cpp, helperStuff.cpp
 int8_t splitString(String inStrng, char delimiter, String wOut[], uint8_t maxWords);
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, helperStuff.cpp, menuStuff.cpp
 String upTime();                                            
-//-- Used in: helperStuff.cpp, timeStuff.cpp, FSYSstuff.cpp
 void strCpyFrm(char *dest, int maxLen, const char *src, uint8_t frm, uint8_t to);
-//-- Used in: DSMRlogger32.cpp, helperStuff.cpp
 float strToFloat(const char *s, int dec);                   
-//-- Used in: helperStuff.cpp, MQTTstuff.cpp
 double round1(double value);                                
-//-- Used in: helperStuff.cpp
 double round2(double value);                                
-//-- Used in: restAPI.cpp, helperStuff.cpp, MQTTstuff.cpp
 double round3(double value);                                
-//-- Used in: DSMRlogger32.cpp, helperStuff.cpp
 void getLastResetReason(RESET_REASON reason, char *txtReason, int txtReasonLen);
-//-- Used in: handleTestdata.cpp, restAPI.cpp, helperStuff.cpp, handleSlimmeMeter.cpp
 unsigned int CRC16(unsigned int crc, unsigned char *buf, int len);
 //-- from menuStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, menuStuff.cpp
+void displayHoursHist(bool Telnet=true);                    
+void displayDaysHist(bool Telnet=true);                     
+void displayMonthsHist(bool Telnet=true);                   
+void displayBoardInfo();                                    
+void handleKeyInput(char inChar);                           
 void wait4KeyInput();                                       
+//-- from DSMRlogger32.ino -----------
+void displayStatus();                                       
+void delayms(unsigned long delay_ms);                       
+void doTaskTelegram();                                      
+void doSystemTasks();                                       
 //-- from DSMRsetupStuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, DSMRsetupStuff.cpp
 void setupFileSystem();                                     
-//-- Used in: DSMRlogger32.cpp, DSMRsetupStuff.cpp
-void setupSysLogger(const char*);                                      
-//-- Used in: DSMRlogger32.cpp, DSMRsetupStuff.cpp
+void setupSysLogger();                                      
 void setupPsram();                                          
-//-- Used in: DSMRlogger32.cpp, DSMRsetupStuff.cpp
 bool setupIsFsPopulated();                                  
 //-- from FSYSstuff.ino -----------
-//-- Used in: DSMRlogger32.cpp, FSYSstuff.cpp
 void readLastStatus();                                      
-//-- Used in: DSMRlogger32.cpp, restAPI.cpp, FSYSstuff.cpp, menuStuff.cpp, processTelegram.cpp
 void writeLastStatus();                                     
-//-- Used in: processTelegram.cpp, FSYSstuff.cpp
 void buildDataRecordFromSM(char *recIn, timeStruct useTime);
-//-- Used in: restAPI.cpp, FSYSstuff.cpp
 uint16_t buildDataRecordFromJson(char *recIn, int recLen, String jsonIn);
-//-- Used in: restAPI.cpp, processTelegram.cpp, FSYSstuff.cpp
 void writeDataToRingFile(char *fileName, int8_t ringType, char *record, timeStruct slotTime);
-//-- Used in: FSYSstuff.cpp, restAPI.cpp, menuStuff.cpp
 void writeDataToRingFiles(timeStruct useTime);              
-//-- Used in: FSYSstuff.cpp, menuStuff.cpp
+void readOneSlot(char *record, const char *fileName , uint16_t readSlot , uint16_t maxSlots);
 void readAllSlots(char *record, int8_t ringType, const char *fileName, timeStruct thisTime);
-//-- Used in: settingsStuff.cpp, FSYSstuff.cpp
+bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType);
+bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType, uint16_t noSlots);
 bool alterRingFile();                                       
-//-- Used in: settingsStuff.cpp, FSYSstuff.cpp
 uint16_t readRingHistoryDepth(const char *fileName, int8_t ringType);
-//-- Used in: FSYSstuff.cpp, menuStuff.cpp
+void fillRecord(char *record, int8_t maxLen);               
+int32_t freeSpace();                                        
 void listFilesystem();                                      
-//-- Used in: FSYSstuff.cpp, menuStuff.cpp
 void eraseFile();                                           
-//-- Used in: DSMRsetupStuff.cpp, FSYSstuff.cpp
 bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay);
+int sortListFiles(const void *cmp1, const void *cmp2);      
+//-- from arduinoGlue.h -----------
+//void apply(Item &i);                                        
+void deallocate(void* pointer);                             
 //-- from wifiEvents.h -----------
-//-- Used in: DSMRlogger32.cpp, wifiEvents.cpp
 void WiFiEvent(WiFiEvent_t event);                          
 //-- from neoPixelStuff.h -----------
-//-- Used in: DSMRlogger32.cpp, networkStuff.cpp, FSYSstuff.cpp
 void neoPixOff(int neoPixNr);                               
-//-- Used in: handleTestdata.cpp, DSMRlogger32.cpp, networkStuff.cpp, FSYSstuff.cpp, helperStuff.cpp, handleSlimmeMeter.cpp
 void neoPixOn(int neoPixNr, neoPixColor color);             
-//-- Used in: DSMRlogger32.cpp, menuStuff.cpp
 void blinkNeoPixels(uint8_t times, uint16_t speed);         
 //-- from safeTimers.h -----------
 uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, byte timerType);

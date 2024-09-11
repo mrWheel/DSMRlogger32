@@ -13,9 +13,6 @@
 //============ Includes ====================
 #include "arduinoGlue.h"
 
-//============ Added by Convertor ==========
-
-
 /*
  * safeTimers.h (original name timers.h) is developed by Erik
  *
@@ -113,60 +110,6 @@
  *  }
  *
 */
-
-//--- timerType's -----------------------
-	//-- moved to arduinoGlue.h // #define SKIP_MISSED_TICKS             0
-	//-- moved to arduinoGlue.h // #define SKIP_MISSED_TICKS_WITH_SYNC   1
-	//-- moved to arduinoGlue.h // #define CATCH_UP_MISSED_TICKS         2
-
-	//-- moved to arduinoGlue.h // #define DECLARE_TIMER_MIN(timerName, ...) \
-	//-- moved to arduinoGlue.h //   static uint32_t timerName##_interval = (getParam(0, __VA_ARGS__, 0) * 60 * 1000), \
-	//-- moved to arduinoGlue.h //                                          timerName##_due  = millis() \
-	//-- moved to arduinoGlue.h //                                              +timerName##_interval \
-	//-- moved to arduinoGlue.h //                                              +random(timerName##_interval / 3); \
-	//-- moved to arduinoGlue.h //   static byte     timerName##_type = getParam(1, __VA_ARGS__, 0);
-
-	//-- moved to arduinoGlue.h // #define DECLARE_TIMER_SEC(timerName, ...) \
-	//-- moved to arduinoGlue.h //   static uint32_t timerName##_interval = (getParam(0, __VA_ARGS__, 0) * 1000), \
-	//-- moved to arduinoGlue.h //                                          timerName##_due  = millis() \
-	//-- moved to arduinoGlue.h //                                              +timerName##_interval \
-	//-- moved to arduinoGlue.h //                                              +random(timerName##_interval / 3); \
-	//-- moved to arduinoGlue.h //   static byte     timerName##_type = getParam(1, __VA_ARGS__, 0);
-
-	//-- moved to arduinoGlue.h // #define DECLARE_TIMER_MS(timerName, ...) \
-	//-- moved to arduinoGlue.h //   static uint32_t timerName##_interval = (getParam(0, __VA_ARGS__, 0)), \
-	//-- moved to arduinoGlue.h //                                          timerName##_due  = millis() \
-	//-- moved to arduinoGlue.h //                                              +timerName##_interval \
-	//-- moved to arduinoGlue.h //                                              +random(timerName##_interval / 3); \
-	//-- moved to arduinoGlue.h //   static byte     timerName##_type = getParam(1, __VA_ARGS__, 0);
-
-	//-- moved to arduinoGlue.h // #define DECLARE_TIMER   DECLARE_TIMER_MS
-
-	//-- moved to arduinoGlue.h // #define CHANGE_INTERVAL_MIN(timerName, ...) \
-	//-- moved to arduinoGlue.h //   timerName##_interval = (getParam(0, __VA_ARGS__, 0) *60*1000); \
-	//-- moved to arduinoGlue.h //   timerName##_due  = millis() +timerName##_interval;
-	//-- moved to arduinoGlue.h // #define CHANGE_INTERVAL_SEC(timerName, ...) \
-	//-- moved to arduinoGlue.h //   timerName##_interval = (getParam(0, __VA_ARGS__, 0) *1000); \
-	//-- moved to arduinoGlue.h //   timerName##_due  = millis() +timerName##_interval;
-	//-- moved to arduinoGlue.h // #define CHANGE_INTERVAL_MS(timerName, ...) \
-	//-- moved to arduinoGlue.h //   timerName##_interval = (getParam(0, __VA_ARGS__, 0) ); \
-	//-- moved to arduinoGlue.h //   timerName##_due  = millis() +timerName##_interval;
-
-	//-- moved to arduinoGlue.h // #define CHANGE_INTERVAL CHANGE_INTERVAL_MS
-
-	//-- moved to arduinoGlue.h // #define TIME_LEFT(timerName)          ( __TimeLeft__(timerName##_due) )
-	//-- moved to arduinoGlue.h // #define TIME_LEFT_MS(timerName)       ( (TIME_LEFT(timerName) ) )
-	//-- moved to arduinoGlue.h // #define TIME_LEFT_MIN(timerName)      ( (TIME_LEFT(timerName) ) / (60 * 1000))
-	//-- moved to arduinoGlue.h // #define TIME_LEFT_SEC(timerName)      ( (TIME_LEFT(timerName) ) / 1000 )
-
-	//-- moved to arduinoGlue.h // #define TIME_PAST(timerName)          ( (timerName##_interval - TIME_LEFT(timerName)) )
-	//-- moved to arduinoGlue.h // #define TIME_PAST_MS(timerName)       ( (TIME_PAST(timerName) )
-	//-- moved to arduinoGlue.h // #define TIME_PAST_SEC(timerName)      ( (TIME_PAST(timerName) / 1000) )
-	//-- moved to arduinoGlue.h // #define TIME_PAST_MIN(timerName)      ( (TIME_PAST(timerName) / (60*1000)) )
-
-	//-- moved to arduinoGlue.h // #define RESTART_TIMER(timerName)      ( timerName##_due = millis()+timerName##_interval );
-
-	//-- moved to arduinoGlue.h // #define DUE(timerName)                ( __Due__(timerName##_due, timerName##_interval, timerName##_type) )
 
 uint32_t __Due__(uint32_t &timer_due, uint32_t timer_interval, byte timerType)
 {

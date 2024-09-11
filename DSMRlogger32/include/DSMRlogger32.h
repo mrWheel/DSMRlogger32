@@ -15,7 +15,7 @@
 */
 //============ Includes ====================
 #include "oledStuff.h"
-#include "handleTestdata.h"
+//#include "handleTestdata.h"
 #include "FSmanager.h"
 #include "handleSlimmeMeter.h"
 #include "FSYSstuff.h"
@@ -40,155 +40,22 @@
   #error "Only one of these: LITTLEFS or SPIFFS can be used!"
 #endif
 
-//------[FS@2.0.0]
-//#include <FS.h>                                   		//-- moved to arduinoGlue.h
-
-#ifdef _SPIFFS
-	//-- moved to arduinoGlue.h //   #define _FSYS SPIFFS
-  //------[SPIFFS@2.0.0] // part of ESP32 Core https://github.com/ESP32/Arduino
-  //------[SPIFFS_SysLogger-2.0.1@2.0.1]
-//#include <SPIFFS_SysLogger.h>                     		//-- moved to arduinoGlue.h
-#endif
-#ifdef _LITTLEFS
-	//-- moved to arduinoGlue.h //   #define _FSYS LittleFS
-//#include <LittleFS.h>                             		//-- moved to arduinoGlue.h
-//#include <LittleFS_SysLogger.h>                   		//-- moved to arduinoGlue.h
-#endif
-
 ESPSL     sysLog;
 
-/* example of debug info with time information ----------------------------------------------*/
-	//-- moved to arduinoGlue.h // #define writeToSysLog(...) ({ \
-	//-- moved to arduinoGlue.h //         sysLog.writeDbg(sysLog.buildD("[%04d-%02d-%02d %02d:%02d:%02d][%-12.12s] "  \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.year()          \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.month()         \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.day()           \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.hour()          \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.minute()        \
-	//-- moved to arduinoGlue.h //                                                                , tzEurope.second()        \
-	//-- moved to arduinoGlue.h //                                                                , __FUNCTION__)            \
-	//-- moved to arduinoGlue.h //                                          ,__VA_ARGS__); \
-	//-- moved to arduinoGlue.h //                              })
-	//-- moved to arduinoGlue.h // #define _SYSLOG_LINES       150
-	//-- moved to arduinoGlue.h // #define _SYSLOG_LINE_LEN    120
-
-//#include <HardwareSerial.h>                       		//-- moved to arduinoGlue.h
-//#include <esp32/rom/rtc.h>
-//#include <rom/rtc.h>                              		//-- moved to arduinoGlue.h
-
 //-- use UART1 for SMserial
-HardwareSerial SMserial (1);
-//------ [WiFi@1.2.7 WiFi@2.0.0]
-//#include <WiFi.h>                                 		//-- moved to arduinoGlue.h
-//------ [WebServer@2.0.0]  - part of ESP32 Core https://github.com/ESP32/Arduino
-//#include <WebServer.h>                            		//-- moved to arduinoGlue.h
-//------ [ESPmDNS@2.0.0]    - part of ESP32 Core https://github.com/ESP32/Arduino
-//#include <ESPmDNS.h>                              		//-- moved to arduinoGlue.h
+HardwareSerial    SMserial (1);
+WebServer         httpServer (80);
+HTTPUpdateServer  httpUpdater(true);
 
-//#include <WiFiUdp.h>                              		//-- moved to arduinoGlue.h
-//------ [HTTPUpdateServer@2.0.0] - part of ESP32 Core https://github.com/ESP32/Arduino
-//#include <HTTPUpdateServer.h>                     		//-- moved to arduinoGlue.h
-//------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
-//#include <WiFiManager.h>                          		//-- moved to arduinoGlue.h
-
-// included in main program: #include <TelnetStream.h>       // Version 0.0.1 - https://github.com/jandrassy/TelnetStream
-
-WebServer        httpServer (80);
-HTTPUpdateServer httpUpdater(true);
-
-//------ [ezTime@0.8.3]
-	//-- moved to arduinoGlue.h // #define AMSTERDAM_POSIX  "CET-1CEST,M3.5.0,M10.5.0/3"    // Time in Amsterdam
-//#include <ezTime.h>                               		//-- moved to arduinoGlue.h
-//Timezone    tzEurope;
-
-//-- https://github.com/jandrassy/TelnetStream
-//------ [TelnetStream@1.2.2]
-//#include <TelnetStream.h>                         		//-- moved to arduinoGlue.h
 #include "safeTimers.h"
 
 //------ [Adafruit_NeoPixel@1.10.6]
 #include "neoPixelStuff.h"
-
-//------ [ArduinoJson@6.19.3]
-//#include <ArduinoJson.h>                          		//-- moved to arduinoGlue.h
-
-//-- convenience macros to convert to and from tm years 
-//-- from: https://github.com/kachok/arduino-libraries/blob/master/Time/Time.h
-	//-- moved to arduinoGlue.h // #define  tmYearToCalendar(Y) ((Y) + 1970)  // full four digit year 
-	//-- moved to arduinoGlue.h // #define  CalendarYrToTm(Y)   ((Y) - 1970)
-
-//-- https://github.com/mrWheel/dsmr2Lib.git
-//------ [dsmr2Lib-master@0.1] (commit 5e7f07d (16-02-2022 12:40)?)
-//#include <dsmr2.h>                                		//-- moved to arduinoGlue.h
-	//-- moved to arduinoGlue.h // #define _DEFAULT_HOSTNAME  "DSMR-ESP32"
-
-//-- Slimme Meter UART1 pins
-	//-- moved to arduinoGlue.h // #define SMRX                    18 
-	//-- moved to arduinoGlue.h // #define SMTX                    -1
-
-	//-- moved to arduinoGlue.h // #define _PULSE_TIME           5000
-	//-- moved to arduinoGlue.h // #define _PIN_WD_RESET            0    //-- GPIO00
-	//-- moved to arduinoGlue.h // #define _PIN_HEARTBEAT           4
-	//-- moved to arduinoGlue.h // #define _DTR_ENABLE              5
-	//-- moved to arduinoGlue.h // #define LED_BUILTIN             15    //-- esp32
-	//-- moved to arduinoGlue.h // #define _TLGRM_LEN           10000    //-- probably a bit to long
-	//-- moved to arduinoGlue.h // #define _JSONBUFF_LEN       200000    //-- 60000 is needed for 190 Hour History
-	//-- moved to arduinoGlue.h // #define _GMSG_LEN              512
-	//-- moved to arduinoGlue.h // #define _FCHAR_LEN              50
-	//-- moved to arduinoGlue.h // #define _HOSTNAME_LEN           30
-	//-- moved to arduinoGlue.h // #define _MY_SSID_LEN           100
-	//-- moved to arduinoGlue.h // #define _MY_PASSWD_LEN         100
-	//-- moved to arduinoGlue.h // #define _INDEXPAGE_LEN          50
-	//-- moved to arduinoGlue.h // #define _MQTT_BROKER_LEN       101
-	//-- moved to arduinoGlue.h // #define _MQTT_USER_LEN          40
-	//-- moved to arduinoGlue.h // #define _MQTT_PASSWD_LEN        40
-	//-- moved to arduinoGlue.h // #define _MQTT_TOPTOPIC_LEN      21
-	//-- moved to arduinoGlue.h // #define _FIELDTABLE_CNAME_LEN  100
-	//-- moved to arduinoGlue.h // #define _FIELDTABLE_CVALUE_LEN 100
-	//-- moved to arduinoGlue.h // #define _SETTINGS_FILE     "/DSMRsmSettings.json"
-	//-- moved to arduinoGlue.h // #define _SYSTEM_FILE       "/DSMRdevSettings.json"
-	//-- moved to arduinoGlue.h // #define _STATUS_FILE       "/DSMRstatus.csv"
-
-	//-- moved to arduinoGlue.h // #define LED_ON                 LOW
-	//-- moved to arduinoGlue.h // #define LED_OFF               HIGH
-	//-- moved to arduinoGlue.h // #define _GLOW_TIME             300
-	//-- moved to arduinoGlue.h // #define _FLASH_BUTTON            0
-	//-- moved to arduinoGlue.h // #define _FSYS_MAX_FILES         30
-	//-- moved to arduinoGlue.h // #define _MQTT_BUFF_MAX         200
-//-- (obis 0-0:96.13.1) = 2048 + \r\n\0 => 2051
-//-- altered dsmr2lib to 512 (+3)
-	//-- moved to arduinoGlue.h // #define _TIMESTAMP_LEN          14  // yymmddhhmmssX\0
-	//-- moved to arduinoGlue.h // #define _PSRAM_LIMIT           500
-
-	//-- moved to arduinoGlue.h // #define RNG_HOURS         1
-	//-- moved to arduinoGlue.h // #define RNG_DAYS          2
-	//-- moved to arduinoGlue.h // #define RNG_MONTHS        3
-	//-- moved to arduinoGlue.h // #define RNG_YEARS         4
-//-------------------------.........1....1....2....2....3....3....4....4....5....5....6....6....7....7
-//-------------------------1...5....0....5....0....5....0....5....0....5....0....5....0....5....0....5
-	//-- moved to arduinoGlue.h // #define DATA_FORMAT       "%-8.8s;%10.3f;%10.3f;%10.3f;%10.3f;%10.3f;"
-	//-- moved to arduinoGlue.h // #define DATA_CSV_HEADER   "YYMMDDHH;      EDT1;      EDT2;      ERT1;      ERT2;       GDT;#%5d"
-//----- room for 74 chars + '\0'
-	//-- moved to arduinoGlue.h // #define DATA_RECLEN       75  //-- compatible with reclen API firmware
-
-	//-- moved to arduinoGlue.h // #define HOURS_FILE        "/RINGhours.csv"
-	//-- moved to arduinoGlue.h // #define _NO_HOUR_SLOTS_   (48 +1)
-
-	//-- moved to arduinoGlue.h // #define DAYS_FILE         "/RINGdays.csv"
-	//-- moved to arduinoGlue.h // #define _NO_DAY_SLOTS_    (14 +1)
-
-	//-- moved to arduinoGlue.h // #define MONTHS_FILE       "/RINGmonths.csv"
-	//-- moved to arduinoGlue.h // #define _NO_MONTH_SLOTS_  (24 +1)
-
-//enum    { PERIOD_UNKNOWN, HOURS, DAYS, MONTHS, YEARS };
-
 #include "Debug.h"
 #include "wifiEvents.h"   // part of ESP32 Core https://github.com/ESP32/Arduino
 
-//============ Added by Convertor ==========
 
-
-/**
+/************** MOVED TO arduinoGlue.h ******************************************
  * Define the tlgrmData we're interested in, as well as the tlgrmDatastructure to
  * hold the parsed tlgrmData. This list shows all supported fields, remove
  * any fields you are not using from the below list to make the parsing
@@ -263,127 +130,8 @@ HTTPUpdateServer httpUpdater(true);
 //               /* TimestampedFixedValue */, mbus4_delivered_dbl
 //               >;
 
-
-/*				*** enum moved to arduinoGlue.h ***
-enum    { TAB_UNKNOWN, TAB_ACTUEEL, TAB_LAST24HOURS, TAB_LAST7DAYS, TAB_LAST24MONTHS, TAB_GRAPHICS, TAB_SYSINFO, TAB_EDITOR };
-*/
-
-/*      *** moved to arduinGlue.h ***     */
-//struct myWiFiStruct
-//{
-//  char      SSID[_MY_SSID_LEN];
-//  char      password[_MY_PASSWD_LEN];
-//  IPAddress ipWiFi; 
-//  IPAddress ipGateway;
-//  IPAddress ipDNS; 
-//  IPAddress ipSubnet;
-//};
 myWiFiStruct   myWiFi;
 
-
-/*				*** union moved to arduinoGlue.h ***
-union t
-{
-  char      cValue[_FIELDTABLE_CVALUE_LEN];
-  int32_t   iValue;
-  uint32_t  uValue;
-  float     fValue;
-};
-*/
-
-/*				*** struct moved to arduinoGlue.h ***
-struct fieldTableStruct
-{
-  char      cName[_FIELDTABLE_CNAME_LEN];
-  t         type;
-  char      cType;
-};
-*/
-
-/*				*** struct moved to arduinoGlue.h ***
-struct settingSmStruct
-{
-  uint8_t   PreDSMR40;
-  uint8_t   SmHasFaseInfo;
-  uint8_t   Mbus1Type;
-  uint8_t   Mbus2Type;
-  uint8_t   Mbus3Type;
-  uint8_t   Mbus4Type;
-  float     EDT1;
-  float     EDT2;
-  float     ERT1;
-  float     ERT2;
-  float     GDT;
-  float     ENBK;
-  float     GNBK;
-};
-*/
-
-/*				*** struct moved to arduinoGlue.h ***
-struct settingDevStruct
-{
-  char      Hostname[_HOSTNAME_LEN];
-  char      IndexPage[_INDEXPAGE_LEN];
-  uint8_t   TelegramInterval;
-  uint8_t   OledType;    // 0=none, 1=SSD1306, 2=SH1106
-  uint16_t  OledSleep;
-  uint8_t   OledFlip;
-  uint8_t   NeoBrightness;
-  uint8_t   DailyReboot;
-  uint8_t   runAPmode;
-  uint16_t  NoHourSlots;
-  uint16_t  NoDaySlots;
-  uint16_t  NoMonthSlots;
-  char      MQTTbroker[_MQTT_BROKER_LEN];
-  char      MQTTuser[_MQTT_USER_LEN];
-  char      MQTTpasswd[_MQTT_PASSWD_LEN];
-  char      MQTTtopTopic[_MQTT_TOPTOPIC_LEN];
-  int32_t   MQTTinterval;
-  int16_t   MQTTbrokerPort;
-};
-*/
-
-	//-- moved to arduinoGlue.h // #define _MAX_ACTUAL_STORE  500 //--155
-/*				*** struct moved to arduinoGlue.h ***
-struct actualDataStruct
-{
-  uint32_t  count;
-  char      timestamp[_TIMESTAMP_LEN+1];
-  float     power_delivered_l1;
-  float     power_delivered_l2;
-  float     power_delivered_l3;
-  float     power_returned_l1;
-  float     power_returned_l2;
-  float     power_returned_l3;
-  float     gas_delivered;
-};
-*/
-
-/*				*** struct moved to arduinoGlue.h ***
-struct timeStruct
-{
-  char      Timestamp[_TIMESTAMP_LEN];
-  int16_t   Year;
-  int8_t    Month;
-  int8_t    Day;
-  int8_t    Hour;
-  int8_t    Minute;
-  int8_t    Second;
-  int8_t    Weekday;    //--  1 = Sunday
-  time_t    epoch;
-  uint32_t  Months;     //-- Months since epoch
-  uint16_t  monthsHist; //-- number of slots per month
-  uint16_t  monthSlot;  //-- active month slot
-  uint32_t  Days;       //-- Days since epoch
-  uint16_t  daysHist;   //-- number of slots per day
-  uint16_t  daySlot;    //-- active day slot
-  uint32_t  Hours;      //-- Hours since epoch
-  uint16_t  hoursHist;  //-- number of slots per hour
-  uint16_t  hourSlot;   //-- active hour slot
-};
-*/
-
-//-- 
 timeStruct  lastTlgrmTime;
 timeStruct  prevTlgrmTime;
 
@@ -393,6 +141,9 @@ const char *flashMode[]    { "QIO", "QOUT", "DIO", "DOUT", "Unknown" };
 
 //-- ESP32 core does no longer accept -1 as a GPIO pin
 P1Reader    slimmeMeter(&SMserial, _DTR_ENABLE);
+
+//=============== PROTOTYPES ====================================
+void doSystemTasks();                                       
 
 //===========================GLOBAL VAR'S======================================
 WiFiClient        wifiClient;
@@ -470,11 +221,6 @@ char infoArray[][35]   = { "identification", "p1_version", "p1_version_be"
 int  infoElements = (sizeof(infoArray)/sizeof(infoArray[0]))-1;
 
 bool onlyIfPresent  = false;
-
-//-- MQTT client publish and subscribe functionality
-//-- https://github.com/knolleary/pubsubclient
-//------ [PubSubClient@2.7 pubsubclient-master@2.7]
-//#include <PubSubClient.h>                         		//-- moved to arduinoGlue.h
 
 PubSubClient MQTTclient(wifiClient);
 

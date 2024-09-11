@@ -3,7 +3,7 @@
 **  Program  : menuStuff, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 2022, 2023 Willem Aandewiel
+**  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
@@ -164,14 +164,6 @@ void handleKeyInput(char inChar)
       case 'B':
         displayBoardInfo();
         break;
-        
-#if defined(_HAS_NO_SLIMMEMETER)
-      case 'C':
-        forceBuildRingFiles = true;
-        runMode = SInit;
-        break;
-#endif
-        
       case 'd':
       case 'D':
         displayDaysHist(true);
@@ -291,9 +283,6 @@ void handleKeyInput(char inChar)
       default:
         Debugln("\r\nCommands are (*X only uppercase):\r\n");
         Debugln("   B - Board Info\r");
-#if defined(_HAS_NO_SLIMMEMETER)
-        Debugln("  *C - Create build RING files\r");
-#endif
         Debugln("  *E - erase file from Filesystem\r");
         Debugln("   F - force Reboot Watchdog\r");
         Debugln("   I - Identify by blinking NeoPixels\r");

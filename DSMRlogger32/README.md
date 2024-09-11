@@ -8,6 +8,10 @@ Firmware for the DSMR-logger Rev. 5.0 using only API call's
 
 Documentation can be found [here](https://mrwheel-docs.gitbook.io/dsmrlogger32/) (in progress)!
 
+### Ported to PlatformIO
+As of now the DSMRlogger32 firmware is ported to `VSCode` with the `PlatformIO` extension.
+<p>
+
 <table>
   <tr><th>Versie</th><th align="Left">Opmerking</th></tr>
   <tr>

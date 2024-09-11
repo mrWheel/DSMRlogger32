@@ -41,105 +41,44 @@ void saveTimestamp(const char *timeStamp)
 {
   //-- save this timestamp as "previous timestamp"
   prevTlgrmTime = lastTlgrmTime;
+  if (prevTlgrmTime.Year < 2000)
+  {
+    prevTlgrmTime = buildTimeStruct(lastTlgrmTime.Timestamp, devSetting->NoHourSlots
+                                                         , devSetting->NoDaySlots 
+                                                         , devSetting->NoMonthSlots);
+  }
   //-- fill all other fields
   strlcpy(lastTlgrmTime.Timestamp, timeStamp, _TIMESTAMP_LEN);
   lastTlgrmTime = buildTimeStruct(lastTlgrmTime.Timestamp, devSetting->NoHourSlots
                                                          , devSetting->NoDaySlots 
                                                          , devSetting->NoMonthSlots);
+  DebugTf("prevTlgrmTime[%s], lastTlgrmTime[%s]\r\n", prevTlgrmTime.Timestamp, lastTlgrmTime.Timestamp);
 
 } //  saveTimestamp()
 
-/****
-//===========================================================================================
-timeStruct buildTimeStruct(const char *timeStamp, uint16_t hourSlots
-                                                , uint16_t daySlots
-                                                , uint16_t monthSlots)
-{
-  if (hourSlots  < _NO_HOUR_SLOTS_)  hourSlots  = _NO_HOUR_SLOTS_;
-  if (daySlots   < _NO_DAY_SLOTS_)   daySlots   = _NO_DAY_SLOTS_;
-  if (monthSlots < _NO_MONTH_SLOTS_) monthSlots = _NO_MONTH_SLOTS_;
-  timeStruct thisTime;
-  //-- fill all other fields
-  strlcpy(thisTime.Timestamp, timeStamp, _TIMESTAMP_LEN);
 
-  switch(strlen(thisTime.Timestamp))
-  {
-    case  4: strlcat(thisTime.Timestamp, "01010101", _TIMESTAMP_LEN);  break;
-    case  5: strlcat(thisTime.Timestamp, "1010101", _TIMESTAMP_LEN);  break;
-    case  6: strlcat(thisTime.Timestamp, "010101", _TIMESTAMP_LEN);  break;
-    case  7: strlcat(thisTime.Timestamp, "10101", _TIMESTAMP_LEN);  break;
-    case  8: strlcat(thisTime.Timestamp, "0101", _TIMESTAMP_LEN);  break;
-    case  9: strlcat(thisTime.Timestamp, "101", _TIMESTAMP_LEN);  break;
-    case 10: strlcat(thisTime.Timestamp, "01", _TIMESTAMP_LEN);  break;
-    case 11: strlcat(thisTime.Timestamp, "1", _TIMESTAMP_LEN);  break;
-  }
+//-- timeStruct
+//struct timeStruct {
+//    char Timestamp[13];   //-- "YYMMDDHHMMSS" with null terminator
+//    int Year;             //-- EEYY
+//    int Month;
+//    int Day;
+//    int Hour;
+//    int Minute;
+//    int Second;
+//    time_t epoch;
+//    int Weekday;   // Day of the week (0-6, where 0 = Sunday)
+//    int Months;
+//    int monthSlot;
+//    int daysHist;
+//    int daySlot;
+//    int hoursHist;
+//    int hourSlot;
+//    int Days;
+//    int Hours;
+//    int monthsHist;
+//};
 
-  thisTime.Year   = String(timeStamp).substring(0, 2).toInt();    // YY
-  thisTime.Month  = String(timeStamp).substring(2, 4).toInt();    // MM
-  thisTime.Day    = String(timeStamp).substring(4, 6).toInt();    // DD
-  thisTime.Hour   = String(timeStamp).substring(6, 8).toInt();    // HH
-  thisTime.Minute = String(timeStamp).substring(8, 10).toInt();   // MM
-  thisTime.Second = String(timeStamp).substring(10, 12).toInt();  // SS
-
-  //-- save Europe epoch ..
-  time_t  epochEurope = time(0);
-  //--pio- Timezone tzSM;
-  //-- set SM time
-  //--pio- tzSM.setTime(thisTime.Hour, thisTime.Minute, thisTime.Second,
-  //--pio-              thisTime.Day,  thisTime.Month,  thisTime.Year);
-                   // Fill the tm structure
-    timeinfo.tm_year = thisTime.Year + (2000 - 1900);  // Years since 1900
-    timeinfo.tm_mon  = thisTime.Month;        // Months since January (0-11)
-    timeinfo.tm_mday = thisTime.Day;          // Day of the month
-    timeinfo.tm_hour = thisTime.Hour;         // Hours (0-23)
-    timeinfo.tm_min  = thisTime.Minute;       // Minutes (0-59)
-    timeinfo.tm_sec  = thisTime.Second;       // Seconds (0-59)
-
-    // Convert the tm structure to epoch time
-    time_t smEpoch = mktime(&timeinfo);
-
-  //-- create SM epoch .. and other fields
-  thisTime.epoch      = smEpoch;
-  thisTime.Weekday    = timeinfo()->tm.weekday();  //-- 1 = Sunday
-  thisTime.Months     = ((tzSM.year() -1) * 12) + tzSM.month();
-  thisTime.monthsHist = monthSlots;
-  thisTime.monthSlot  = (thisTime.Months % monthSlots);
-  thisTime.Days       = (thisTime.epoch / SECS_PER_DAY);
-  thisTime.daysHist   = daySlots;
-  thisTime.daySlot    = (thisTime.Days % daySlots);
-  thisTime.Hours      = (thisTime.epoch / SECS_PER_HOUR);
-  thisTime.hoursHist  = hourSlots;
-  thisTime.hourSlot  = (thisTime.Hours % hourSlots);
-  //-- reset Europe time
-  tzEurope.setTime(epochEurope);
-
-  return thisTime;
-  
-} //  buildTimeStruct()
-***/
-
-/**** timeStruct
-struct timeStruct {
-    char Timestamp[13];   // "YYMMDDHHMMSS" with null terminator
-    int Year;
-    int Month;
-    int Day;
-    int Hour;
-    int Minute;
-    int Second;
-    time_t epoch;
-    int Weekday;   // Day of the week (0-6, where 0 = Sunday)
-    int Months;
-    int monthSlot;
-    int daysHist;
-    int daySlot;
-    int hoursHist;
-    int hourSlot;
-    int Days;
-    int Hours;
-    int monthsHist;
-};
-***/
 // Function to fill missing parts of the timestamp if it has fewer than 12 characters.
 //===========================================================================================
 void fillMissingTimestamp(char *timestamp) 
@@ -155,111 +94,236 @@ void fillMissingTimestamp(char *timestamp)
     {
         strlcat(timestamp, defaultFill[len], _TIMESTAMP_LEN);
     }
-}
+} // fillMissingTimestamp()
 
 //===========================================================================================
-timeStruct buildTimeStruct(const char *timeStamp, uint16_t hourSlots, uint16_t daySlots, uint16_t monthSlots) 
+// Returns the number of days in a given month of a given year.
+// 
+// Takes into account leap years for February.
+// 
+// @param year The year to consider.
+// @param month The month to consider (0-based, i.e. 0 for January, 2 for February, etc.).
+// @return The number of days in the given month of the given year.
+int daysInMonth(int year, int month) 
 {
-    timeStruct thisTime;
-    
-    // Ensure valid slots
-    if (hourSlots < _NO_HOUR_SLOTS_)    hourSlots = _NO_HOUR_SLOTS_;
-    if (daySlots < _NO_DAY_SLOTS_)      daySlots = _NO_DAY_SLOTS_;
-    if (monthSlots < _NO_MONTH_SLOTS_)  monthSlots = _NO_MONTH_SLOTS_;
-    
-    // Copy the timestamp and fill missing parts
-    strncpy(thisTime.Timestamp, timeStamp, _TIMESTAMP_LEN - 1);
-    thisTime.Timestamp[_TIMESTAMP_LEN - 1] = '\0';
-    fillMissingTimestamp(thisTime.Timestamp);
-    
-    // Extract values from the filled timestamp
-    thisTime.Year   = atoi(thisTime.Timestamp) + 2000;
-    thisTime.Month  = atoi(thisTime.Timestamp + 2);
-    thisTime.Day    = atoi(thisTime.Timestamp + 4);
-    thisTime.Hour   = atoi(thisTime.Timestamp + 6);
-    thisTime.Minute = atoi(thisTime.Timestamp + 8);
-    thisTime.Second = atoi(thisTime.Timestamp + 10);
-    
-    // Convert to epoch time
-    struct tm timeinfo = {0};
-    timeinfo.tm_year  = thisTime.Year - 1900;
-    timeinfo.tm_mon   = thisTime.Month - 1;
-    timeinfo.tm_mday  = thisTime.Day;
-    timeinfo.tm_hour  = thisTime.Hour;
-    timeinfo.tm_min   = thisTime.Minute;
-    timeinfo.tm_sec   = thisTime.Second;
-    thisTime.epoch    = mktime(&timeinfo);
-    
-    // Calculate additional fields
-    thisTime.Weekday    = (timeinfo.tm_wday + 1) % 7;  // 0 = Sunday, 6 = Saturday
-    thisTime.Months     = (thisTime.Year - 1970) * 12 + thisTime.Month - 1;
-    thisTime.monthsHist = monthSlots;
-    thisTime.monthSlot  = thisTime.Months % monthSlots;
-    thisTime.Days       = thisTime.epoch / SECS_PER_DAY;
-    thisTime.daysHist   = daySlots;
-    thisTime.daySlot    = thisTime.Days % daySlots;
-    thisTime.Hours      = thisTime.epoch / SECS_PER_HOUR;
-    thisTime.hoursHist  = hourSlots;
-    thisTime.hourSlot   = thisTime.Hours % hourSlots;
-    
-    return thisTime;
-    
-} //  buildTimeStruct()buildTimeStruct()
+    static const int days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month == 1) //-- February
+    { 
+        if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+            return 29;
+        }
+    }
+    return days[month];
+
+} // daysInMonth()
+
+//===========================================================================================
+// Helper function to calculate days since epoch (January 1, 1970)
+int daysSinceEpoch(int year, int month, int day) 
+{
+    int days = 0;
+    for (int y = 1970; y < year; ++y) 
+    {
+        days += 365 + (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+    }
+    for (int m = 0; m < month - 1; ++m) 
+    {
+        days += daysInMonth(year, m);
+    }
+    return days + day - 1;
+
+} // daysSinceEpoch()
 
 //===========================================================================================
 timeStruct calculateTime(timeStruct useTime, int16_t units, int8_t ringType)
 {
-  time_t actualTime = time(0);  // Save the actual time
+  timeStruct newTime = useTime;  // Initialize newTime with useTime to keep all fields
+
+  if (Verbose2) DebugTf("calculateTime[%s], units[%d], ringType[%d]\n", useTime.Timestamp, units, ringType);
   
-  timeStruct newTime = useTime;
-  
+  // Parse useTime.Timestamp
+  int year, month, day, hour, minute, second;
+  if (sscanf(useTime.Timestamp, "%2d%2d%2d%2d%2d%2d", &year, &month, &day, &hour, &minute, &second) != 6) {
+    DebugTf("Error: Invalid Timestamp format\n");
+    return useTime;  // Return original time if parsing fails
+  }
+
+  // Adjust year to full 4-digit year
+  year += 2000;
+
+  // Adjust time based on units and ringType
   switch(ringType)
   {
     case RNG_HOURS:
-        newTime.epoch += (units * SECS_PER_HOUR);
+        hour += units;
+        while (hour >= 24) 
+        {
+            hour -= 24;
+            day++;
+            //-??- if (day > daysInMonth(year, month - 1)) 
+            if (day > daysInMonth(year, month)) 
+            {
+                day = 1;
+                month++;
+                if (month > 12) {
+                    month = 1;
+                    year++;
+                }
+            }
+        }
+        while (hour < 0) 
+        {
+            hour += 24;
+            day--;
+            if (day < 1) 
+            {
+                month--;
+                if (month < 1) 
+                {
+                    month = 12;
+                    year--;
+                }
+                day = daysInMonth(year, month - 1);
+            }
+        }
         break;
     case RNG_DAYS:
-        newTime.epoch += (units * SECS_PER_DAY);
+        day += units;
+        while (day > daysInMonth(year, month - 1)) 
+        {
+            day -= daysInMonth(year, month - 1);
+            month++;
+            if (month > 12) 
+            {
+                month = 1;
+                year++;
+            }
+        }
+        while (day < 1) 
+        {
+            month--;
+            if (month < 1) 
+            {
+                month = 12;
+                year--;
+            }
+            day += daysInMonth(year, month - 1);
+        }
         break;
     case RNG_MONTHS:
-        newTime.epoch += (units * SECS_PER_MONTH);
+        month += units;
+        while (month > 12) 
+        {
+            month -= 12;
+            year++;
+        }
+        while (month < 1) 
+        {
+            month += 12;
+            year--;
+        }
+        // Adjust for month lengths
+        if (day > daysInMonth(year, month - 1)) 
+        {
+            day = daysInMonth(year, month - 1);
+        }
         break;
+    default:
+        DebugTf("Error: Invalid ringType\n");
+        return useTime;  // Return original time if ringType is invalid
   }
 
-  struct tm *localTime = localtime(&newTime.epoch);
-  
-  newTime.Year      = localTime->tm_year + 1900;
-  newTime.Month     = localTime->tm_mon + 1;
-  newTime.Day       = localTime->tm_mday;
-  newTime.Hour      = localTime->tm_hour;
-  newTime.Minute    = localTime->tm_min;
-  newTime.Second    = localTime->tm_sec;
-  newTime.Weekday   = localTime->tm_wday + 1;  // tm_wday is 0-6, we want 1-7
-  
-  newTime.Months    = ((newTime.Year - 1970) * 12) + newTime.Month - 1;
-  newTime.monthSlot = (newTime.Months % useTime.monthsHist);
-  newTime.Days      = newTime.epoch / SECS_PER_DAY;
-  newTime.daySlot   = (newTime.Days % useTime.daysHist);
-  newTime.Hours     = newTime.epoch / SECS_PER_HOUR;
-  newTime.hourSlot  = (newTime.Hours % useTime.hoursHist);
+  // Fill in newTime struct
+  newTime.Year    = year;
+  newTime.Month   = month;
+  newTime.Day     = day;
+  newTime.Hour    = hour;
+  newTime.Minute  = minute;
+  newTime.Second  = second;
 
-  snprintf(newTime.Timestamp, _TIMESTAMP_LEN, "%04d%02d%02d%02d%02d%02dX"
-                                        , newTime.Year
+  // Calculate epoch time (UTC)
+  int days = daysSinceEpoch(year, month, day);
+  newTime.epoch = (days * 86400) + (hour * 3600) + (minute * 60) + second;
+
+  // Calculate weekday (1 = Sunday, 7 = Saturday)
+  newTime.Weekday = ((days + 4) % 7) + 1;  // January 1, 1970 was a Thursday (4)
+
+  newTime.Months      = (newTime.Year * 12) + newTime.Month;
+  newTime.monthsHist  = devSetting->NoMonthSlots;
+  newTime.monthSlot   = (newTime.Months % newTime.monthsHist);
+  newTime.Days        = newTime.epoch / SECS_PER_DAY;
+  newTime.daysHist    = devSetting->NoDaySlots;
+  newTime.daySlot     = (newTime.Days % newTime.daysHist);
+  newTime.Hours       = newTime.epoch / SECS_PER_HOUR;
+  newTime.hoursHist   = devSetting->NoHourSlots;
+  newTime.hourSlot    = (newTime.Hours % newTime.hoursHist);
+
+  if (Verbose2) DebugTf("old.timeStamp[%s]\r\n", useTime.Timestamp);
+
+  snprintf(newTime.Timestamp, _TIMESTAMP_LEN, "%02d%02d%02d%02d%02d%02d"
+                                        , newTime.Year % 100
                                         , newTime.Month
                                         , newTime.Day
                                         , newTime.Hour
                                         , newTime.Minute
                                         , newTime.Second);
 
-  time_t ignoredTime;
-  time(&ignoredTime);  // Restore the actual time (this updates the internal time)
+  if (Verbose2) 
+      DebugTf("new.timeStamp[%s], hour[%2d], hourSlot[%2d], day[%2d], daySlot[%2d], month[%2d], monthSlot[%2d]\r\n"
+                                                                              , newTime.Timestamp
+                                                                              , newTime.Hour
+                                                                              , newTime.hourSlot
+                                                                              , newTime.Day
+                                                                              , newTime.daySlot
+                                                                              , newTime.Month
+                                                                              , newTime.monthSlot);
 
-  if (Verbose1) DebugTf(" ->> new-Timestamp[%s]\r\n", newTime.Timestamp);
+  if (Verbose1)
+      DebugTf("new.timeStamp[%s], hours[%d], hist[%d], days[%d], hist[%d], months[%d], hist[%d]\r\n", newTime.Timestamp
+                                                                  , newTime.Hours
+                                                                  , newTime.hoursHist
+                                                                  , newTime.Days
+                                                                  , newTime.daysHist
+                                                                  , newTime.Months
+                                                                  , newTime.monthsHist);
 
   return newTime;
 
 } //  calculateTime()
 
+
+//===========================================================================================
+timeStruct buildTimeStruct(const char *timeStamp, uint16_t maxHourSlots, uint16_t maxDaySlots, uint16_t maxMonthSlots) 
+{
+    struct tm  timeInfo = {0};
+    timeStruct thisTime = {0};
+
+    if (Verbose2)
+        DebugTf("--->given.timeStamp[%s], maxHourSlot[%2d], maxDaySlot[%2d], maxMonthSlot[%2d]\r\n", timeStamp
+                                                                                   , maxHourSlots
+                                                                                   , maxDaySlots
+                                                                                   , maxMonthSlots);
+    
+    // Ensure valid slots
+    if (maxHourSlots  < _NO_HOUR_SLOTS_)   maxHourSlots   = _NO_HOUR_SLOTS_;
+    if (maxDaySlots   < _NO_DAY_SLOTS_)    maxDaySlots    = _NO_DAY_SLOTS_;
+    if (maxMonthSlots < _NO_MONTH_SLOTS_)  maxMonthSlots  = _NO_MONTH_SLOTS_;
+    
+    // Copy the timestamp and fill missing parts
+    strncpy(thisTime.Timestamp, timeStamp, _TIMESTAMP_LEN - 1);
+    thisTime.Timestamp[_TIMESTAMP_LEN - 1] = '\0';
+    fillMissingTimestamp(thisTime.Timestamp);
+
+    thisTime = calculateTime(thisTime, 0, RNG_HOURS);
+
+    if (Verbose1)
+        DebugTf("returning.timeStamp[%s],    hourSlot[%2d],    daySlot[%2d],    monthSlot[%2d]\r\n", thisTime.Timestamp
+                                                                                      , thisTime.hourSlot
+                                                                                      , thisTime.daySlot
+                                                                                      , thisTime.monthSlot);
+    return thisTime;
+    
+} //  buildTimeStruct()
 
 
 //===========================================================================================
@@ -292,6 +356,7 @@ void epochToTimestamp(time_t t, char *ts, int8_t len)
           , localtime(&now)->tm_hour, localtime(&now)->tm_min, localtime(&now)->tm_sec);
 
 } // epochToTimestamp()
+
 
 //===========================================================================================
 int8_t MinuteFromTimestamp(const char *timeStamp)

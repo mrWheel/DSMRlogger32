@@ -426,7 +426,7 @@ void updateFirmware()
 void reBootESP()
 {
   DebugTln("Redirect and ReBoot ..");
-  doRedirect("Reboot ESP32 ..", 30, "/", true);
+  doRedirect("Reboot DSMRlogger32 ..", 50, "/", true);
 
 } // reBootESP()
 

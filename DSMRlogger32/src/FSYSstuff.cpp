@@ -188,6 +188,8 @@ void writeDataToRingFile(char *fileName, int8_t ringType, char *record, timeStru
   uint16_t offset = 0;
   uint16_t slotNr = 0;
 
+  DebugTf("input.timestamp[%s], ringType[%d], record[%s]\r\n", slotTime.Timestamp, ringType, record);
+
   fillRecord(record, DATA_RECLEN);
 
   if (!isValidTimestamp(record, 8))
@@ -206,8 +208,8 @@ void writeDataToRingFile(char *fileName, int8_t ringType, char *record, timeStru
     switch(ringType)
     {
       case RNG_HOURS:
-        DebugTf("slotTime.Hours[%3d], devSetting[%3d]\r\n", slotTime.Hours
-                                                          , devSetting->NoHourSlots);
+        DebugTf("slotTime.Hours[%3d], devSetting->NoHourSlots[%3d]\r\n", slotTime.Hours
+                                                                       , devSetting->NoHourSlots);
         createRingFile(fileName, slotTime, ringType, devSetting->NoHourSlots);
         break;
       case RNG_DAYS:
@@ -377,12 +379,16 @@ bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType)
   char       dumpRec[DATA_RECLEN + 2] = {0};  //-- temp. for debugging
   uint16_t   useSlot = 0;
   uint16_t   noSlots;
-  timeStruct tmpTime = useTime;
+  timeStruct tmpTime = calculateTime(useTime, 0, ringType);
+  useTime = tmpTime;
   timeStruct newTime = {0};
 
-  DebugTf("Hours[%d], Days[%d], Months[%d]\r\n", useTime.Hours
-                                               , useTime.Days
-                                               , useTime.Months);
+  DebugTf("Timestamp[%s], Year[%02d], Month[%d], Day[%d], Hour[%d]\r\n"
+                                                              , useTime.Timestamp
+                                                              , useTime.Year
+                                                              , useTime.Month
+                                                              , useTime.Day
+                                                              , useTime.Hour);
 
   DebugTf("Free Psram [%d]bytes\r\n", ESP.getFreePsram() );
 
@@ -391,9 +397,10 @@ bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType)
 
   switch(ringType)
   {
-    case RNG_HOURS:   noSlots = useTime.Hours;  break;
-    case RNG_DAYS:    noSlots = useTime.Days;   break;
-    case RNG_MONTHS:  noSlots = useTime.Months; break;
+    case RNG_HOURS:   noSlots = devSetting->NoHourSlots;  break;
+    case RNG_DAYS:    noSlots = devSetting->NoDaySlots;   break;
+  //case RNG_MONTHS:  noSlots = useTime.Months; break;
+    case RNG_MONTHS:  noSlots = devSetting->NoMonthSlots; break;
     default:      return false;
   }
   Debugf(", History[%d]\r\n", noSlots);
@@ -463,9 +470,15 @@ bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType)
                                                           , noSlots);
         break;
     case RNG_HOURS:
+        DebugTf("tmpTime: Timestamp[%s], Year[%02d], Month[%02d], Day[%02d], Hour[%02d]\r\n"
+                                                          , tmpTime.Timestamp
+                                                          , tmpTime.Year
+                                                          , tmpTime.Month
+                                                          , tmpTime.Day
+                                                          , tmpTime.Hour);  
         newTime = tmpTime; //calculateTime(tmpTime, useTime.Hours, ringType);
         useSlot = newTime.hourSlot;
-        DebugTf("Start [%02d-%02d-%02d], Hour[%02d] (slot[%d]of[%d])\r\n"
+        DebugTf("newTime: Start [%02d-%02d-%02d], Hour[%02d] (slot[%d]of[%d])\r\n"
                                                           , newTime.Year
                                                           , newTime.Month
                                                           , newTime.Day
@@ -497,15 +510,15 @@ bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType)
     switch(ringType)
     {
       case RNG_MONTHS:
-          newTime = calculateTime(newTime, -1, ringType);
-          snprintf(gMsg, 15, "%02d%02d0000", newTime.Year, newTime.Month);
+          newTime = calculateTime(newTime, -1, ringType); //-- subtract one month
+          snprintf(gMsg, 15, "%02d%02d00000000", (newTime.Year % 100), newTime.Month);
           newTime = buildTimeStruct(gMsg, useTime.Hours, useTime.Days, useTime.Months);
           if (Verbose1) DebugTf("new Months Key[%s], Slot[%02d]\r\n", gMsg, newTime.monthSlot);
           useSlot = newTime.monthSlot;
           break;
       case RNG_DAYS:
-          newTime = calculateTime(newTime, -1, ringType);
-          snprintf(gMsg, 15, "%02d%02d%02d000000", newTime.Year
+          newTime = calculateTime(newTime, -1, ringType); //-- subtract one day
+          snprintf(gMsg, 15, "%02d%02d%02d000000", (newTime.Year % 100)
                                                       , newTime.Month
                                                       , newTime.Day);
           newTime = buildTimeStruct(gMsg, useTime.Hours, useTime.Days, useTime.Months);
@@ -513,8 +526,8 @@ bool createRingFile(const char *fileName, timeStruct useTime, int8_t ringType)
           useSlot = newTime.daySlot;
           break;
       case RNG_HOURS:
-          newTime = calculateTime(newTime, -1, ringType);
-          snprintf(gMsg, 15, "%02d%02d%02d%02d0000", newTime.Year
+          newTime = calculateTime(newTime, -1, ringType); //-- subtract one hour
+          snprintf(gMsg, 15, "%02d%02d%02d%02d0000", (newTime.Year % 100)
                                                         , newTime.Month
                                                         , newTime.Day
                                                         , newTime.Hour);

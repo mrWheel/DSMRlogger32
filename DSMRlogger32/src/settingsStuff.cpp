@@ -384,13 +384,15 @@ void readDevSettings(bool show)
   if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
 
   devSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
+  if (devSetting->NoHourSlots > 190) devSetting->NoHourSlots  = 190;
   devSetting->NoDaySlots   = readRingHistoryDepth(DAYS_FILE,   RNG_DAYS);
+  if (devSetting->NoDaySlots  > 155) devSetting->NoDaySlots   = 155;
   devSetting->NoMonthSlots = readRingHistoryDepth(MONTHS_FILE, RNG_MONTHS);
+  if (devSetting->NoMonthSlots > 61) devSetting->NoMonthSlots =  61;
 
   //--- this will take some time to settle in
   //--- probably need a reboot before that to happen :-(
   startMDNS(devSetting->Hostname);
-
 
   if (devSetting->NeoBrightness ==  0) devSetting->NeoBrightness =  50;
   if (devSetting->NeoBrightness <  10) devSetting->NeoBrightness =  10;

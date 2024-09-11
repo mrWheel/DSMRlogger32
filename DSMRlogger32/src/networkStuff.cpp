@@ -70,7 +70,7 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
   uint32_t lTime = millis();
   String thisAP = String(hostname) + "-" + WiFi.macAddress();
 
-  DebugTln("start ...");
+  DebugTf("startWiFi ...[%s]\r\n",  thisAP.c_str());
 
   if (eraseCredentials) manageWiFi.resetSettings();
 

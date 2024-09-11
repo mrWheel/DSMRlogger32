@@ -117,17 +117,6 @@ void _debugBOL(const char *fn, int line);
 #define RESTART_TIMER(timerName)      ( timerName##_due = millis()+timerName##_interval );
 #define DUE(timerName)                ( __Due__(timerName##_due, timerName##_interval, timerName##_type) )
 #define _FSYS SPIFFS
-//#define writeToSysLog(...) ({ 
-//        sysLog.writeDbg(sysLog.buildD("[%04d-%02d-%02d %02d:%02d:%02d][%-12.12s] "  
-//                                                               , tzEurope.year()    
-//                                                               , tzEurope.month()   
-//                                                               , tzEurope.day()     
-//                                                               , tzEurope.hour()    
-//                                                               , tzEurope.minute()  
-//                                                               , tzEurope.second()  
-//                                                               , __FUNCTION__)      
-//                                                               ,__VA_ARGS__); 
-//                             })
 
 #define writeToSysLog(...) ({ \
         sysLog.writeDbg(sysLog.buildD("[%04d-%02d-%02d %02d:%02d:%02d][%-12.12s] "  \
@@ -721,10 +710,10 @@ timeStruct calculateTime(timeStruct useTime, int16_t units, int8_t ringType);
 String buildDateTimeString(const char *timeStamp, int len); 
 void epochToTimestamp(time_t t, char *ts, int8_t len);      
 int8_t MinuteFromTimestamp(const char *timeStamp);          
-int8_t HourFromTimestamp(const char *timeStamp);            
-int8_t DayFromTimestamp(const char *timeStamp);             
-int8_t MonthFromTimestamp(const char *timeStamp);           
-int8_t YearFromTimestamp(const char *timeStamp);            
+//int8_t HourFromTimestamp(const char *timeStamp);            
+//int8_t DayFromTimestamp(const char *timeStamp);             
+//int8_t MonthFromTimestamp(const char *timeStamp);           
+//int8_t YearFromTimestamp(const char *timeStamp);            
 time_t epoch(const char *timeStamp, int8_t len, bool syncTime);
 //-- from FSmanager.ino -----------
 void setupFSmanager();                                      

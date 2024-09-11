@@ -78,6 +78,7 @@ void checkFlashButton()
 //===========================================================================================
 void oled_Init()
 {
+  DebugTln("Wire.begin() ......");
   Wire.begin();
   if (devSetting->OledType == 2)
         oled.begin(&SH1106_128x64, I2C_ADDRESS);
@@ -92,6 +93,7 @@ void oled_Init()
   boolDisplay = true;
   if (devSetting->OledFlip)  oled.displayRemap(true);
   RESTART_TIMER(oledSleepTimer);
+  DebugTln("oled_Init() Done ..");
 
 }   // oled_Init()
 

@@ -461,15 +461,15 @@ void sendDeviceTime()
 
   snprintf(theTime, sizeof(theTime), "%02d-%02d-%04d %02d:%02d:%02d"
                                                     , localtime(&now)->tm_mday
-                                                    , localtime(&now)->tm_mon
-                                                    , localtime(&now)->tm_year
+                                                    , localtime(&now)->tm_mon + 1
+                                                    , localtime(&now)->tm_year + 1900
                                                     , localtime(&now)->tm_hour
                                                     , localtime(&now)->tm_min
                                                     , localtime(&now)->tm_sec);
 
   snprintf(theTimeRev, sizeof(theTimeRev), "%04d-%02d-%02d %02d:%02d:%02d"
-                                                    , localtime(&now)->tm_year
-                                                    , localtime(&now)->tm_mon
+                                                    , localtime(&now)->tm_year + 1900
+                                                    , localtime(&now)->tm_mon + 1
                                                     , localtime(&now)->tm_mday
                                                     , localtime(&now)->tm_hour
                                                     , localtime(&now)->tm_min

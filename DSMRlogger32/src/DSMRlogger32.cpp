@@ -221,6 +221,15 @@ void setup()
   while(!Serial) { delay(10); }
 
   upTimeStart = millis() / 1000;
+    
+  neoPixels.begin();
+  neoPixels.show();
+  neoPixels.setBrightness(125);  
+
+  DebugTln("blink Neo Pixels ..");
+  blinkNeoPixels(5, 750);
+  neoPixOn(0, neoPixRed);
+  neoPixOn(1, neoPixRed);
   
   // for now 115200. Look at end of setup()
   SMserial.begin (115200, SERIAL_8N1, SMRX, SMTX);
@@ -244,15 +253,6 @@ void setup()
   //-- Hold WatchDog
   DebugTln("Reset Watchdog ..");
   resetWatchdog();  
-  
-  neoPixels.begin();
-  neoPixels.show();
-  neoPixels.setBrightness(125);  
-
-  DebugTln("blink Neo Pixels ..");
-  blinkNeoPixels(5, 750);
-  neoPixOn(0, neoPixRed);
-  neoPixOn(1, neoPixRed);
 
   pulseHeart(true);
   neoPixOn(0, neoPixRed);
@@ -274,6 +274,91 @@ void setup()
     runAPmode = true;
     DebugTln("device setting: run as AP!");
   }
+  oled_Init();
+
+  //=============start Networkstuff==================================
+  Serial.println(">>DSMR-logger32<<");
+  Serial.println("Verbinden met WiFi...");
+
+  if (devSetting->OledType > 0)
+  {
+    if (devSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
+    oled_Clear();                       // clear the screen
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
+    oled_Print_Msg(1, "Verbinden met WiFi", 500);
+  }
+  digitalWrite(LED_BUILTIN, LED_ON);
+  if (!runAPmode)
+  {
+    startWiFi(devSetting->Hostname, 240, false);  // timeout 4 minuten
+    myWiFi.ipWiFi    = WiFi.localIP();
+    myWiFi.ipGateway = WiFi.gatewayIP();
+    DebugT("DSMRlogger32 IP address: ");
+    Debugln(WiFi.localIP());
+  
+    WiFi.onEvent(WiFiEvent);
+  }
+  else
+  {
+    if (devSetting->runAPmode)
+          writeToSysLog("run in AP mode by system setting!");
+    else  writeToSysLog("run in AP mode requested by user!");
+    WiFi.softAP(devSetting->Hostname);
+    DebugT("AP IP address: ");
+    Debugln(WiFi.softAPIP());
+    lostWiFiConnection = false;
+  }
+  //--- setup randomseed the right way (??)
+  //--- Read more: http://www.esp32learning.com/code/esp32-true-random-number-generator-example.php
+  esp_random();
+
+  if (devSetting->OledType > 0)
+  {
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
+    if (runAPmode)  oled_Print_Msg(1, devSetting->Hostname, 0);
+    else            oled_Print_Msg(1, WiFi.SSID(), 0);
+    if (runAPmode)  snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.softAPIP().toString().c_str());
+    else            snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
+    oled_Print_Msg(2, gMsg, 1500);
+  }
+  
+  startTelnet();
+  if (devSetting->OledType > 0)
+  {
+    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
+    oled_Print_Msg(3, "telnet (poort 23)", 2500);
+  }
+  
+  digitalWrite(LED_BUILTIN, LED_OFF);
+
+  Debugln();
+  DebugT ("Connected to " );
+  if (runAPmode)  Debugln(devSetting->Hostname);
+  else            Debugln(myWiFi.SSID);
+  DebugT ("IP address: " );
+  if (runAPmode)  Debugln(WiFi.softAPIP());
+  else            Debugln(myWiFi.ipWiFi);
+  if (!runAPmode)
+  {
+    DebugT ("IP gateway: " );
+    Debugln (myWiFi.ipGateway);
+  }
+  Debugln();
+
+  for (int L=0; L < 4; L++)
+  {
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    delay(200);
+  }
+  digitalWrite(LED_BUILTIN, LED_OFF);
+
+  startMDNS(devSetting->Hostname);
+  if (devSetting->OledType > 0)
+  {
+    oled_Print_Msg(3, "mDNS gestart", 1500);
+  }
+
+  //=============end Networkstuff======================================
   
   //------ read status file for last Timestamp --------------------
   strlcpy(lastTlgrmTime.Timestamp, "040302010101X", _TIMESTAMP_LEN);
@@ -287,16 +372,6 @@ void setup()
   //-- make sure both prev and last are initialized
   saveTimestamp(lastTlgrmTime.Timestamp);
   saveTimestamp(lastTlgrmTime.Timestamp);
-//  tzEurope.setTime(  lastTlgrmTime.Hour
-//                   , lastTlgrmTime.Minute
-//                   , lastTlgrmTime.Second
-//                   , lastTlgrmTime.Day
-//                   , lastTlgrmTime.Month
-//                   , lastTlgrmTime.Year);
-//  DebugTf("===> lastTimestamp[%s]-> nrReboots[%u] - Errors[%u]\r\n\n"
-//                                      , lastTlgrmTime.Timestamp
-//                                      , nrReboots++
-//                                      , slotErrors);
 
   timeSync.setup();
   timeSync.sync(100);
@@ -381,86 +456,6 @@ void setup()
   DebugTf("last Reset Reason CPU[1] - %s\r\n", lastResetCPU1);
   writeToSysLog("last Reset Reason CPU[1] - %s", lastResetCPU1);  
 
-  oled_Init();
-
-  //=============start Networkstuff==================================
-  if (devSetting->OledType > 0)
-  {
-    if (devSetting->OledFlip)  oled_Init();  // only if true restart(init) oled screen
-    oled_Clear();                       // clear the screen
-    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
-    oled_Print_Msg(1, "Verbinden met WiFi", 500);
-  }
-  digitalWrite(LED_BUILTIN, LED_ON);
-  if (!runAPmode)
-  {
-    startWiFi(devSetting->Hostname, 240, false);  // timeout 4 minuten
-    myWiFi.ipWiFi    = WiFi.localIP();
-    myWiFi.ipGateway = WiFi.gatewayIP();
-  
-    WiFi.onEvent(WiFiEvent);
-  }
-  else
-  {
-    if (devSetting->runAPmode)
-          writeToSysLog("run in AP mode by system setting!");
-    else  writeToSysLog("run in AP mode requested by user!");
-    WiFi.softAP(devSetting->Hostname);
-    DebugT("AP IP address: ");
-    Debugln(WiFi.softAPIP());
-    lostWiFiConnection = false;
-  }
-  //--- setup randomseed the right way (??)
-  //--- Read more: http://www.esp32learning.com/code/esp32-true-random-number-generator-example.php
-  esp_random();
-
-  if (devSetting->OledType > 0)
-  {
-    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
-    if (runAPmode)  oled_Print_Msg(1, devSetting->Hostname, 0);
-    else            oled_Print_Msg(1, WiFi.SSID(), 0);
-    if (runAPmode)  snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.softAPIP().toString().c_str());
-    else            snprintf(gMsg,  _GMSG_LEN, "IP %s", WiFi.localIP().toString().c_str());
-    oled_Print_Msg(2, gMsg, 1500);
-  }
-  
-  startTelnet();
-  if (devSetting->OledType > 0)
-  {
-    oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
-    oled_Print_Msg(3, "telnet (poort 23)", 2500);
-  }
-  
-  digitalWrite(LED_BUILTIN, LED_OFF);
-
-  Debugln();
-  DebugT ("Connected to " );
-  if (runAPmode)  Debugln(devSetting->Hostname);
-  else            Debugln(myWiFi.SSID);
-  DebugT ("IP address: " );
-  if (runAPmode)  Debugln(WiFi.softAPIP());
-  else            Debugln(myWiFi.ipWiFi);
-  if (!runAPmode)
-  {
-    DebugT ("IP gateway: " );
-    Debugln (myWiFi.ipGateway);
-  }
-  Debugln();
-
-  for (int L=0; L < 4; L++)
-  {
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    delay(200);
-  }
-  digitalWrite(LED_BUILTIN, LED_OFF);
-
-  startMDNS(devSetting->Hostname);
-  if (devSetting->OledType > 0)
-  {
-    oled_Print_Msg(3, "mDNS gestart", 1500);
-  }
-
-  //=============end Networkstuff======================================
 
   if (!runAPmode)
   {
@@ -469,23 +464,6 @@ void setup()
     {
       oled_Print_Msg(3, "setup NTP server", 100);
     }
-    //-- events();
-    //setDebug(INFO);
-    /***
-    DebugT("Wait for NTP sync ...");
-    while (!waitForSync(2)) { Debug('.'); delay(500); }
-    Debugln("Done!");
-    updateNTP();
-    DebugT("UTC: ");
-    Debugln(UTC.dateTime());
-  
-    //--tzEurope.setLocation("Europe/Amsterdam");
-    tzEurope.setPosix(AMSTERDAM_POSIX);
-    DebugTf("Amsterdam time: ");
-    Debugln(tzEurope.dateTime());
-    DebugT("Timezone: "); Debugln(tzEurope.getTimezoneName());
-    writeToSysLog("Timezone: %s", tzEurope.getTimezoneName().c_str());  
-    ***/
     time(&now);
     DebugTln(F("NTP server set!\r\n\r"));
     DebugTf("NTP Date/Time: %02d-%02d-%04d %02d:%02d:%02d\r\n"
@@ -701,6 +679,8 @@ void doTaskTelegram()
 void doSystemTasks()
 {
   pulseHeart();
+  time(&now);
+
   
 #ifndef _HAS_NO_SLIMMEMETER
   slimmeMeter.loop();
@@ -737,12 +717,6 @@ void loop ()
   doTaskTelegram();
 
   loopCount++;
-
-//  //--- update upTime counter
-//  if (DUE(updateSeconds))
-//  {
-//    upTimeSeconds++;
-//  }
 
   //--- if an OLED screen attached, display the status
   if (devSetting->OledType > 0)
@@ -803,8 +777,6 @@ void loop ()
   }
   
 #ifndef _HAS_NO_SLIMMEMETER
-  //-- hier moet nog even over worden nagedacht
-  //-- via een setting in- of uit-schakelen
   if (devSetting->DailyReboot && (localtime(&now)->tm_hour == 4) && (localtime(&now)->tm_min == 5))
   {
     slotErrors      = 0;

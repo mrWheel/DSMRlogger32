@@ -48,7 +48,7 @@ void processTelegram()
   {
     buildDataRecordFromSM(record, prevTlgrmTime);
     updatedRINGfiles = true;
-    DebugTf("Update MONTHS, DAYS & HOURS RING-files..[%02d-%02d-%02d (%02d)] Changed Year! [%d/%d]\r\n" 
+    DebugTf("Update MONTHS, DAYS & HOURS RING-files..[%04d-%02d-%02d (%02d)] Changed Year! [%d/%d]\r\n" 
                                                             , prevTlgrmTime.Year
                                                             , prevTlgrmTime.Month
                                                             , prevTlgrmTime.Day
@@ -70,14 +70,14 @@ void processTelegram()
   else if (lastTlgrmTime.Month != prevTlgrmTime.Month)  
   {
     buildDataRecordFromSM(record, prevTlgrmTime);
-    DebugTf("Update MONTHS, DAYS & HOURS RING-files..[%02d-%02d-%02d (%02d)] Changed Month! [%d/%d]\r\n" 
+    DebugTf("Update MONTHS, DAYS & HOURS RING-files..[%04d-%02d-%02d (%02d)] Changed Month! [%d/%d]\r\n" 
                                                             , prevTlgrmTime.Year
                                                             , prevTlgrmTime.Month
                                                             , prevTlgrmTime.Day
                                                             , prevTlgrmTime.Hour
                                                             , prevTlgrmTime.Month
                                                             , lastTlgrmTime.Month);
-    writeToSysLog("Update RING-files [%02d-%02d-%02d (%02d)] Changed Month! [%d/%d] - MONTHS, DAYS & HOURS"
+    writeToSysLog("Update RING-files [%04d-%02d-%02d (%02d)] Changed Month! [%d/%d] - MONTHS, DAYS & HOURS"
                                                             , prevTlgrmTime.Year
                                                             , prevTlgrmTime.Month
                                                             , prevTlgrmTime.Day

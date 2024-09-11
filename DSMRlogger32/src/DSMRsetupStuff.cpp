@@ -10,8 +10,6 @@
 */
 #include "DSMRsetupStuff.h"
 
-	//-- moved to arduinoGlue.h // #define FORMAT_SPIFFS_IF_FAILED true
-
 //===========================================================================================
 void setupFileSystem()
 {
@@ -49,7 +47,7 @@ void setupFileSystem()
 
 
 //===========================================================================================
-void setupSysLogger()
+void setupSysLogger(const char* versionInfo)
 {
   DebugTln("initiate SysLogger..");
   
@@ -63,7 +61,8 @@ void setupSysLogger()
   }
   writeToSysLog("    ");                         
   writeToSysLog("-- new start ------------------------------------");                         
-  writeToSysLog("**** Booting....[%s]", String(_FW_VERSION).c_str());
+  //writeToSysLog("**** Booting....[%s]", String(_FW_VERSION).c_str());
+  writeToSysLog("**** Booting....[%s]", versionInfo);
   
 } //  setupSysLogger()
 

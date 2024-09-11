@@ -10,17 +10,6 @@
 */
 #include "oledStuff.h"
 
-//------ [SSD1306Ascii@1.3.0]
-//#include <SSD1306Ascii.h>                         		//-- moved to arduinoGlue.h
-//------ [Wire@2.0.0]
-//#include <SSD1306AsciiWire.h>                     		//-- moved to arduinoGlue.h
-
-// 0X3C+SA0 - 0x3C or 0x3D
-	//-- moved to arduinoGlue.h // #define I2C_ADDRESS 0x3C
-
-// Define proper RST_PIN if required.
-	//-- moved to arduinoGlue.h // #define RST_PIN -1
-
 SSD1306AsciiWire oled;
 
 void oled_Print_Msg(uint8_t, String, uint16_t);

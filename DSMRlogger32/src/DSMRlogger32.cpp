@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-	//-- moved to arduinoGlue.h // #define _FW_VERSION "v5.0.5 (24-04-2023)"
+const char* _FW_VERSION = "v5.1.0 (11-09-2024)";
 /*
 **  Copyright (c) 2022, 2023 Willem Aandewiel
 **
@@ -51,49 +51,10 @@
 **   
 **   https://mrwheel-docs.gitbook.io/DSMRlogger32/
 */
-/******************** compiler options  ********************************************/
-//#define _SHOW_PASSWRDS             // well .. show the PSK key and MQTT password, what else?
-//#define _HAS_NO_SLIMMEMETER        // define for testing only!
-
-//---- you have to choose one of these: { _SPIFFS | _LITTLEFS }
-//#define _LITTLEFS
-	//-- moved to arduinoGlue.h // #define _SPIFFS
 
 /******************** don't change anything below this comment **********************/
 
-//#include <esp_heap_caps.h>                        		//-- moved to arduinoGlue.h
-
 #include "DSMRlogger32.h"
-
-/*				*** struct moved to arduinoGlue.h ***
-struct showValues
-{
-  template<typename Item>
-  void apply(Item &i)
-  {
-    if (i.present())
-    {
-      DebugT(Item::name);
-      Debug(F(": "));
-      Debug(i.val());
-      Debug(Item::unit());
-    }
-    Debugln();
-  }
-};
-*/
-
-//-- prototype moved to arduinoGlue.h--
-//bool isInFieldsArray(const char *lookUp, int elemts);
-//void addToTable(const char *cName, float fValue);
-
-//=======================================================================
-//-- moved to arduinoGlue.h
-//template<typename Item>
-//Item &typecastValue(Item &i)
-//{
-//  return i;
-//}
 
 //=======================================================================
 float typecastValue(TimestampedFixedValue i)
@@ -106,60 +67,6 @@ float typecastValue(FixedValue i)
 {
   return i;
 }
-
-//=======================================================================
-/*				*** struct moved to arduinoGlue.h ***
-struct buildJsonV2ApiSm
-{
-  bool  skip = false;
-
-  template<typename Item>
-  void apply(Item &i)
-  {
-    skip = false;
-    String Name = String(Item::name);
-    if (!isInFieldsArray(Name.c_str(), fieldsElements))
-    {
-      skip = true;
-    }
-    if (!skip)
-    {
-      if (i.present())
-      {
-        addToTable(Name.c_str(), typecastValue(i.val()));
-      }
-    }
-  }
-
-};
-*/  // buildJsonV2ApiSm
-
-//=======================================================================
-/*				*** struct moved to arduinoGlue.h ***
-struct addSmToActualStore
-{
-  bool  skip = false;
-
-  template<typename Item>
-  void apply(Item &i)
-  {
-    skip = false;
-    String Name = String(Item::name);
-    if (!isInFieldsArray(Name.c_str(), fieldsElements))
-    {
-      skip = true;
-    }
-    if (!skip)
-    {
-      if (i.present())
-      {
-        pushToActualStore(Name.c_str(), typecastValue(i.val()));
-      }
-    }
-  }
-
-};
-*/  // addSmToActualStore
 
 TimeSync      timeSync;  //-- new, not in Arduino version
 struct tm     timeinfo;
@@ -265,7 +172,7 @@ void setup()
   setupFileSystem();
 
   //------ initialize devSetting logger --------------------
-  setupSysLogger();
+  setupSysLogger(_FW_VERSION);
 
   readDevSettings(true);
 
@@ -605,7 +512,6 @@ void setup()
 
   DebugTln(F("Enable slimmeMeter..\r"));
 
-#if !defined( _HAS_NO_SLIMMEMETER )
   DebugTln("Setup serial port for Smart Meter reading");
   if (smSetting->PreDSMR40 == 0)
   {
@@ -626,8 +532,6 @@ void setup()
     SMserial.begin(9600, SERIAL_7E1, SMRX, SMTX);
     slimmeMeter.doChecksum(false);
   }
-
-#endif // not _HAS_NO_SLIMME_METER
 
   neoPixOn(1, neoPixGreenLow);
   
@@ -662,14 +566,10 @@ void doTaskTelegram()
   {
     if (Verbose1) 
       DebugTln("doTaskTelegram");
-#if defined(_HAS_NO_SLIMMEMETER)
-    handleTestdata();
-#else
     //-- enable DTR to read a telegram from the Slimme Meter
     slimmeMeter.enable(true); 
     slimmeMeter.loop();
     handleSlimmemeter();
-#endif
   }
   
 } //  doTaskTelegram()
@@ -680,11 +580,7 @@ void doSystemTasks()
 {
   pulseHeart();
   time(&now);
-
-  
-#ifndef _HAS_NO_SLIMMEMETER
-  slimmeMeter.loop();
-#endif
+ 
   MQTTclient.loop();
   httpServer.handleClient();
 
@@ -698,10 +594,10 @@ void doSystemTasks()
   {
     neoPixOn(1, neoPixGreenLow);
   }
-  if (ntpEventId == 0)
-  {
+  //if (ntpEventId == 0)
+  //{
     //-pio-if (timeSet) { ntpEventId = setEvent(logNtpTime, now()+3600); }
-  }
+  //}
   //--pio-events(); //-- update ezTime every 30? minutes
   yield();
 
@@ -776,20 +672,6 @@ void loop ()
     }
   }
   
-#ifndef _HAS_NO_SLIMMEMETER
-  if (devSetting->DailyReboot && (localtime(&now)->tm_hour == 4) && (localtime(&now)->tm_min == 5))
-  {
-    slotErrors      = 0;
-    nrReboots       = 0;
-    writeLastStatus();
-    //--  skip to next minute (6)
-    writeToSysLog("Daily Reboot! after 60 seconds");
-    delay(60000);
-    ESP.restart();
-    delay(3000);
-  }
-#endif
-
   yield();
 
 } // loop()

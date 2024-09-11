@@ -44,6 +44,7 @@ void pulseHeart()
 //===========================================================================================
 void resetWatchdog()
 {
+  DebugTln("Watchdog Reset!");
   for(int i=0; i<3; i++)
   {
     digitalWrite(_PIN_WD_RESET, LOW);
@@ -429,7 +430,8 @@ struct SpiRamAllocator
 };
 */
 
-//using SpiRamJsonDocument = BasicJsonDocument<SpiRamAllocator>;  //-- moved to arduinoGlue.h
+//-- now in arduinoGlue.h --------------------------------------
+//using SpiRamJsonDocument = BasicJsonDocument<SpiRamAllocator>;
 
 
 /***************************************************************************

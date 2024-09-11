@@ -10,7 +10,6 @@
 */
 #include "handleSlimmeMeter.h"
 
-#ifndef _HAS_NO_SLIMMEMETER
 //==================================================================================
 void handleSlimmemeter()
 {
@@ -176,8 +175,6 @@ void processSlimmemeter()
   } // if (slimmeMeter.available())
 
 } // handleSlimmeMeter()
-
-#endif  // ifndef _HAS_NO_SLIMMEMETER
 
 
 //==================================================================================

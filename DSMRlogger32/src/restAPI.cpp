@@ -372,9 +372,6 @@ void sendDeviceInfo()
   //-- Allocate the JsonDocument
   SpiRamJsonDocument  doc(3000);
 
-#ifdef _HAS_NO_SLIMMEMETER
-  strlcat(compileOptions, "[NO_SLIMMEMETER]", sizeof(compileOptions));
-#endif
 #ifdef _SHOW_PASSWRDS
   strlcat(compileOptions, "[SHOW_PASSWRDS]", sizeof(compileOptions));
 #endif

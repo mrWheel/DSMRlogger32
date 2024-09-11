@@ -4,5 +4,19 @@
 //============ Includes ====================
 #include "arduinoGlue.h"
 
+//============ Prototypes ==================
+bool handleList();                                          
+void deleteRecursive(const char *path);                     
+bool handleFile(String &&path);                             
+void handleUpload();                                        
+void formatFS();                                            
+void listFS();                                              
+void sendResponce();                                        
+const String formatBytes(size_t const &bytes);              
+void reBootESP();                                           
+void doRedirect(String msg, int wait, const char *URL, bool reboot);
+String getContentType(String filename);                     
+
+
 //============ Added by Convertor ==========
 #endif // FSMANAGER_H

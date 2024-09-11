@@ -9,5 +9,7 @@ DECLARE_TIMER_EXTERN(reconnectMQTTtimer);
 DECLARE_TIMER_EXTERN(nextTelegram);
 DECLARE_TIMER_EXTERN(oledSleepTimer);
 
+void showDevSettings();      
+
 //============ Added by Convertor ==========
 #endif // SETTINGSSTUFF_H

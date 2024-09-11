@@ -9,32 +9,7 @@
 ***************************************************************************
 */
 #include "networkStuff.h"
-/****
-//------ [WiFi@1.2.7 WiFi@2.0.0]
-//#include <WiFi.h>                                 		//-- moved to arduinoGlue.h
-//------ [WebServer@2.0.0]      
-//#include <WebServer.h>                            		//-- moved to arduinoGlue.h
-//------ [ESPmDNS@2.0.0]
-//#include <ESPmDNS.h>                              		//-- moved to arduinoGlue.h
 
-//#include <WiFiUdp.h>                              		//-- moved to arduinoGlue.h
-
-//------ [HTTPUpdateServer@2.0.0]
-#include "HTTPUpdateServer.h"  // part of ESP32 Core https://github.com/ESP32/Arduino
-
-//------ [WiFiManager@2.0.10-beta] ([DNSServer@2.0.0])
-//#include <WiFiManager.h>                          		//-- moved to arduinoGlue.h
-// included in main program: #include <TelnetStream.h>       // Version 0.0.1 - https://github.com/jandrassy/TelnetStream
-//------ [FS@2.0.0]
-//#include <FS.h>                                   		//-- moved to arduinoGlue.h
-
-
-WebServer        httpServer (80);
-HTTPUpdateServer httpUpdater(true);
-****/
-
-//static      FSInfo SPIFFSinfo;
-//bool        filesysMounted;
 bool        isConnected = false;
 
 //-- gets called when WiFiManager enters configuration mode

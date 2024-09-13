@@ -144,6 +144,8 @@ void _debugBOL(const char *fn, int line);
 #define _PIN_HEARTBEAT           4
 #define _DTR_ENABLE              5
 #define LED_BUILTIN             15    //-- esp32
+#define _PIN_RELAYS             14
+#define _SHIELD_TIME            10
 #define _TLGRM_LEN           10000    //-- probably a bit to long
 #define _JSONBUFF_LEN       200000    //-- 60000 is needed for 190 Hour History
 #define _GMSG_LEN              512
@@ -259,6 +261,10 @@ struct settingDevStruct
   char      MQTTtopTopic[_MQTT_TOPTOPIC_LEN];
   int32_t   MQTTinterval;
   int16_t   MQTTbrokerPort;
+  int8_t    ShieldFase;
+  int16_t   ShieldOnThreshold;
+  int16_t   ShieldOffThreshold;
+  int16_t   ShieldOnHysteresis; //-- minuten
 };
 
 //-- from DSMRlogger32.h

@@ -29,6 +29,9 @@
 #include "timeStuff.h"
 #include "helperStuff.h"
 #include "wifiEvents.h"
+#include "Shield32.h"
+
+Shield32 myShield;
 
 #include "arduinoGlue.h"
 
@@ -260,6 +263,7 @@ DECLARE_TIMER_MIN(reconnectMQTTtimer,  2);  //-- try reconnecting cyclus timer
 DECLARE_TIMER_SEC(publishMQTTtimer,   60, SKIP_MISSED_TICKS); // interval time between MQTT messages
 DECLARE_TIMER_SEC(antiWearTimer,     301);
 DECLARE_TIMER_MIN(oledSleepTimer,     10);  //-- sleep the display in 10 minutes
+DECLARE_TIMER_SEC(shieldTimer,  _SHIELD_TIME);  //-- process shieldTask every _SHIELD_TIME seconds
 
 /***************************************************************************
 *

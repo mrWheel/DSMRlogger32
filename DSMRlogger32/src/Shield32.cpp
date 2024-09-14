@@ -1,65 +1,120 @@
 /*
 ***************************************************************************
-**  Program  : shield, part of DSMRlogger32
+**  Program  : Shield32, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 204 Willem Aandewiel
+**  Copyright (c) 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
 */
+
+//#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include <esp_log.h>
 #include "Shield32.h"
 
+static const char *TAG = "Shield32";
 
 Shield32::Shield32() {}
 
 //--------------------------------------------------------------------------------------------
-void Shield32::setup(int pinNr, int8_t monitorFase, int onValue, int offValue, int16_t onHysteresis)
+void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int16_t onHysteresis)
 {
-  _pinNr = pinNr;
-  _monitorFase = monitorFase;
-  _onValue = onValue;
-  _offValue = offValue;
-  _onHysteresis = onHysteresis;
-  Serial.printf("Shield32::setup(pinNr[%d], monitorFase[%d], onValue[%d], offValue[%d], onHyseresis[%d])\r\n", _pinNr
-                                                                                                             , _monitorFase
-                                                                                                             , _onValue, _offValue
-                                                                                                             , onHysteresis);
-  pinMode(_pinNr, OUTPUT);
+  esp_log_level_set("Shield32", ESP_LOG_INFO);
+  Shield32::_pinNr          = pinNr;
+  Shield32::_inversedLogic  = inversedLogic;
+  Shield32::_onValue        = onValue;
+  Shield32::_offValue       = offValue;
+  Shield32::_onHysteresis   = onHysteresis;
+  Shield32::_switchOnDelay  = millis() + (_onHysteresis * 1000);
+
+  if (Shield32::_inversedLogic)
+  {
+    Shield32::_HIGH = LOW;
+    Shield32::_LOW  = HIGH;
+  }
+  else
+  {  
+    Shield32::_HIGH = HIGH;
+    Shield32::_LOW  = LOW;
+  }
+
+  ESP_LOGI(TAG, "====> setup(pinNr[%d], HIGH[%s], onValue[%d], offValue[%d], onHyseresis[%d])\r\n", Shield32::_pinNr
+                                                                                        , (Shield32::_inversedLogic ? "LOW" : "HIGH")
+                                                                                        , Shield32::_onValue, Shield32::_offValue
+                                                                                        , onHysteresis);
+  digitalWrite(Shield32::_pinNr, Shield32::_LOW);
+  pinMode(Shield32::_pinNr, OUTPUT);
+  digitalWrite(Shield32::_pinNr, Shield32::_LOW);
 
 } // setup()
+
 
 //--------------------------------------------------------------------------------------------
 void Shield32::loop(int actualValue)
 {
-  Serial.printf("==============>>  Fase[%d], OnValue[%d], OffValue[%d], onHysteresys[%d]\r\n", _monitorFase, _onValue, _offValue, _onHysteresis);
-  _switchOnDelay = millis();
-  if (actualValue >= _onValue)
+  ESP_LOGI(TAG, "=====> [%d] shieldState[%d] => test actValue[%d]", Shield32::shieldState, Shield32::shieldState, actualValue);
+  switch(Shield32::shieldState)
   {
-    if ((millis() - _switchOnDelay) > (_onHysteresis*1000))
-    {
-      if (digitalRead(_pinNr))
-            Serial.printf("==============>>  Shield32::already(ON) with power[%d]\r\n", actualValue);
-      else  Serial.printf("==============>>  Shield32::switch(ON) with power[%d]\r\n", actualValue);
-      _switchOnDelay = millis();  
-      digitalWrite(_pinNr, HIGH);
-    }
-    else Serial.printf("==============>>  Shield32::hysteresis[%d]\r\n", (millis() - _switchOnDelay) );
-  }
-  if (actualValue < _offValue)
-  {
-    if (digitalRead(_pinNr)) 
-    {
-          //-- reset _switchOnDelay only if state was HIGH!
-          _switchOnDelay = millis();
-          Serial.printf("==============>>  Shield32::switch(OFF)  with power[%d]\r\n", actualValue);
-    }
-    else  Serial.printf("==============>>  Shield32::already(OFF)  with power[%d]\r\n", actualValue);
-    digitalWrite(_pinNr, LOW);
-  }
+    case 0: //-- initialize shield, set output LOW
+          {
+            ESP_LOGI(TAG, "=====> [0] Initialize");
+            digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+            Shield32::shieldState = 1;
+            //-- fall through to next state (1)          
+          }
 
-} // loop()
+    case 1: //-- wait for due _switchOnDelay
+          {
+            ESP_LOGI(TAG, "=====> [1] wait for switchDelay ..millis()[%d] > switchOnDelay[%d]", (millis()/1000)
+                                                                                  , Shield32::_switchOnDelay/1000);
+            if (millis() > Shield32::_switchOnDelay)
+                  Shield32::shieldState = 2;
+            else  Shield32::shieldState = 1;
+            break;
+          }
 
+    case 2: //-- if _onValue is reached, set output HIGH
+          {
+            if (digitalRead(Shield32::_pinNr) == Shield32::_HIGH) //-- allready "On"
+            {
+              Shield32::shieldState = 3;
+              break;
+            }
+            ESP_LOGI(TAG, "=====> [2] is onValue [%d] reached ..", Shield32::_onValue);
+            if (actualValue >= Shield32::_onValue)
+            {
+              ESP_LOGI(TAG, "=====> [2] Yes! [%d]>[%d] (onValue reached) .. digitalWrite(pin,[%d])", actualValue, Shield32::_onValue, Shield32::_HIGH);
+              digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+              Shield32::shieldState = 3;
+            }
+            Shield32::shieldState = 2;
+            break;
+          }
+
+    case 3: //-- if _offValue is reached, set output LOW
+          {
+            if (digitalRead(Shield32::_pinNr) == Shield32::_LOW) //-- allready "Off"
+            {
+              Shield32::shieldState = 2;
+              break;
+            } 
+            ESP_LOGI(TAG, "=====> [3] is offValue [%d] reached ..", Shield32::_offValue);
+            if (actualValue < Shield32::_offValue)
+            {
+              ESP_LOGI(TAG, "=====> [3] Yes! [%d]<[%d] (offValue reached) .. digitalWrite(pin,[%d])", actualValue, Shield32::_offValue, Shield32::_LOW);
+              digitalWrite(Shield32::_pinNr, Shield32::_LOW);
+              Shield32::shieldState = 1;
+              Shield32::_switchOnDelay = millis() + (Shield32::_onHysteresis *1000);  
+            }
+            break;
+          }
+
+    default:  Shield32::shieldState = 0;
+
+  } // switch(Shield32::shieldState)
+
+} //  loop()
 
 /***************************************************************************
 *

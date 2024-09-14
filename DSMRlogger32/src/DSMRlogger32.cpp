@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.2.1 (13-09-2024)";
+const char* _FW_VERSION = "v5.2.1 (14-09-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
@@ -509,8 +509,10 @@ void setup()
   }
 
   //================ Start Shield =====================================
-  myShield.setup(_PIN_RELAYS, devSetting->ShieldFase, devSetting->ShieldOnThreshold
-                            , devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
+  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed
+                            , devSetting->ShieldOnThreshold
+                            , devSetting->ShieldOffThreshold
+                            , devSetting->ShieldOnHysteresis);
 
 
   //================ Start Slimme Meter ===============================
@@ -574,17 +576,7 @@ void doTaskShield()
     //if (Verbose1) 
       DebugTln("doTaskShield..");
     //-- do whats needed for the Shield
-    switch(devSetting->ShieldFase)
-    {
-      case -3:  actPower = (int)(tlgrmData.power_delivered_l1 *-1000); break;
-      case -2:  actPower = (int)(tlgrmData.power_delivered_l2 *-1000); break;
-      case -1:  actPower = (int)(tlgrmData.power_delivered_l3 *-1000); break;
-      case  0:  actPower = 0; break;
-      case  1:  actPower = (int)(tlgrmData.power_returned_l1 *1000); break;
-      case  2:  actPower = (int)(tlgrmData.power_returned_l2 *1000); break;
-      case  3:  actPower = (int)(tlgrmData.power_returned_l3 *1000); break;
-      default:  actPower = 0;
-    }
+    actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
     myShield.loop(actPower);
   }
   

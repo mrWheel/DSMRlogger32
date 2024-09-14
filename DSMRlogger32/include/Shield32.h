@@ -2,10 +2,10 @@
 #define SHIELD32_H
 /*
 ***************************************************************************
-**  Program  : shield32.h, part of DSMRlogger32
-**  Version  : v2.0.1
+**  Program  : Shield32.h, part of DSMRlogger32
+**  Version  : v5.n
 **
-**  Copyright (c) 204 Willem Aandewiel
+**  Copyright (c) 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
@@ -17,16 +17,19 @@ class Shield32
 {
     public:
         Shield32();
-        void setup(int pinNr, int8_t monitorFase, int onValue, int offValue, int16_t onHysteresis);
+        void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int16_t onHysteresis);
         void loop(int actualValue);
 
     private:
         int       _pinNr;
-        int8_t    _monitorFase;
+        int8_t    _inversedLogic;
         int       _onValue;
         int       _offValue;
         uint32_t  _onHysteresis;
         uint32_t  _switchOnDelay = 0;
+        int8_t    shieldState = 0;
+        uint8_t   _HIGH = 1;
+        uint8_t   _LOW  = 0;
 };
 
 #endif // SHIELD32_H

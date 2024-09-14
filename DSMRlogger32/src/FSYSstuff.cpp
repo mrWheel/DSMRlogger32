@@ -1189,7 +1189,7 @@ bool DSMRfileExist(const char *fileName, const char* funcName, bool doDisplay)
     neoPixOff(1);
     oled_Print_Msg(1, "Bestaat:", 10);
     oled_Print_Msg(2, fName, 10);
-    oled_Print_Msg(3, "op FileSystem?", 250);
+    oled_Print_Msg(3, "op FileSystem?", 100);
   }
 
   if (!_FSYS.exists(fName) )

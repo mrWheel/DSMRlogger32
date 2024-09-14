@@ -282,7 +282,7 @@ void writeDevSettings(bool show)
   doc["mqttInterval"]       = devSetting->MQTTinterval;
   doc["mqttTopTopic"]       = devSetting->MQTTtopTopic;
   //-- Shield Stuff
-  doc["shieldFase"]         = devSetting->ShieldFase;
+  doc["shieldInversed"]     = devSetting->ShieldInversed;
   doc["shieldOnThreshold"]  = devSetting->ShieldOnThreshold; 
   doc["shieldOffThreshold"] = devSetting->ShieldOffThreshold;
   doc["shieldOnHysteresis"] = devSetting->ShieldOnHysteresis;
@@ -306,8 +306,8 @@ void writeDevSettings(bool show)
   if (devSetting->NeoBrightness <  10)   devSetting->NeoBrightness = 10;
   if (devSetting->NeoBrightness > 250)   devSetting->NeoBrightness = 250;
   if (devSetting->TelegramInterval  < 2) devSetting->TelegramInterval = 10;
-  if (devSetting->ShieldFase < -3)       devSetting->ShieldFase = 0;
-  if (devSetting->ShieldFase >  3)       devSetting->ShieldFase = 0;  
+  //if (devSetting->shieldInverse < -3)       devSetting->shieldInverse = 0;
+  //if (devSetting->shieldInverse >  3)       devSetting->shieldInverse = 0;  
   if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
   if (devSetting->ShieldOnHysteresis < _SHIELD_TIME) devSetting->ShieldOnHysteresis = _SHIELD_TIME;
 
@@ -315,7 +315,7 @@ void writeDevSettings(bool show)
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
   CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
 
-  myShield.setup(_PIN_RELAYS, devSetting->ShieldFase, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
+  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
 
   if (show) { showDevSettings(); }
 
@@ -346,7 +346,7 @@ void readDevSettings(bool show)
     devSetting->TelegramInterval    = 10;
     devSetting->MQTTinterval        = 0;
     strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1));
-    devSetting->ShieldFase          = 0;
+    devSetting->ShieldInversed      = 0;
     devSetting->ShieldOnThreshold   = 0;
     devSetting->ShieldOffThreshold  = 0;
     devSetting->ShieldOnHysteresis  = 0;
@@ -397,7 +397,7 @@ void readDevSettings(bool show)
   if (doc["mqttPassword"])  { strlcpy(devSetting->MQTTpasswd, doc["mqttPassword"] | "", (_MQTT_PASSWD_LEN -1)); }
   if (doc["mqttInterval"])  { devSetting->MQTTinterval        = doc["mqttInterval"].as<int>(); }
   if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
-  if (doc["shieldFase"])           { devSetting->ShieldFase         = doc["shieldFase"].as<int>(); }
+  if (doc["shieldInversed"])       { devSetting->ShieldInversed     = doc["shieldInversed"].as<int>(); }
   if (doc["shieldOnThreshold"])    { devSetting->ShieldOnThreshold  = doc["shieldOnThreshold"].as<int>(); }
   if (doc["shieldOffThreshold"])   { devSetting->ShieldOffThreshold = doc["shieldOffThreshold"].as<int>(); }
   if (doc["shieldOnHysteresis"])   { devSetting->ShieldOnHysteresis = doc["shieldOnHysteresis"].as<int>(); }
@@ -463,7 +463,7 @@ void showDevSettings()
     Debugf("              MQTT top Topic : %s\r\n", devSetting->MQTTtopTopic);
 
     Debugln(F("\r\n==== SHIELD settings ============================================\r"));
-    Debugf("                 Shield Fase : %d\r\n", devSetting->ShieldFase);
+    Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
     Debugf("         Shield On Threshold : %d\r\n", devSetting->ShieldOnThreshold);
     Debugf("        Shield Off Threshold : %d\r\n", devSetting->ShieldOffThreshold);
     Debugf("        Shield On Hysteresis : %d\r\n", devSetting->ShieldOnHysteresis);
@@ -577,10 +577,10 @@ void updateDevSettings(const char *field, const char *newValue)
   }
   if (!strcasecmp(field, "mqtt_toptopic"))      strlcpy(devSetting->MQTTtopTopic, newValue, 20);
 
-  if (!strcasecmp(field, "shield_fase"))          devSetting->ShieldFase        = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_on_hysteresis")) devSetting->ShieldOnHysteresis = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_inversed"))      devSetting->ShieldInversed      = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold   = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold  = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_on_hysteresis")) devSetting->ShieldOnHysteresis  = String(newValue).toInt();
 
   writeDevSettings(false);
 

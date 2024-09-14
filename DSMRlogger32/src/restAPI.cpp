@@ -427,7 +427,7 @@ void sendDeviceInfo()
   doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
-  doc['devinfo']["shield_fase"]           = (int)devSetting->ShieldFase;
+  doc['devinfo']["shield_inversed"]       = (int)devSetting->ShieldInversed;
   doc['devinfo']["shield_on_treshold"]    = (int)devSetting->ShieldOnThreshold;
   doc['devinfo']["shield_off_treshold"]   = (int)devSetting->ShieldOffThreshold;
   doc['devinfo']["shield_on_hysteresis"]  = (int)devSetting->ShieldOnHysteresis;
@@ -714,10 +714,10 @@ void sendDevSettings()
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
 
   nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_fase";
-  nestedRec["value"]    =  devSetting->ShieldFase;
+  nestedRec["name"]     =  "shield_inversed";
+  nestedRec["value"]    =  devSetting->ShieldInversed;
   nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = -3; nestedRec["max"] = 3; 
+  nestedRec["min"]      = 0; nestedRec["max"] = 1; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "shield_on_treshold";

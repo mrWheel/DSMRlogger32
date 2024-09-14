@@ -2651,7 +2651,7 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
           ,[ "sm_has_fase_info",          "SM Has Fase Info (0=Nee, 1=Ja)" ]
           ,[ "smhasfaseinfo",             "SM Has Fase Info (0=Nee, 1=Ja)" ]
           ,[ "ssid",                      "WiFi SSID" ]
-          ,[ "shield_fase",               "Shield Fase (-3..0..3)" ]
+          ,[ "shield_inversed",           "Shield Inversed Logic (0=Nee, 1=Ja" ]
           ,[ "shield_on_treshold",        "Shield 'Aan' drempel" ]
           ,[ "shield_off_treshold",       "Shield 'Uit' drempel'" ]
           ,[ "shield_on_hysteresis",      "Shield 'Aan' hysteresis (sec.)" ]

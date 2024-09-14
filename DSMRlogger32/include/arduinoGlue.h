@@ -261,7 +261,7 @@ struct settingDevStruct
   char      MQTTtopTopic[_MQTT_TOPTOPIC_LEN];
   int32_t   MQTTinterval;
   int16_t   MQTTbrokerPort;
-  int8_t    ShieldFase;
+  int8_t    ShieldInversed;
   int16_t   ShieldOnThreshold;
   int16_t   ShieldOffThreshold;
   int16_t   ShieldOnHysteresis; //-- minuten

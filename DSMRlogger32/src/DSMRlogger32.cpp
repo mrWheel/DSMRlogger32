@@ -2,9 +2,9 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.1.1 (11-09-2024)";
+const char* _FW_VERSION = "v5.2.1 (14-09-2024)";
 /*
-**  Copyright (c) 2022, 2023 Willem Aandewiel
+**  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
@@ -508,6 +508,13 @@ void setup()
     oled_Print_Msg(3, "telegram .....", 500);
   }
 
+  //================ Start Shield =====================================
+  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed
+                            , devSetting->ShieldOnThreshold
+                            , devSetting->ShieldOffThreshold
+                            , devSetting->ShieldOnHysteresis);
+
+
   //================ Start Slimme Meter ===============================
 
   DebugTln(F("Enable slimmeMeter..\r"));
@@ -557,6 +564,23 @@ void delayms(unsigned long delay_ms)
   }
 
 } // delayms()
+
+
+//==[ Do Shield Processing ]===============================================================
+void doTaskShield()
+{
+  int actPower = 0;
+
+  if (DUE(shieldTimer))
+  {
+    //if (Verbose1) 
+      DebugTln("doTaskShield..");
+    //-- do whats needed for the Shield
+    actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
+    myShield.loop(actPower);
+  }
+  
+} //  doTaskShield()
 
 
 //==[ Do Telegram Processing ]===============================================================
@@ -612,6 +636,7 @@ void loop ()
   //--- as often as possible
   doSystemTasks();
   doTaskTelegram();
+  doTaskShield();
 
   loopCount++;
 

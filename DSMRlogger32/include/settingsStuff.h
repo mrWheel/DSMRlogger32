@@ -3,6 +3,11 @@
 
 //============ Includes ====================
 #include "arduinoGlue.h"
+#include "Shield32.h"
+
+extern Shield32 myShield;
+
+
 
 DECLARE_TIMER_EXTERN(publishMQTTtimer);
 DECLARE_TIMER_EXTERN(reconnectMQTTtimer);

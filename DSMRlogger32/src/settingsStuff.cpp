@@ -3,7 +3,7 @@
 **  Program  : settingsStuff, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 2020 .. 2023 Willem Aandewiel
+**  Copyright (c) 2020 .. 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
@@ -263,24 +263,29 @@ void writeDevSettings(bool show)
   SpiRamJsonDocument  doc(3000);
 
   //-- Fill JSON document from settings
-  doc["hostname"]         = devSetting->Hostname;
-  doc["indexPage"]        = devSetting->IndexPage;
-  doc["dailyReboot"]      = devSetting->DailyReboot;
-  doc["runAPmode"]        = devSetting->runAPmode;
-  doc["noHourSlots"]      = devSetting->NoHourSlots;  //-- don't change directly
-  doc["noDaySlots"]       = devSetting->NoDaySlots;   //-- don't change directly
-  doc["noMonthSlots"]     = devSetting->NoMonthSlots; //-- don't change directly
-  doc["oledType"]         = devSetting->OledType;
-  doc["oledSleep"]        = devSetting->OledSleep;
-  doc["oledFlip"]         = devSetting->OledFlip;
-  doc["neoBrightness"]    = devSetting->NeoBrightness;
-  doc["telegramInterval"] = devSetting->TelegramInterval;
-  doc["mqttBroker"]       = devSetting->MQTTbroker;
-  doc["mqttBrokerPort"]   = devSetting->MQTTbrokerPort;
-  doc["mqttUser"]         = devSetting->MQTTuser;
-  doc["mqttPassword"]     = devSetting->MQTTpasswd;
-  doc["mqttInterval"]     = devSetting->MQTTinterval;
-  doc["mqttTopTopic"]     = devSetting->MQTTtopTopic;
+  doc["hostname"]           = devSetting->Hostname;
+  doc["indexPage"]          = devSetting->IndexPage;
+  doc["dailyReboot"]        = devSetting->DailyReboot;
+  doc["runAPmode"]          = devSetting->runAPmode;
+  doc["noHourSlots"]        = devSetting->NoHourSlots;  //-- don't change directly
+  doc["noDaySlots"]         = devSetting->NoDaySlots;   //-- don't change directly
+  doc["noMonthSlots"]       = devSetting->NoMonthSlots; //-- don't change directly
+  doc["oledType"]           = devSetting->OledType;
+  doc["oledSleep"]          = devSetting->OledSleep;
+  doc["oledFlip"]           = devSetting->OledFlip;
+  doc["neoBrightness"]      = devSetting->NeoBrightness;
+  doc["telegramInterval"]   = devSetting->TelegramInterval;
+  doc["mqttBroker"]         = devSetting->MQTTbroker;
+  doc["mqttBrokerPort"]     = devSetting->MQTTbrokerPort;
+  doc["mqttUser"]           = devSetting->MQTTuser;
+  doc["mqttPassword"]       = devSetting->MQTTpasswd;
+  doc["mqttInterval"]       = devSetting->MQTTinterval;
+  doc["mqttTopTopic"]       = devSetting->MQTTtopTopic;
+  //-- Shield Stuff
+  doc["shieldInversed"]     = devSetting->ShieldInversed;
+  doc["shieldOnThreshold"]  = devSetting->ShieldOnThreshold; 
+  doc["shieldOffThreshold"] = devSetting->ShieldOffThreshold;
+  doc["shieldOnHysteresis"] = devSetting->ShieldOnHysteresis;
 
   //DebugTln("---------------------------------------------------");
   //serializeJsonPretty(doc, Serial);
@@ -301,10 +306,16 @@ void writeDevSettings(bool show)
   if (devSetting->NeoBrightness <  10)   devSetting->NeoBrightness = 10;
   if (devSetting->NeoBrightness > 250)   devSetting->NeoBrightness = 250;
   if (devSetting->TelegramInterval  < 2) devSetting->TelegramInterval = 10;
+  //if (devSetting->shieldInverse < -3)       devSetting->shieldInverse = 0;
+  //if (devSetting->shieldInverse >  3)       devSetting->shieldInverse = 0;  
+  if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
+  if (devSetting->ShieldOnHysteresis < _SHIELD_TIME) devSetting->ShieldOnHysteresis = _SHIELD_TIME;
 
   DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", devSetting->TelegramInterval);
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
   CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
+
+  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
 
   if (show) { showDevSettings(); }
 
@@ -328,13 +339,17 @@ void readDevSettings(bool show)
     DebugTln(F(" .. file not found! --> created file!"));
     strlcpy(devSetting->Hostname, _DEFAULT_HOSTNAME, (_HOSTNAME_LEN -1));
     strlcpy(devSetting->IndexPage, "DSMRindex.html", (_INDEXPAGE_LEN -1));
-    devSetting->DailyReboot       = 0;
-    devSetting->runAPmode         = 0;
-    devSetting->OledType          = 1;
-    devSetting->NeoBrightness     = 75;
-    devSetting->TelegramInterval  = 10;
-    devSetting->MQTTinterval      = 0;
+    devSetting->DailyReboot         = 0;
+    devSetting->runAPmode           = 0;
+    devSetting->OledType            = 1;
+    devSetting->NeoBrightness       = 75;
+    devSetting->TelegramInterval    = 10;
+    devSetting->MQTTinterval        = 0;
     strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1));
+    devSetting->ShieldInversed      = 0;
+    devSetting->ShieldOnThreshold   = 0;
+    devSetting->ShieldOffThreshold  = 0;
+    devSetting->ShieldOnHysteresis  = 0;
     writeDevSettings(false);
   }
 
@@ -382,6 +397,10 @@ void readDevSettings(bool show)
   if (doc["mqttPassword"])  { strlcpy(devSetting->MQTTpasswd, doc["mqttPassword"] | "", (_MQTT_PASSWD_LEN -1)); }
   if (doc["mqttInterval"])  { devSetting->MQTTinterval        = doc["mqttInterval"].as<int>(); }
   if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
+  if (doc["shieldInversed"])       { devSetting->ShieldInversed     = doc["shieldInversed"].as<int>(); }
+  if (doc["shieldOnThreshold"])    { devSetting->ShieldOnThreshold  = doc["shieldOnThreshold"].as<int>(); }
+  if (doc["shieldOffThreshold"])   { devSetting->ShieldOffThreshold = doc["shieldOffThreshold"].as<int>(); }
+  if (doc["shieldOnHysteresis"])   { devSetting->ShieldOnHysteresis = doc["shieldOnHysteresis"].as<int>(); }
 
   devSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
   if (devSetting->NoHourSlots > 190) devSetting->NoHourSlots  = 190;
@@ -442,6 +461,12 @@ void showDevSettings()
 #endif
     Debugf("          MQTT send Interval : %d\r\n", devSetting->MQTTinterval);
     Debugf("              MQTT top Topic : %s\r\n", devSetting->MQTTtopTopic);
+
+    Debugln(F("\r\n==== SHIELD settings ============================================\r"));
+    Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
+    Debugf("         Shield On Threshold : %d\r\n", devSetting->ShieldOnThreshold);
+    Debugf("        Shield Off Threshold : %d\r\n", devSetting->ShieldOffThreshold);
+    Debugf("        Shield On Hysteresis : %d\r\n", devSetting->ShieldOnHysteresis);
 
     Debugln("-\r");
 
@@ -550,7 +575,12 @@ void updateDevSettings(const char *field, const char *newValue)
     devSetting->MQTTinterval   = String(newValue).toInt();
     CHANGE_INTERVAL_SEC(publishMQTTtimer, devSetting->MQTTinterval);
   }
-  if (!strcasecmp(field, "mqtt_toptopic"))     strlcpy(devSetting->MQTTtopTopic, newValue, 20);
+  if (!strcasecmp(field, "mqtt_toptopic"))      strlcpy(devSetting->MQTTtopTopic, newValue, 20);
+
+  if (!strcasecmp(field, "shield_inversed"))      devSetting->ShieldInversed      = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold   = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold  = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_on_hysteresis")) devSetting->ShieldOnHysteresis  = String(newValue).toInt();
 
   writeDevSettings(false);
 

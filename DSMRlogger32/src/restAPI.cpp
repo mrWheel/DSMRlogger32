@@ -3,7 +3,7 @@
 **  Program  : restAPI, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 2020, 2022, 2023 Willem Aandewiel
+**  Copyright (c) 2020 .. 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
@@ -222,8 +222,6 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
       // json string: {"name":"mqtt_interval","value":12}
       // json string: {"name":"hostname","value":"abc"}
       //------------------------------------------------------------
-      // so, why not use ArduinoJSON library?
-      // I say: try it yourself ;-) It won't be easy
       DebugTln(httpServer.arg(0));
       //-- Allocate the JsonDocument
       SpiRamJsonDocument  doc(3000);
@@ -429,6 +427,10 @@ void sendDeviceInfo()
   doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
+  doc['devinfo']["shield_inversed"]       = (int)devSetting->ShieldInversed;
+  doc['devinfo']["shield_on_treshold"]    = (int)devSetting->ShieldOnThreshold;
+  doc['devinfo']["shield_off_treshold"]   = (int)devSetting->ShieldOffThreshold;
+  doc['devinfo']["shield_on_hysteresis"]  = (int)devSetting->ShieldOnHysteresis;
 
   snprintf(gMsg,  _GMSG_LEN, "%s:%04d", devSetting->MQTTbroker, devSetting->MQTTbrokerPort);
   doc["devinfo"]["mqtt_broker"]     = gMsg;
@@ -710,6 +712,30 @@ void sendDevSettings()
   nestedRec["value"]    =  devSetting->MQTTinterval;
   nestedRec["type"]     = "i"; 
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_inversed";
+  nestedRec["value"]    =  devSetting->ShieldInversed;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = 0; nestedRec["max"] = 1; 
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_on_treshold";
+  nestedRec["value"]    =  devSetting->ShieldOnThreshold;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = -10000; nestedRec["max"] = 10000;
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_off_treshold";
+  nestedRec["value"]    =  devSetting->ShieldOffThreshold;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = -10000; nestedRec["max"] = 10000;
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_on_hysteresis";
+  nestedRec["value"]    =  devSetting->ShieldOnHysteresis;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = 0; nestedRec["max"] = 60; //-- minuten
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   serializeJson(doc, jsonBuff, _JSONBUFF_LEN);

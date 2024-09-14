@@ -3,7 +3,7 @@
 **  Program  : setupStuff, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 2020 .. 2023 Willem Aandewiel
+**  Copyright (c) 2020 .. 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************

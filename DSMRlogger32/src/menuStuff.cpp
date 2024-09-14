@@ -3,7 +3,7 @@
 **  Program  : menuStuff, part of DSMRlogger32
 **  Version  : v5.n
 **
-**  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
+**  Copyright (c) 2022 .. 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************

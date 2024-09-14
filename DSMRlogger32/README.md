@@ -15,6 +15,20 @@ As of now the DSMRlogger32 firmware is ported to `VSCode` with the `PlatformIO` 
 <table>
   <tr><th>Versie</th><th align="Left">Opmerking</th></tr>
   <tr>
+    <td valign="top">5.2.1</td>
+    <td>Nieuwe functionaliteit
+        <br>2024-09-14: Op GPIO14 kan een relays worden aangesloten.
+        Via de [Instellingen] -> [Systeem] kun je nu opgeven bij welke waarden 
+        dit relays "Aan" of "Uit" moet gaan. Om niet te snel na het "Uit"
+        schakelen van het relays deze weer "Aan" te zetten kan er een
+        Hysterese Tijd worden ingesteld.
+        Ook kan de logica van de aansturing van het Relays ge-inverteerd
+        worden (om te voorkomen dat het relays in rust, de "Uit stand" juist
+        bekrachtigd wordt). Sommige relays modules maken gebruik van deze 
+        inversed logic.
+    </td>
+  </tr>
+  <tr>
     <td valign="top">5.0.5</td>
     <td>Nieuwe functionaliteit
         <br>24-04-2023: Uitbreiding "Actual Tabel" naar 500 punten.

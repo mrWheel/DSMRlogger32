@@ -1,5 +1,6 @@
 # DSMRlogger32
 Firmware for Rev. 5 of the DSMR-logger (Slimme Meter uitlezer)
+This project is converted to VScode and PlatformIO.
 
 # THIS IS A PRODUCTION RELEASE
 

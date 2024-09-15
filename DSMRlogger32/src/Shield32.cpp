@@ -59,7 +59,7 @@ void Shield32::loop(int actualValue)
     case 0: //-- initialize shield, set output LOW
           {
             ESP_LOGI(TAG, "=====> [0] Initialize");
-            digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+            digitalWrite(Shield32::_pinNr, Shield32::_LOW);
             Shield32::shieldState = 1;
             //-- fall through to next state (1)          
           }

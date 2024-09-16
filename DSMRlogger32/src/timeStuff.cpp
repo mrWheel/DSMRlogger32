@@ -148,7 +148,7 @@ timeStruct calculateTime(timeStruct useTime, int16_t units, int8_t ringType)
     return useTime;  // Return original time if parsing fails
   }
 
-  // Adjust year to full 4-digit year
+  // Adjust year to full 4-digit year 
   year += 2000;
 
   // Adjust time based on units and ringType
@@ -248,7 +248,8 @@ timeStruct calculateTime(timeStruct useTime, int16_t units, int8_t ringType)
   // Calculate weekday (1 = Sunday, 7 = Saturday)
   newTime.Weekday = ((days + 4) % 7) + 1;  // January 1, 1970 was a Thursday (4)
 
-  newTime.Months      = (newTime.Year * 12) + newTime.Month;
+  //-- subract 1 from Year is for compatibility with the Arduino version
+  newTime.Months      = ((newTime.Year -1) * 12) + newTime.Month;
   newTime.monthsHist  = devSetting->NoMonthSlots;
   newTime.monthSlot   = (newTime.Months % newTime.monthsHist);
   newTime.Days        = newTime.epoch / SECS_PER_DAY;

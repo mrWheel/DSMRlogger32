@@ -282,6 +282,7 @@ void writeDevSettings(bool show)
   doc["mqttInterval"]       = devSetting->MQTTinterval;
   doc["mqttTopTopic"]       = devSetting->MQTTtopTopic;
   //-- Shield Stuff
+  doc["shieldGpio"]         = devSetting->ShieldGpio;
   doc["shieldInversed"]     = devSetting->ShieldInversed;
   doc["shieldOnThreshold"]  = devSetting->ShieldOnThreshold; 
   doc["shieldOffThreshold"] = devSetting->ShieldOffThreshold;
@@ -306,8 +307,12 @@ void writeDevSettings(bool show)
   if (devSetting->NeoBrightness <  10)   devSetting->NeoBrightness = 10;
   if (devSetting->NeoBrightness > 250)   devSetting->NeoBrightness = 250;
   if (devSetting->TelegramInterval  < 2) devSetting->TelegramInterval = 10;
-  //if (devSetting->shieldInverse < -3)       devSetting->shieldInverse = 0;
-  //if (devSetting->shieldInverse >  3)       devSetting->shieldInverse = 0;  
+  if (!isValidGpio(devSetting->ShieldGpio))
+  {
+      devSetting->ShieldGpio = -1;
+  }
+  if (devSetting->ShieldInversed < 0)      devSetting->ShieldInversed = 0;  
+  if (devSetting->ShieldInversed > 1)      devSetting->ShieldInversed = 1;  
   if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
   if (devSetting->ShieldOnHysteresis < _SHIELD_TIME) devSetting->ShieldOnHysteresis = _SHIELD_TIME;
 
@@ -315,7 +320,7 @@ void writeDevSettings(bool show)
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
   CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
 
-  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
+  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
 
   if (show) { showDevSettings(); }
 
@@ -346,6 +351,7 @@ void readDevSettings(bool show)
     devSetting->TelegramInterval    = 10;
     devSetting->MQTTinterval        = 0;
     strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1));
+    devSetting->ShieldGpio          = -1;
     devSetting->ShieldInversed      = 0;
     devSetting->ShieldOnThreshold   = 0;
     devSetting->ShieldOffThreshold  = 0;
@@ -397,6 +403,7 @@ void readDevSettings(bool show)
   if (doc["mqttPassword"])  { strlcpy(devSetting->MQTTpasswd, doc["mqttPassword"] | "", (_MQTT_PASSWD_LEN -1)); }
   if (doc["mqttInterval"])  { devSetting->MQTTinterval        = doc["mqttInterval"].as<int>(); }
   if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
+  if (doc["shieldGpio"])           { devSetting->ShieldGpio         = doc["shieldGpio"].as<int>(); }
   if (doc["shieldInversed"])       { devSetting->ShieldInversed     = doc["shieldInversed"].as<int>(); }
   if (doc["shieldOnThreshold"])    { devSetting->ShieldOnThreshold  = doc["shieldOnThreshold"].as<int>(); }
   if (doc["shieldOffThreshold"])   { devSetting->ShieldOffThreshold = doc["shieldOffThreshold"].as<int>(); }
@@ -463,6 +470,13 @@ void showDevSettings()
     Debugf("              MQTT top Topic : %s\r\n", devSetting->MQTTtopTopic);
 
     Debugln(F("\r\n==== SHIELD settings ============================================\r"));
+    if (isValidGpio(devSetting->ShieldGpio))
+        Debugf( "                 Shield GPIO : %d\r\n", devSetting->ShieldGpio);
+    else 
+    {
+        devSetting->ShieldGpio = -1;
+        Debugf( "                 Shield GPIO : %s\r\n", "Not Used");
+    }
     Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
     Debugf("         Shield On Threshold : %d\r\n", devSetting->ShieldOnThreshold);
     Debugf("        Shield Off Threshold : %d\r\n", devSetting->ShieldOffThreshold);
@@ -577,6 +591,14 @@ void updateDevSettings(const char *field, const char *newValue)
   }
   if (!strcasecmp(field, "mqtt_toptopic"))      strlcpy(devSetting->MQTTtopTopic, newValue, 20);
 
+  if (!strcasecmp(field, "shield_gpio")) 
+  {
+    if (isValidGpio(String(newValue).toInt())) 
+          devSetting->ShieldGpio = String(newValue).toInt();
+    else  devSetting->ShieldGpio = -1;
+
+
+  }
   if (!strcasecmp(field, "shield_inversed"))      devSetting->ShieldInversed      = String(newValue).toInt();
   if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold   = String(newValue).toInt();
   if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold  = String(newValue).toInt();
@@ -585,6 +607,26 @@ void updateDevSettings(const char *field, const char *newValue)
   writeDevSettings(false);
 
 } // updateDevSettings()
+
+
+
+//=======================================================================
+// Function to check if a value exists in a predefined set of values
+bool isValidGpio(int newGpio) 
+{
+  int validGpios[] = {2,12,13,14,15,16,17,19,25,26,27,32,33};  // List of shield GPIO pins
+  int size = sizeof(validGpios) / sizeof(validGpios[0]);  // Calculate the array size
+
+  for (int i = 0; i < size; ++i) 
+  {
+      if (newGpio == validGpios[i]) 
+      {
+          return true;  // Return true if the value is found
+      }
+  }
+  return false;  // Return false if not found
+
+} // isValidGpio()
 
 /***************************************************************************
 *

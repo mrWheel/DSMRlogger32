@@ -21,6 +21,8 @@ class Shield32
         void loop(int actualValue);
 
     private:
+        static int customTelnetVprintf(const char* fmt, va_list args);
+        
         int       _pinNr;
         int8_t    _inversedLogic;
         int       _onValue;

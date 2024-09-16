@@ -14,7 +14,8 @@ DECLARE_TIMER_EXTERN(reconnectMQTTtimer);
 DECLARE_TIMER_EXTERN(nextTelegram);
 DECLARE_TIMER_EXTERN(oledSleepTimer);
 
-void showDevSettings();      
+void showDevSettings();   
+bool isValidGpio(int newGpio);   
 
 //============ Added by Convertor ==========
 #endif // SETTINGSSTUFF_H

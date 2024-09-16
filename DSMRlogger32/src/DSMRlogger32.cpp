@@ -2,30 +2,59 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.2.1 (14-09-2024)";
+const char* _FW_VERSION = "v5.2.1 (16-09-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
 **
-**  Tested with: ESP32 core 2.0.5 by Espressif Systems
-**               core 2.0.7 gives all kind of problems with SPIFF
+**  platformio.ini for DSMR-logger32 Revision 5 (ESP32):
 **
-**  Arduino-IDE settings for DSMR-logger32 Revision 5 (ESP32):
+**    [platformio]
+**    workspace_dir = .pio.nosync
+**    default_envs = DSMRlogger32
+**    
+**    [env:DSMRlogger32]
+**    platform = espressif32
+**    board = esp32dev
+**    framework = arduino
+**    ;board_build.partitions = min_spiffs.csv
+**    ;board_build.partitions = huge_app.csv
+**    board_build.partitions = ./partitions32.csv
+**    board_build.filesystem = spiffs
+**    board_build.flash_mode = qio
+**    board_build.f_flash = 80000000
+**    monitor_speed = 115200
+**    upload_speed = 230400
+**    ;-- change next line to your system
+**    upload_port = /dev/cu.usbserial-3224142
+**    build_flags = -w
+**    ;      CORE_DEBUG_LEVEL: (0)NoLogging, (1)Error, (2)Warning, (3)Info, (4)Debug, (5)Verbose
+**        -D CORE_DEBUG_LEVEL=3
+**    	  -D BOARD_HAS_PSRAM
+**    lib_ldf_mode = deep+
+**    lib_deps = 
+**    	https://github.com/mrWheel/SPIFFS_SysLogger
+**    	https://github.com/mrWheel/dsmr2Lib
+**      https://github.com/mrWheel/TimeSyncLib
+**    	greiman/SSD1306Ascii@^1.3.5
+**    	jandrassy/TelnetStream@^1.3.0
+**    	tzapu/WiFiManager@^2.0.17
+**    	adafruit/Adafruit NeoPixel@^1.12.3
+**      bblanchon/ArduinoJson@6.21.5
+**    	knolleary/PubSubClient@^2.8
+**    monitor_filters = 
+**    	esp32_exception_decoder
+
 **
-**    - Board             : "ESP32 Wrover Module" [ESP32-WROVER-E]
-**    - Upload Speed      : "230400" to "460800" (max. with FTDI programmer)
-**    - Flash Frequency   : "80MHz" or "40MHz" (sometimes 80MHz to fast)
-**    // Flash Size       : "4MB (32Mb)"
-**    - Flash Mode        : "QIO" or "DIO" (sometimes "QIO" is too fast)
-**    - Partition Scheme  : "Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"
-**    - Core Debug Level  : "None" ??
-**    - Erase All Flash   : "Disabled" (maybeEnable only first Flash!)
-**    // PSRAM            : "Enabled"
-**    // Arduino Runs On  : "Core 1"
-**    // Events Run On    : "Core 0"
-**
+**  partition32.csv
+**    # Name,   Type, SubType, Offset,  Size, Flags
+**    nvs,      data, nvs,     0x9000,  0x5000,
+**    otadata,  data, ota,     0xe000,  0x2000,
+**    app0,     app,  ota_0,   0x10000, 0x180000,  
+**    app1,     app,  ota_1,   0x190000,0x180000,  
+**    spiffs,   data, spiffs,  0x310000,0x80000,
 **
 **  Coding Style  ( http://astyle.sourceforge.net/astyle.html#_Quick_Start )
 **   - Allman style (-A1)
@@ -156,7 +185,7 @@ void setup()
   pinMode(_FLASH_BUTTON,  INPUT_PULLUP);
   pinMode(_PIN_HEARTBEAT, OUTPUT);
   pinMode(_PIN_WD_RESET,  OUTPUT);
-  
+
   //-- Hold WatchDog
   DebugTln("Reset Watchdog ..");
   resetWatchdog();  
@@ -175,6 +204,17 @@ void setup()
   setupSysLogger(_FW_VERSION);
 
   readDevSettings(true);
+
+/*****
+  pinMode(devSetting->ShieldGpio,  OUTPUT);
+  for(int i=0; i<50; i++)
+  {
+    digitalWrite(devSetting->ShieldGpio, HIGH);
+    delay(500);
+    digitalWrite(devSetting->ShieldGpio, LOW);
+    delay(200);
+  }
+*****/
 
   if (devSetting->runAPmode > 0)
   {
@@ -509,7 +549,7 @@ void setup()
   }
 
   //================ Start Shield =====================================
-  myShield.setup(_PIN_RELAYS, devSetting->ShieldInversed
+  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed
                             , devSetting->ShieldOnThreshold
                             , devSetting->ShieldOffThreshold
                             , devSetting->ShieldOnHysteresis);

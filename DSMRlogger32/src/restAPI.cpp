@@ -427,6 +427,7 @@ void sendDeviceInfo()
   doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
+  doc['devinfo']["shield_gpio"]           = (int)devSetting->ShieldGpio;
   doc['devinfo']["shield_inversed"]       = (int)devSetting->ShieldInversed;
   doc['devinfo']["shield_on_treshold"]    = (int)devSetting->ShieldOnThreshold;
   doc['devinfo']["shield_off_treshold"]   = (int)devSetting->ShieldOffThreshold;
@@ -712,6 +713,13 @@ void sendDevSettings()
   nestedRec["value"]    =  devSetting->MQTTinterval;
   nestedRec["type"]     = "i"; 
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
+
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_gpio";
+  nestedRec["value"]    =  devSetting->ShieldGpio;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = -1; nestedRec["max"] = 33; 
 
   nestedRec = doc["system"].createNestedObject();
   nestedRec["name"]     =  "shield_inversed";

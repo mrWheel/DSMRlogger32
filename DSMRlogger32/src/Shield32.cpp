@@ -16,20 +16,20 @@
 
 static const char *TAG = "Shield32";
 
-//Shield32::Shield32() {}
 // Constructor
 Shield32::Shield32() {}
 
 //--------------------------------------------------------------------------------------------
-void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int32_t onHysteresis)
+void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, uint32_t onDelay, uint32_t offDelay)
 {
   esp_log_level_set("Shield32", ESP_LOG_INFO);
   Shield32::_pinNr          = pinNr;
   Shield32::_inversedLogic  = inversedLogic;
   Shield32::_onValue        = onValue;
   Shield32::_offValue       = offValue;
-  Shield32::_onHysteresis   = onHysteresis;
-  Shield32::_switchOnDelay  = millis() + (_onHysteresis * 1000);
+  Shield32::_onDelay        = onDelay;
+  Shield32::_offDelay       = offDelay;
+  Shield32::_switchDelay  = millis() + (Shield32::_onDelay * 1000);
 
   if (Shield32::_inversedLogic)
   {
@@ -42,10 +42,11 @@ void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue,
     Shield32::_LOW  = LOW;
   }
 
-  ESP_LOGI(TAG, "====> setup(pinNr[%d], HIGH[%s], onValue[%d], offValue[%d], onHyseresis[%d])\r\n", Shield32::_pinNr
+  ESP_LOGI(TAG, "====> setup(pinNr[%d], HIGH[%s], onValue[%d], offValue[%d], onDelay[%d], offDelay[%d])\r\n", Shield32::_pinNr
                                                                                         , (Shield32::_inversedLogic ? "LOW" : "HIGH")
                                                                                         , Shield32::_onValue, Shield32::_offValue
-                                                                                        , onHysteresis);
+                                                                                        , Shield32::_onDelay
+                                                                                        , Shield32::_offDelay);
   if (Shield32::_pinNr >= 0)
   {
     digitalWrite(Shield32::_pinNr, Shield32::_LOW);
@@ -65,6 +66,35 @@ void Shield32::loop(int actualValue)
     return;
   }
 
+  if (Shield32::_mustFlip)
+  {
+      ESP_LOGI(TAG, "=====> flipSwitch()");
+      Shield32::_mustFlip = false;
+
+      if (digitalRead(_pinNr) == Shield32::_LOW)
+      {
+        digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+        //-- set _switchDelay in ms
+        Shield32::_switchDelay = millis() + (Shield32::_offDelay *1000);  
+        Shield32::shieldState = 3;
+      }
+      else
+      {
+        digitalWrite(Shield32::_pinNr, Shield32::_LOW);
+        //-- set _switchDelay in ms
+        Shield32::_switchDelay = millis() + (Shield32::_onDelay *1000);  
+        Shield32::shieldState = 1;
+      }
+  }
+
+  //-- States:
+  //-- 0 - initialize shield, set output LOW
+  //-- 1 - wait for due _switchDelay
+  //-- 2 - if _onValue is reached, set output HIGH
+  //-- 3 - wait for due _switchDelay
+  //-- 4 - if _offValue is reached, set output LOW
+  //-- 5 - wait for due _switchDelay
+
   switch(Shield32::shieldState)
   {
     case 0: //-- initialize shield, set output LOW
@@ -74,18 +104,18 @@ void Shield32::loop(int actualValue)
             //-- fall through to next state (1)          
           }
 
-    case 1: //-- wait for due _switchOnDelay
+    case 1: //-- wait for due _switchDelay
           {
-            if (millis() > (Shield32::_switchOnDelay * 1000))
+            if (millis() < (Shield32::_switchDelay))
             {
-              ESP_LOGI(TAG, "=====> [1] Wait[%d] seconds", Shield32::_switchOnDelay - (millis() / 1000));
+              ESP_LOGI(TAG, "=====> [1] Wait[%d] seconds till due On Delay ...", (Shield32::_switchDelay - millis()) /1000);
               Shield32::shieldState = 1;
               break;
             }
             else
             {
               ESP_LOGI(TAG, "=====> [1] Done waiting!");
-             Shield32::shieldState = 2;
+              Shield32::shieldState = 2;
             }
           }
 
@@ -100,30 +130,51 @@ void Shield32::loop(int actualValue)
             }
             if (actualValue >= Shield32::_onValue)
             {
-              ESP_LOGI(TAG, "=====> [2] Set Switch to HIGH");
+              ESP_LOGI(TAG, "=====> [2] Set Switch to HIGH (set switch off delay to [%d] seconds)", Shield32::_offDelay);
               digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+              //-- set _switchDelay in ms
+              Shield32::_switchDelay = millis() + (Shield32::_offDelay *1000);  
               Shield32::shieldState = 3;
+              break;
             }
             Shield32::shieldState = 2;
             break;
           }
 
-    case 3: //-- if _offValue is reached, set output LOW
+    case 3: //-- wait for due _switchDelay
           {
-            ESP_LOGI(TAG, "=====> [3] Check if act[%d] < off[%d]", actualValue, Shield32::_offValue);
+            if (millis() < (Shield32::_switchDelay))
+            {
+              ESP_LOGI(TAG, "=====> [3] Wait[%d] seconds till due Off Delay ...", (Shield32::_switchDelay - millis()) / 1000);
+              Shield32::shieldState = 3;
+              break;
+            }
+            else
+            {
+              ESP_LOGI(TAG, "=====> [3] Done waiting!");
+              Shield32::shieldState = 4;
+            }
+          }
+
+    case 4: //-- if _offValue is reached, set output LOW
+          {
+            ESP_LOGI(TAG, "=====> [4] Check if act[%d] < off[%d]", actualValue, Shield32::_offValue);
             if (digitalRead(Shield32::_pinNr) == Shield32::_LOW) //-- allready "Off"
             {
-              ESP_LOGI(TAG, "=====> [3] Switch already LOW");
-              Shield32::shieldState = 2;
+              ESP_LOGI(TAG, "=====> [4] Switch already LOW");
+              Shield32::shieldState = 1;
               break;
             } 
             if (actualValue < Shield32::_offValue)
             {
-              ESP_LOGI(TAG, "=====> [3] Set Switch to LOW");
+              ESP_LOGI(TAG, "=====> [3] Set Switch to LOW (set switch on delay to [%d] seconds)", Shield32::_onDelay);
               digitalWrite(Shield32::_pinNr, Shield32::_LOW);
+              //-- set _switchDelay in ms
+              Shield32::_switchDelay = millis() + (Shield32::_onDelay *1000);  
               Shield32::shieldState = 1;
-              Shield32::_switchOnDelay = millis() + (Shield32::_onHysteresis *1000);  
+              break;
             }
+            Shield32::shieldState = 4;
             break;
           }
 
@@ -132,6 +183,14 @@ void Shield32::loop(int actualValue)
   } // switch(Shield32::shieldState)
 
 } //  loop()
+
+
+//--------------------------------------------------------------------------------------------
+void Shield32::flipSwitch()
+{
+  Shield32::_mustFlip = true;
+
+} // flipSwitch()flipSwitch()
 
 
 /***************************************************************************

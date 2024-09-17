@@ -427,11 +427,12 @@ void sendDeviceInfo()
   doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
-  doc['devinfo']["shield_gpio"]           = (int)devSetting->ShieldGpio;
-  doc['devinfo']["shield_inversed"]       = (int)devSetting->ShieldInversed;
-  doc['devinfo']["shield_on_treshold"]    = (int)devSetting->ShieldOnThreshold;
-  doc['devinfo']["shield_off_treshold"]   = (int)devSetting->ShieldOffThreshold;
-  doc['devinfo']["shield_on_hysteresis"]  = (int)devSetting->ShieldOnHysteresis;
+  doc['devinfo']["shield_gpio"]         = (int)devSetting->ShieldGpio;
+  doc['devinfo']["shield_inversed"]     = (int)devSetting->ShieldInversed;
+  doc['devinfo']["shield_on_treshold"]  = (int)devSetting->ShieldOnThreshold;
+  doc['devinfo']["shield_off_treshold"] = (int)devSetting->ShieldOffThreshold;
+  doc['devinfo']["shield_on_delay"]     = (int)devSetting->ShieldOnDelay;
+  doc['devinfo']["shield_off_delay"]    = (int)devSetting->ShieldOffDelay;
 
   snprintf(gMsg,  _GMSG_LEN, "%s:%04d", devSetting->MQTTbroker, devSetting->MQTTbrokerPort);
   doc["devinfo"]["mqtt_broker"]     = gMsg;
@@ -740,8 +741,14 @@ void sendDevSettings()
   nestedRec["min"]      = -10000; nestedRec["max"] = 10000;
 
   nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_on_hysteresis";
-  nestedRec["value"]    =  devSetting->ShieldOnHysteresis;
+  nestedRec["name"]     =  "shield_on_delay";
+  nestedRec["value"]    =  devSetting->ShieldOnDelay;
+  nestedRec["type"]     = "i"; 
+  nestedRec["min"]      = 0; nestedRec["max"] = 36000; //-- tien uur (in seconden)
+
+  nestedRec = doc["system"].createNestedObject();
+  nestedRec["name"]     =  "shield_off_delay";
+  nestedRec["value"]    =  devSetting->ShieldOffDelay;
   nestedRec["type"]     = "i"; 
   nestedRec["min"]      = 0; nestedRec["max"] = 36000; //-- tien uur (in seconden)
 

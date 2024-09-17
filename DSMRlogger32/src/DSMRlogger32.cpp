@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.2.2 (16-09-2024)";
+const char* _FW_VERSION = "v5.2.2 (17-09-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
@@ -552,7 +552,8 @@ void setup()
   myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed
                             , devSetting->ShieldOnThreshold
                             , devSetting->ShieldOffThreshold
-                            , devSetting->ShieldOnHysteresis);
+                            , devSetting->ShieldOnDelay
+                            , devSetting->ShieldOffDelay);
 
 
   //================ Start Slimme Meter ===============================
@@ -611,6 +612,10 @@ void doTaskShield()
 {
   int actPower = 0;
 
+  if (digitalRead(_FLASH_BUTTON) == LOW)
+  {
+    myShield.flipSwitch();
+  }
   if (DUE(shieldTimer))
   {
     //if (Verbose1) 

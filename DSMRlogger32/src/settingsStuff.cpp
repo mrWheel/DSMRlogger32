@@ -311,10 +311,11 @@ void writeDevSettings(bool show)
   {
       devSetting->ShieldGpio = -1;
   }
-  if (devSetting->ShieldInversed < 0)      devSetting->ShieldInversed = 0;  
-  if (devSetting->ShieldInversed > 1)      devSetting->ShieldInversed = 1;  
+  if (devSetting->ShieldInversed < 0)    devSetting->ShieldInversed = 0;  
+  if (devSetting->ShieldInversed > 1)    devSetting->ShieldInversed = 1;  
   if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
-  if (devSetting->ShieldOnHysteresis < _SHIELD_TIME) devSetting->ShieldOnHysteresis = _SHIELD_TIME;
+  if (devSetting->ShieldOnHysteresis <     0) devSetting->ShieldOnHysteresis =     0;
+  if (devSetting->ShieldOnHysteresis > 36000) devSetting->ShieldOnHysteresis = 36000;
 
   DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", devSetting->TelegramInterval);
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
@@ -478,9 +479,9 @@ void showDevSettings()
         Debugf( "                 Shield GPIO : %s\r\n", "Not Used");
     }
     Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
-    Debugf("         Shield On Threshold : %d\r\n", devSetting->ShieldOnThreshold);
-    Debugf("        Shield Off Threshold : %d\r\n", devSetting->ShieldOffThreshold);
-    Debugf("        Shield On Hysteresis : %d\r\n", devSetting->ShieldOnHysteresis);
+    Debugf("         Shield On Threshold : %d [Watt]\r\n", devSetting->ShieldOnThreshold);
+    Debugf("        Shield Off Threshold : %d [Watt]\r\n", devSetting->ShieldOffThreshold);
+    Debugf("        Shield On Hysteresis : %d [seconden]\r\n", devSetting->ShieldOnHysteresis);
 
     Debugln("-\r");
 

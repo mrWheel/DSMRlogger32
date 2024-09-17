@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.2.1 (16-09-2024)";
+const char* _FW_VERSION = "v5.2.2 (16-09-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **

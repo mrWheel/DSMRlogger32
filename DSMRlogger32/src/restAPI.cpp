@@ -743,7 +743,7 @@ void sendDevSettings()
   nestedRec["name"]     =  "shield_on_hysteresis";
   nestedRec["value"]    =  devSetting->ShieldOnHysteresis;
   nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = 0; nestedRec["max"] = 60; //-- minuten
+  nestedRec["min"]      = 0; nestedRec["max"] = 36000; //-- tien uur (in seconden)
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   serializeJson(doc, jsonBuff, _JSONBUFF_LEN);

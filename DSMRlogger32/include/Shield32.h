@@ -17,7 +17,7 @@ class Shield32
 {
     public:
         Shield32();
-        void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int16_t onHysteresis);
+        void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int32_t onHysteresis);
         void loop(int actualValue);
 
     private:

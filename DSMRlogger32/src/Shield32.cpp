@@ -21,7 +21,7 @@ static const char *TAG = "Shield32";
 Shield32::Shield32() {}
 
 //--------------------------------------------------------------------------------------------
-void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int16_t onHysteresis)
+void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int32_t onHysteresis)
 {
   esp_log_level_set("Shield32", ESP_LOG_INFO);
   Shield32::_pinNr          = pinNr;
@@ -76,22 +76,31 @@ void Shield32::loop(int actualValue)
 
     case 1: //-- wait for due _switchOnDelay
           {
-            if (millis() > Shield32::_switchOnDelay)
-                  Shield32::shieldState = 2;
-            else  Shield32::shieldState = 1;
-            break;
+            if (millis() > (Shield32::_switchOnDelay * 1000))
+            {
+              ESP_LOGI(TAG, "=====> [1] Wait[%d] seconds", Shield32::_switchOnDelay - (millis() / 1000));
+              Shield32::shieldState = 1;
+              break;
+            }
+            else
+            {
+              ESP_LOGI(TAG, "=====> [1] Done waiting!");
+             Shield32::shieldState = 2;
+            }
           }
 
     case 2: //-- if _onValue is reached, set output HIGH
           {
+            ESP_LOGI(TAG, "=====> [2] Check if act[%d] > on[%d]", actualValue, Shield32::_onValue);
             if (digitalRead(Shield32::_pinNr) == Shield32::_HIGH) //-- allready "On"
             {
+              ESP_LOGI(TAG, "=====> [2] Switch already HIGH");
               Shield32::shieldState = 3;
               break;
             }
             if (actualValue >= Shield32::_onValue)
             {
-              ESP_LOGI(TAG, "=====> [2] Switch HIGH");
+              ESP_LOGI(TAG, "=====> [2] Set Switch to HIGH");
               digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
               Shield32::shieldState = 3;
             }
@@ -101,14 +110,16 @@ void Shield32::loop(int actualValue)
 
     case 3: //-- if _offValue is reached, set output LOW
           {
+            ESP_LOGI(TAG, "=====> [3] Check if act[%d] < off[%d]", actualValue, Shield32::_offValue);
             if (digitalRead(Shield32::_pinNr) == Shield32::_LOW) //-- allready "Off"
             {
+              ESP_LOGI(TAG, "=====> [3] Switch already LOW");
               Shield32::shieldState = 2;
               break;
             } 
             if (actualValue < Shield32::_offValue)
             {
-              ESP_LOGI(TAG, "=====> [3] Switch LOW");
+              ESP_LOGI(TAG, "=====> [3] Set Switch to LOW");
               digitalWrite(Shield32::_pinNr, Shield32::_LOW);
               Shield32::shieldState = 1;
               Shield32::_switchOnDelay = millis() + (Shield32::_onHysteresis *1000);  

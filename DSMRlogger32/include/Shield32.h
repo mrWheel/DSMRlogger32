@@ -17,8 +17,9 @@ class Shield32
 {
     public:
         Shield32();
-        void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, int32_t onHysteresis);
+        void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, uint32_t onDelay, uint32_t offDelay);
         void loop(int actualValue);
+        void flipSwitch();
 
     private:
         static int customTelnetVprintf(const char* fmt, va_list args);
@@ -27,11 +28,13 @@ class Shield32
         int8_t    _inversedLogic;
         int       _onValue;
         int       _offValue;
-        uint32_t  _onHysteresis;
-        uint32_t  _switchOnDelay = 0;
+        uint32_t  _onDelay;
+        uint32_t  _offDelay;
+        int32_t   _switchDelay = 0;
         int8_t    shieldState = 0;
         uint8_t   _HIGH = 1;
         uint8_t   _LOW  = 0;
+        bool      _mustFlip = false;
 };
 
 #endif // SHIELD32_H

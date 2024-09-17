@@ -9,7 +9,7 @@
 ***************************************************************************
 */
 #include "menuStuff.h"
-
+#include <WiFiManager.h>
 
 //===========================================================================================
 void displayHoursHist(bool Telnet)
@@ -251,14 +251,18 @@ void handleKeyInput(char inChar)
         break;
 
       case 'W':
-        Debugf("\r\nConnect to AP [%s] and go to ip address shown in the AP-name\r\n", devSetting->Hostname);
-        delay(1000);
-        WiFi.disconnect(true);  // deletes credentials ?!
-        writeToSysLog("Erase WiFi credentials! and restart..");
-        startWiFi(devSetting->Hostname, 240, true);
-        delay(2000);
-        ESP.restart();
-        delay(2000);
+        {
+            Debugf("\r\nConnect to AP [%s] and go to ip address shown in the AP-name\r\n", devSetting->Hostname);
+            delay(1000);
+            writeToSysLog("Erase WiFi credentials! and restart..");
+            //-- Create an instance of WiFiManager
+            WiFiManager wifiManager;  
+            //-- and reset WiFi settings 
+            wifiManager.resetSettings();
+            delay(2000);
+            ESP.restart();
+            delay(2000);
+        }
         break;
         
       case 'y': skipHeartbeats = false;

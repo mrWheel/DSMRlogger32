@@ -286,7 +286,8 @@ void writeDevSettings(bool show)
   doc["shieldInversed"]     = devSetting->ShieldInversed;
   doc["shieldOnThreshold"]  = devSetting->ShieldOnThreshold; 
   doc["shieldOffThreshold"] = devSetting->ShieldOffThreshold;
-  doc["shieldOnHysteresis"] = devSetting->ShieldOnHysteresis;
+  doc["shieldOnDelay"]      = devSetting->ShieldOnDelay;
+  doc["shieldOffDelay"]     = devSetting->ShieldOffDelay;
 
   //DebugTln("---------------------------------------------------");
   //serializeJsonPretty(doc, Serial);
@@ -311,17 +312,21 @@ void writeDevSettings(bool show)
   {
       devSetting->ShieldGpio = -1;
   }
-  if (devSetting->ShieldInversed < 0)    devSetting->ShieldInversed = 0;  
-  if (devSetting->ShieldInversed > 1)    devSetting->ShieldInversed = 1;  
+  if (devSetting->ShieldInversed < 0)     devSetting->ShieldInversed = 0;  
+  if (devSetting->ShieldInversed > 1)     devSetting->ShieldInversed = 1;  
   if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
-  if (devSetting->ShieldOnHysteresis <     0) devSetting->ShieldOnHysteresis =     0;
-  if (devSetting->ShieldOnHysteresis > 36000) devSetting->ShieldOnHysteresis = 36000;
+  if (devSetting->ShieldOnDelay <     0)  devSetting->ShieldOnDelay =     0;
+  if (devSetting->ShieldOnDelay > 36000)  devSetting->ShieldOnDelay = 36000;
+  if (devSetting->ShieldOffDelay <     0) devSetting->ShieldOffDelay =     0;
+  if (devSetting->ShieldOffDelay > 36000) devSetting->ShieldOffDelay = 36000;
 
   DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", devSetting->TelegramInterval);
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
   CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
 
-  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed, devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold, devSetting->ShieldOnHysteresis);
+  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed
+                                       , devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold
+                                       , devSetting->ShieldOnDelay, devSetting->ShieldOffDelay);
 
   if (show) { showDevSettings(); }
 
@@ -356,7 +361,8 @@ void readDevSettings(bool show)
     devSetting->ShieldInversed      = 0;
     devSetting->ShieldOnThreshold   = 0;
     devSetting->ShieldOffThreshold  = 0;
-    devSetting->ShieldOnHysteresis  = 0;
+    devSetting->ShieldOnDelay       = 0;
+    devSetting->ShieldOffDelay      = 0;
     writeDevSettings(false);
   }
 
@@ -408,7 +414,8 @@ void readDevSettings(bool show)
   if (doc["shieldInversed"])       { devSetting->ShieldInversed     = doc["shieldInversed"].as<int>(); }
   if (doc["shieldOnThreshold"])    { devSetting->ShieldOnThreshold  = doc["shieldOnThreshold"].as<int>(); }
   if (doc["shieldOffThreshold"])   { devSetting->ShieldOffThreshold = doc["shieldOffThreshold"].as<int>(); }
-  if (doc["shieldOnHysteresis"])   { devSetting->ShieldOnHysteresis = doc["shieldOnHysteresis"].as<int>(); }
+  if (doc["shieldOnDelay"])        { devSetting->ShieldOnDelay      = doc["shieldOnDelay"].as<int>(); }
+  if (doc["shieldOffDelay"])       { devSetting->ShieldOffDelay     = doc["shieldOffDelay"].as<int>(); }
 
   devSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
   if (devSetting->NoHourSlots > 190) devSetting->NoHourSlots  = 190;
@@ -481,7 +488,8 @@ void showDevSettings()
     Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
     Debugf("         Shield On Threshold : %d [Watt]\r\n", devSetting->ShieldOnThreshold);
     Debugf("        Shield Off Threshold : %d [Watt]\r\n", devSetting->ShieldOffThreshold);
-    Debugf("        Shield On Hysteresis : %d [seconden]\r\n", devSetting->ShieldOnHysteresis);
+    Debugf("      Shield Relays On Delay : %d [seconden]\r\n", devSetting->ShieldOnDelay);
+    Debugf("     Shield Relays Off Delay : %d [seconden]\r\n", devSetting->ShieldOffDelay);
 
     Debugln("-\r");
 
@@ -565,25 +573,25 @@ void updateDevSettings(const char *field, const char *newValue)
     strlcpy(devSetting->MQTTbroker, newValue, 100);
     Debugf("[%s]\r\n", devSetting->MQTTbroker);
     mqttIsConnected = false;
-    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
+    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); //-- try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_broker_port"))
   {
     devSetting->MQTTbrokerPort = String(newValue).toInt();
     mqttIsConnected = false;
-    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
+    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); //-- try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_user"))
   {
     strlcpy(devSetting->MQTTuser, newValue, 35);
     mqttIsConnected = false;
-    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
+    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); //-- try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_passwd"))
   {
     strlcpy(devSetting->MQTTpasswd, newValue, 35);
     mqttIsConnected = false;
-    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); // try reconnecting cyclus timer
+    CHANGE_INTERVAL_MS(reconnectMQTTtimer, 100); //-- try reconnecting cyclus timer
   }
   if (!strcasecmp(field, "mqtt_interval"))
   {
@@ -603,7 +611,8 @@ void updateDevSettings(const char *field, const char *newValue)
   if (!strcasecmp(field, "shield_inversed"))      devSetting->ShieldInversed      = String(newValue).toInt();
   if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold   = String(newValue).toInt();
   if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold  = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_on_hysteresis")) devSetting->ShieldOnHysteresis  = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_on_delay"))      devSetting->ShieldOnDelay       = String(newValue).toInt();
+  if (!strcasecmp(field, "shield_off_delay"))     devSetting->ShieldOffDelay      = String(newValue).toInt();
 
   writeDevSettings(false);
 
@@ -612,20 +621,20 @@ void updateDevSettings(const char *field, const char *newValue)
 
 
 //=======================================================================
-// Function to check if a value exists in a predefined set of values
+//-- Function to check if a value exists in a predefined set of values
 bool isValidGpio(int newGpio) 
 {
-  int validGpios[] = {2,12,13,14,15,16,17,19,25,26,27,32,33};  // List of shield GPIO pins
-  int size = sizeof(validGpios) / sizeof(validGpios[0]);  // Calculate the array size
+  int validGpios[] = {2,12,13,14,15,16,17,19,25,26,27,32,33}; //-- List of shield GPIO pins
+  int size = sizeof(validGpios) / sizeof(validGpios[0]);      //-- Calculate the array size
 
   for (int i = 0; i < size; ++i) 
   {
       if (newGpio == validGpios[i]) 
       {
-          return true;  // Return true if the value is found
+          return true;  //-- Return true if the value is found
       }
   }
-  return false;  // Return false if not found
+  return false;  //-- Return false if not found
 
 } // isValidGpio()
 

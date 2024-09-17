@@ -264,7 +264,8 @@ struct settingDevStruct
   int8_t    ShieldInversed;
   int16_t   ShieldOnThreshold;
   int16_t   ShieldOffThreshold;
-  int32_t   ShieldOnHysteresis; //-- seconden
+  int32_t   ShieldOnDelay;   //-- seconden
+  int32_t   ShieldOffDelay;  //-- seconden
 };
 
 //-- from DSMRlogger32.h

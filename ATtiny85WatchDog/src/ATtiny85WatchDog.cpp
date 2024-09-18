@@ -1,39 +1,17 @@
 /*
-** ATtiny85 Watch Dog for an ESP8266/ESP32
+** ATtiny85 Watch Dog for an ESP8266/ESP32 or any other MCU
 ** 
-** Copyright 2022, 2023 Willem Aandewiel
-** Version 3.1  23-03-2023
+** Copyright 2022 .. 2024 Willem Aandewiel
+** Version 3.1  (18-09-2024)
 ** 
-** 
-** PACKAGES: 
-**   - framework-arduino-avr-attiny @ 1.5.2 
-**   - tool-avrdude @ 1.60300.200527 (6.3.0) 
-**   - toolchain-atmelavr @ 1.70300.191015 (7.3.0)
-** 
-** Use avrfuses.app to set fuses:
-**      Extended  : 0xFF
-**      High      : 0xDE (but 0xDF might also "work" --> brown-out detection disabled)
+** Use [PROJECT TASKS] to set fuses (as in 'platformio.ini'):
+**   - High Fuse: Serial program downloading (SPI) enabled
+**   - High Fuse: Brown-out detector triggel level: Brown-out detection at VCC=1.8 V
+**   - Low Fuse:  Select Clock Source: Int. RC Osc. 8 MHz; Start-up time PWRDWN/RESET: 6 CK/14 CK + 64 ms
+**  
 **      Low       : 0xE2
-**
-**    [Program] -> [Verify] -> [Read]
-**
-** -->> AVRfuses: Serial programdownloading (SPI) enabled
-** -->> AVRfuses: Brown-out Detector trigger level: VCC=1.8 V
-** -->> AVRfuses: Select Clock source: Int. RC Osc. 8MHz; 
-**                  Start-up time PWRDWN/RESET: 6 CK/1 4CK +64 ms
-** 
-** Board              : "ATtiny25/45/85 (no bootloader)"
-** Chip               : "ATtiny85"
-** Clock Source       : "8MHz (internal)"
-** Timer 1 Clock      : "CPU (CPU Frequency)"
-** LTO(1.6.11+ only)  : "disabled"
-** millis()/micros()  : "Enabled"                                      
-** save EEPROM        : "EEPROM not retained"
-** B.O.D. Level (Only set on bootload): "B.O.D. Enabled (1.8v)"
-** 
-**  Copyright (c) 2022, 2023 Willem Aandewiel
-**
-**  TERMS OF USE: MIT License. See bottom of file.
+**      High      : 0xDE (but 0xDF might also "work" --> brown-out detection disabled)
+**      Extended  : 0xFF
 **
 ** ATMEL ATTINY85
 **                        +--\/--+
@@ -86,24 +64,10 @@
 **               |                         | or Wait for RESET from Master
 **  -------------+-------------------------+--------------------------------------
 **  
+**  TERMS OF USE: MIT License. See bottom of file.
 */
 
-// https://github.com/GreyGnome/EnableInterrupt
-#include <EnableInterrupt.h>
-
-#define _PIN_NEOPIXELS        0       // GPIO-00 ==> DIL-6 ==> PB0
-#define _PIN_DUMMY1           1       // GPIO-01 ==> DIL-5 ==> PB1
-#define _PIN_HEARTBEAT        2       // GPIO-02 ==> DIL-7 ==> PB2  / INT0
-#define _PIN_MASTER_EN        3       // GPIO-03 ==> DIL-2 ==> PB3
-#define _PIN_RESET_MYSELF     4       // GPIO-04 ==> DIL-3 ==> PB4
-
-#include <neoPixStuff.h>
-
-#define _STARTUP_TIME     30000 //-- 30 seconden
-#define _MAX_NO_HARTBEAT  90000 //-- 90 seconds
-#define _LAST_WARNING     75000 //-- 15 seconds before reset
-#define _FIRST_WARNING    60000 //-- 30 seconds before reset
-#define _LAST_CHANGE       5000
+#include "ATtiny85WatchDog.h"
 
 volatile  bool receivedInterrupt = false;
 uint8_t   feedsReceived = 0;

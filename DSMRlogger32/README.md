@@ -15,6 +15,23 @@ As of now the DSMRlogger32 firmware is ported to `VSCode` with the `PlatformIO` 
 <table>
   <tr><th>Versie</th><th align="Left">Opmerking</th></tr>
   <tr>
+    <td valign="top">5.3.0</td>
+    <td>Nieuwe functionaliteit
+        <br>2024-09-20: Firmware updates kunnen nu ook vanaf een remote server worden
+        opgehaald. Als de functie wordt opgestart ([FSmanager]->[Update Remote])
+        verschijnt er een scherm met een drop-down lijst met beschikbare updates.<br>
+        Selecteer de gewenste update en klik op [Update] om de update uit te voeren
+        of op [Return] om terug te keren naar de FSmanager.<br>
+        Om deze nieuwe functionaliteit te kunnen gebruiken moet éénmalig de nieuwe
+        firmware (versie 5.3.0) naar je lokale computer worden gedownload en daarna
+        met [Update Local] worden geflashed.<br>
+        Om deze functie te kunnen gebruiken moet, behalve de firmware update, ook
+        het bestand `FSmanager.html` (te vinden op `github`) vanuit de data folder 
+        worden gedownload naar je lokale computer en daarna met de FSmanager worden
+         ge-[Upload].<br>
+        Het uploaden van SPIFFS is helaas nog niet mogelijk.
+    </td>
+  <tr>
     <td valign="top">5.2.1</td>
     <td>Nieuwe functionaliteit
         <br>2024-09-16: Op een GPIO-pin kan (bijvoorbeeld) een relays worden aangesloten.

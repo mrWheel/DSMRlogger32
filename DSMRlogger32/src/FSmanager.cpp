@@ -1,4 +1,3 @@
-
 // ****************************************************************
 #include "FSmanager.h"
 // Sketch Esp8266 Filesystem Manager spezifisch sortiert Modular(Tab)
@@ -39,6 +38,9 @@ struct _catStruct
   int fSize;
 } catStruct;
 
+// ... (rest of the constant definitions remain the same)
+
+
 
 //-aaw-const char WARNING[] PROGMEM = R"(<h2>Check! Sketch is compiled with "FS:none"!)";
 const char WARNING[] PROGMEM = R"(
@@ -73,21 +75,16 @@ const char HELPER[]  PROGMEM = R"(
   </form>
 )";
 
-
-//===========================================================================================
-//-- Funktionsaufruf "setupFS();" muss im Setup eingebunden werden
 void setupFSmanager()
 {
   httpServer.serveStatic("/FSmanager", _FSYS, "/FSmanager.html");
   httpServer.on("/format", formatFS);
   httpServer.on("/listFS", listFS);
   httpServer.on("/ReBoot", reBootESP);
-  httpServer.on("/upload", HTTP_POST, sendResponce, handleUpload);
+  httpServer.on("/local_update", HTTP_POST, sendResponce, handleLocalUpdate);  // Changed from "/upload" to "/local_update"
+  httpServer.on("/remote_update", handleRemoteUpdate);  // New route for remote update
 
-  //const char *update_path = "/firmware";
-  //const char *update_username = "admin";
-  //const char *update_password = "admin";
-  httpUpdater.setup(&httpServer); // , update_path, update_username, update_password);
+  httpUpdater.setup(&httpServer);
 
   httpServer.onNotFound([]()
   {
@@ -113,8 +110,7 @@ void setupFSmanager()
       }
     }
   });
-
-} //  setupFSmanager()
+}
 
 
 //===========================================================================================
@@ -315,9 +311,9 @@ bool handleFile(String &&path)
 
 } //  handleFile()
 
-
+// Changed function name from handleUpload to handleLocalUpdate
 //===========================================================================================
-void handleUpload()
+void handleLocalUpdate()
 {
   // Dateien ins Filesystem schreiben
   static File fsUploadFile;
@@ -336,7 +332,6 @@ void handleUpload()
     if (httpServer.arg(0) == "/") //-- root!
     {
       fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
-      //-aaw-fsUploadFile = _FSYS.open(httpServer.urlDecode(upload.filename), "w");
       DebugTf("FileUpload Name: %s\r\n",  upload.filename.c_str());
       writeToSysLog("FileUpload: [%s]",  upload.filename.c_str());
     }
@@ -369,8 +364,172 @@ void handleUpload()
     //-- poke WatchDog
     pulseHeart(true);
   }
+}
 
-} //  handleUpload()
+// New function to handle remote update
+//===========================================================================================
+void handleRemoteUpdate()
+{
+  char updateServer[100] = {};
+  if (httpServer.method() == HTTP_GET) 
+  {
+    // Fetch file list from the URL
+    HTTPClient http;
+    http.begin("https://www.aandewiel.nl/updates/DSMRlogger32/");
+    int httpCode = http.GET();
+    
+    String options = "<option value=''>Select version</option>";
+    if (httpCode > 0) 
+    {
+      String htmlContent = http.getString();
+      String fileNames[10]; // Assuming max 10 files, adjust if needed
+      int fileCount = 0;
+      int pos = 0;
+      while ((pos = htmlContent.indexOf(".bin", pos)) != -1 && fileCount < 10) 
+      {
+        int hrefPos = htmlContent.lastIndexOf("href=\"", pos);
+        if (hrefPos != -1 && hrefPos < pos) {
+          int startPos = hrefPos + 6; // Move past 'href="'
+          int endPos = htmlContent.indexOf("\"", startPos);
+          if (endPos != -1 && endPos > startPos) 
+          {
+            String fileName = htmlContent.substring(startPos, endPos);
+            if (fileName.endsWith(".bin")) 
+            {
+              // Check for duplicates
+              bool isDuplicate = false;
+              for (int i = 0; i < fileCount; i++) 
+              {
+                if (fileNames[i] == fileName) 
+                {
+                  isDuplicate = true;
+                  break;
+                }
+              }
+              if (!isDuplicate) 
+              {
+                fileNames[fileCount] = fileName;
+                fileCount++;
+              }
+            }
+          }
+        }
+        pos += 4; // Move past ".bin"
+      }
+      
+      // Create options string
+      for (int i = 0; i < fileCount; i++) 
+      {
+        options += "<option value='" + fileNames[i] + "'>" + fileNames[i] + "</option>";
+      }
+      
+      if (fileCount == 0) 
+      {
+        options = "<option value=''>none</option>";
+      }
+    } 
+    else 
+    {
+      options = "<option value=''>Error fetching versions</option>";
+    }
+    http.end();
+
+    // Display the HTML form with JavaScript and dropdown
+    String html = "<html>"
+                  "<head>"
+                  "<script>"
+                  "function submitForm(action) {"
+                  "  var form = document.getElementById('updateForm');"
+                  "  var select = form.elements['newVersionNr'];"
+                  "  if (action === 'Update' && (select.value === '' || select.value === 'none')) {"
+                  "    alert('Please select a valid version');"
+                  "    return;"
+                  "  }"
+                  "  var actionInput = document.createElement('input');"
+                  "  actionInput.type = 'hidden';"
+                  "  actionInput.name = 'action';"
+                  "  actionInput.value = action;"
+                  "  form.appendChild(actionInput);"
+                  "  form.submit();"
+                  "}"
+                  "</script>"
+                  "</head>"
+                  "<body>"
+                  "<h2>Remote Update</h2>"
+                  "<form id='updateForm' method='POST'>"
+                  "Select Version: <select name='newVersionNr'>" + options + "</select><br><br>"
+                  "<button type='button' onclick='submitForm(\"Update\")'>Update</button>"
+                  "<button type='button' onclick='submitForm(\"Return\")'>Return</button>"
+                  "</form>"
+                  "</body>"
+                  "</html>";
+    httpServer.send(200, "text/html", html);
+  } 
+  else if (httpServer.method() == HTTP_POST) 
+  {
+    String newVersionNr = httpServer.arg("newVersionNr");
+    String action = httpServer.arg("action");
+    
+    String message;
+    if (action == "Update") 
+    {
+      DebugTf("Update requested. New version: %s\r\n", newVersionNr.c_str());
+      message = "Update requested. New version: " + newVersionNr;
+      snprintf(updateServer, sizeof(updateServer), "https://www.aandewiel.nl/updates/DSMRlogger32/%s", newVersionNr.c_str());
+            
+      UpdateManager updateManager;
+
+      DebugTf("(%s) Starting Firmware upload!\r\n", __FUNCTION__);
+      doRedirect("Wait for update to complete ...", 120, "/", false);
+      DebugTln("After 'doRedirect()' ..");
+      //-- Shorthand
+      updateManager.updateFirmware(updateServer, [](u_int8_t progress) 
+      {
+        if ((progress % 70) == 0) 
+        {
+          Debugln('.');
+          pulseHeart();
+        }
+        else Debug('.');
+      });
+      if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_ERROR)) 
+      { 
+        DebugTf("\r\n(%s) Update ERROR\r\n", __FUNCTION__);
+        httpServer.send(200, "text/html", "Update ERROR!");
+        delay(1000);
+        ESP.restart();
+        delay(3000);
+      }
+      if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_OK)) 
+      { 
+        Debugf("\r\n(%s) Update OK\r\n", __FUNCTION__);
+        httpServer.send(200, "text/html", "Update Succesfull!");
+        delay(1000);
+        ESP.restart();
+        delay(3000);
+      }
+    }
+    else if (action == "Return") 
+    {
+      DebugTln("Return requested. No update performed.");
+      message = "Return requested. No update performed.";
+    }
+    
+    String response = "<html><body>"
+                      "<h2 id='message'>" + message + "</h2>"
+                      "<script>"
+                      "setTimeout(function() {"
+                      "  document.getElementById('message').innerText = 'Redirecting...';"
+                      "  setTimeout(function() {"
+                      "    window.location.href = '/FSmanager.html';"
+                      "  }, 1000);"
+                      "}, 2000);"
+                      "</script>"
+                      "</body></html>";
+    
+    httpServer.send(200, "text/html", response);
+  }
+}
 
 
 //===========================================================================================
@@ -408,19 +567,6 @@ const String formatBytes(size_t const &bytes)
   return bytes < 1024 ? static_cast<String>(bytes) + " Byte" : bytes < 1048576 ? static_cast<String>(bytes / 1024.0) + " KB" : static_cast<String>(bytes / 1048576.0) + " MB";
 
 } //  formatBytes()
-
-/**
-//=====================================================================================
-void updateFirmware()
-{
-#ifndef _USE_UPDATE_SERVER
-  DebugTln("Redirect to updateIndex ???");
-  //doRedirect("wait ... ", 5, "/updateIndex ", false);
-  httpServer.send(200, "text/html", noUpdateServer);
-#endif
-
-} // updateFirmware()
-**/
 
 //=====================================================================================
 void reBootESP()
@@ -516,6 +662,5 @@ int sortFunction(const void *cmp1, const void *cmp2)
   #endif
 
 } //  sortFunction()
-
 
 /*eof*/

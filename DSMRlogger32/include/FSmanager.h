@@ -3,12 +3,16 @@
 
 //============ Includes ====================
 #include "arduinoGlue.h"
+#include <HTTPClient.h>
+#include "UpdateManager.h"
 
 //============ Prototypes ==================
 bool handleList();                                          
 void deleteRecursive(const char *path);                     
 bool handleFile(String &&path);                             
-void handleUpload();                                        
+//void handleUpload();        
+void handleLocalUpdate();
+void handleRemoteUpdate();
 void formatFS();                                            
 void listFS();                                              
 void sendResponce();                                        

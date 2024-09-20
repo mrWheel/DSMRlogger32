@@ -47,8 +47,13 @@ void startWiFi(const char *hostname, int timeOut, bool eraseCredentials)
 
   DebugTf("startWiFi ...[%s]\r\n",  thisAP.c_str());
 
-  if (eraseCredentials) manageWiFi.resetSettings();
-
+  if (eraseCredentials) 
+  {
+    manageWiFi.resetSettings();
+    delay(1000);
+    ESP.restart();
+    delay(3000);
+  }
   manageWiFi.setDebugOutput(true);
 
   //--- set callback that gets called when connecting to previous WiFi fails, and enters Access Point mode

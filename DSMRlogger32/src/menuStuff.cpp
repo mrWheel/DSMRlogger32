@@ -9,7 +9,6 @@
 ***************************************************************************
 */
 #include "menuStuff.h"
-#include <WiFiManager.h>
 
 //===========================================================================================
 void displayHoursHist(bool Telnet)
@@ -255,10 +254,9 @@ void handleKeyInput(char inChar)
             Debugf("\r\nConnect to AP [%s] and go to ip address shown in the AP-name\r\n", devSetting->Hostname);
             delay(1000);
             writeToSysLog("Erase WiFi credentials! and restart..");
-            //-- Create an instance of WiFiManager
-            WiFiManager wifiManager;  
-            //-- and reset WiFi settings 
-            wifiManager.resetSettings();
+            startWiFi(devSetting->Hostname, 240, true);
+            //-- next lines of code will never be executed as 
+            //--startWiFi(..,..,true) will restart the system
             delay(2000);
             ESP.restart();
             delay(2000);

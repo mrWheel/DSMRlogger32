@@ -131,12 +131,13 @@ void _debugBOL(const char *fn, int line);
                             , ##__VA_ARGS__);    \
                            })
  
-#define _SYSLOG_LINES       150
-#define _SYSLOG_LINE_LEN    120
-#define AMSTERDAM_POSIX  "CET-1CEST,M3.5.0,M10.5.0/3"    // Time in Amsterdam
+#define _SYSLOG_LINES          150
+#define _SYSLOG_LINE_LEN       120
+#define AMSTERDAM_POSIX       "CET-1CEST,M3.5.0,M10.5.0/3"    // Time in Amsterdam
 #define  tmYearToCalendar(Y) ((Y) + 1970)  // full four digit year 
 #define  CalendarYrToTm(Y)   ((Y) - 1970)
-#define _DEFAULT_HOSTNAME  "DSMR-ESP32"
+#define _DEFAULT_HOSTNAME     "DSMR-ESP32"
+#define _REMOTE_UPDATESERVER  "https://www.aandewiel.nl/updates/DSMRlogger32/"
 #define SMRX                    18 
 #define SMTX                    -1
 #define _PULSE_TIME           5000
@@ -159,9 +160,9 @@ void _debugBOL(const char *fn, int line);
 #define _MQTT_TOPTOPIC_LEN      21
 #define _FIELDTABLE_CNAME_LEN  100
 #define _FIELDTABLE_CVALUE_LEN 100
-#define _SETTINGS_FILE     "/DSMRsmSettings.json"
-#define _SYSTEM_FILE       "/DSMRdevSettings.json"
-#define _STATUS_FILE       "/DSMRstatus.csv"
+#define _SETTINGS_FILE        "/DSMRsmSettings.json"
+#define _SYSTEM_FILE          "/DSMRdevSettings.json"
+#define _STATUS_FILE          "/DSMRstatus.csv"
 #define LED_ON                 LOW
 #define LED_OFF               HIGH
 #define _GLOW_TIME             300
@@ -169,7 +170,7 @@ void _debugBOL(const char *fn, int line);
 #define _FSYS_MAX_FILES         30
 #define _MQTT_BUFF_MAX         200
 #define _TIMESTAMP_LEN          14  // yymmddhhmmssX\0
-#define _PSRAM_LIMIT           500
+#define _PSRAM_LIMIT           100
 #define RNG_HOURS         1
 #define RNG_DAYS          2
 #define RNG_MONTHS        3
@@ -687,6 +688,7 @@ extern fieldTableStruct  *fieldTable;
 extern settingSmStruct   *smSetting;
 extern settingDevStruct  *devSetting;
 extern actualDataStruct  *actualStore;
+
 
 //============ Function Prototypes =========
 //-- from MQTTstuff.ino -----------

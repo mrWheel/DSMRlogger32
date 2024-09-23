@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.3.0 (20-09-2024)";
+const char* _FW_VERSION = "v5.3.0 (23-09-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
@@ -336,7 +336,7 @@ void setup()
     oled_Clear();  // clear the screen so we can paint the menu.
     oled_Print_Msg(0, ">>DSMR-logger32<<", 0);
     int8_t sPos = String(_FW_VERSION).indexOf(' ');
-    snprintf(gMsg,  _GMSG_LEN, "(c)2022, 2023 [%s]", String(_FW_VERSION).substring(0, sPos).c_str());
+    snprintf(gMsg,  _GMSG_LEN, "(c)2022..2024 [%s]", String(_FW_VERSION).substring(0, sPos).c_str());
     oled_Print_Msg(1, gMsg, 0);
     oled_Print_Msg(2, " Willem Aandewiel", 0);
     oled_Print_Msg(3, " >> Have fun!! <<", 1000);

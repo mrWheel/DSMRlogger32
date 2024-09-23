@@ -43,7 +43,7 @@ struct _catStruct
 
 
 //-aaw-const char WARNING[] PROGMEM = R"(<h2>Check! Sketch is compiled with "FS:none"!)";
-const char WARNING[] PROGMEM = R"(
+const char WARNING[] = R"(
   <h2>Check! Sketch is compiled with "FS:none"!</h2>
   <br>Do you want to format the filesystem (YOU WILL LOOSE ALL DATA ON IT!)?
   <hr>
@@ -57,7 +57,7 @@ const char WARNING[] PROGMEM = R"(
   <hr>
 )";
 
-const char HELPER[]  PROGMEM = R"(
+const char HELPER[] = R"(
   <br>You first need to upload these two files:
   <ul>
     <li>FSmanager.html</li>
@@ -75,14 +75,86 @@ const char HELPER[]  PROGMEM = R"(
   </form>
 )";
 
+// Display the HTML form with JavaScript and dropdown
+
+const char RFUindexHtml[] = R"(
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Remote Update</title>
+            <script>
+                async function fetchVersions() 
+                {
+                    try 
+                    {
+                        const response = await fetch('/RFUlistFirmware');
+                        if (!response.ok) 
+                        {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const filenames = await response.json();
+
+                        const select = document.getElementById('versionSelect');
+                        select.innerHTML = '<option value="">Select version</option>';
+                        filenames.forEach(file => {
+                            const option = document.createElement('option');
+                            option.value = file;
+                            option.textContent = file;
+                            select.appendChild(option);
+                        });
+                    } 
+                    catch (error) 
+                    {
+                        console.error('Error fetching versions:', error);
+                        document.getElementById('versionSelect').innerHTML = `<option value="">Error fetching versions: ${error.message}</option>`;
+                    }
+                }
+
+                function submitForm(action) 
+                {
+                    const form = document.getElementById('updateForm');
+                    const select = form.elements['newVersionNr'];
+                    if (action === 'Update' && (select.value === '' || select.value === 'none')) 
+                    {
+                        alert('Please select a valid version');
+                        return;
+                    }
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = action;
+                    form.appendChild(actionInput);
+                    form.submit();
+                }
+            </script>
+        </head>
+        <body onload='fetchVersions()'>
+            <h2>Remote Update</h2>
+            <form id="updateForm" method="POST">
+                Select Version: <select id="versionSelect" name="newVersionNr"></select><br><br>
+                <button type="button" onclick='submitForm("Update")'>Update</button>
+                <button type="button" onclick='submitForm("Return")'>Return</button>
+            </form>
+        </body>
+        </html>
+            )";
+
+const char Header[] = "HTTP/1.1 303 OK\r\nLocation:FSmanager.html\r\nCache-Control: no-cache\r\n";
+
+
+//===========================================================================================
 void setupFSmanager()
 {
   httpServer.serveStatic("/FSmanager", _FSYS, "/FSmanager.html");
   httpServer.on("/format", formatFS);
+  httpServer.on("/upload", HTTP_POST, []() {}, handleFileUpload);
   httpServer.on("/listFS", listFS);
   httpServer.on("/ReBoot", reBootESP);
   httpServer.on("/local_update", HTTP_POST, sendResponce, handleLocalUpdate);  // Changed from "/upload" to "/local_update"
-  httpServer.on("/remote_update", handleRemoteUpdate);  // New route for remote update
+  httpServer.on("/RFUupdate", handleRemoteUpdate);  //-- route for remote update
+  httpServer.on("/RFUlistFirmware", RFUlistFirmware);   //-- route for list Firmware
 
   httpUpdater.setup(&httpServer);
 
@@ -311,7 +383,39 @@ bool handleFile(String &&path)
 
 } //  handleFile()
 
-// Changed function name from handleUpload to handleLocalUpdate
+
+//=====================================================================================
+void handleFileUpload()
+{
+  static File fsUploadFile;
+  HTTPUpload &upload = httpServer.upload();
+  if (upload.status == UPLOAD_FILE_START)
+  {
+    //-- Dateinamen auf 30 Zeichen kürzen
+    if (upload.filename.length() > 30)
+    {
+      upload.filename = upload.filename.substring(upload.filename.length() - 30, upload.filename.length());
+    }
+    DebugTln("FileUpload Name: " + upload.filename);
+    fsUploadFile = SPIFFS.open("/" + httpServer.urlDecode(upload.filename), "w");
+  }
+  else if (upload.status == UPLOAD_FILE_WRITE)
+  {
+    DebugTln("FileUpload Data: " + (String)upload.currentSize);
+    if (fsUploadFile)
+      fsUploadFile.write(upload.buf, upload.currentSize);
+  }
+  else if (upload.status == UPLOAD_FILE_END)
+  {
+    if (fsUploadFile)
+      fsUploadFile.close();
+    DebugTln("FileUpload Size: " + (String)upload.totalSize);
+    httpServer.sendContent(Header);
+  }
+
+} // handleFileUpload()
+
+
 //===========================================================================================
 void handleLocalUpdate()
 {
@@ -364,124 +468,207 @@ void handleLocalUpdate()
     //-- poke WatchDog
     pulseHeart(true);
   }
-}
+} // handleLocalUpdate()
 
-// New function to handle remote update
+
 //===========================================================================================
-void handleRemoteUpdate()
+// Custom reverse string search function
+const char* reverse_strstr(const char* haystack, const char* needle, const char* haystack_end) 
 {
-  char updateServer[100] = {};
-  if (httpServer.method() == HTTP_GET) 
+  size_t needle_len = strlen(needle);
+  const char* p;
+
+  if (needle_len == 0) 
   {
-    // Fetch file list from the URL
-    HTTPClient http;
-    http.begin("https://www.aandewiel.nl/updates/DSMRlogger32/");
-    int httpCode = http.GET();
-    
-    String options = "<option value=''>Select version</option>";
-    if (httpCode > 0) 
+    return haystack_end;
+  }
+
+  for (p = haystack_end - needle_len; p >= haystack; --p) 
+  {
+    if (strncmp(p, needle, needle_len) == 0) 
     {
-      String htmlContent = http.getString();
-      String fileNames[10]; // Assuming max 10 files, adjust if needed
-      int fileCount = 0;
-      int pos = 0;
-      while ((pos = htmlContent.indexOf(".bin", pos)) != -1 && fileCount < 10) 
+      return p;
+    }
+  }
+
+  return NULL;
+} // reverse_strstr()
+
+
+//===========================================================================================
+void RFUlistFirmware() 
+{
+  uint8_t nrVersions = 0;
+
+  DebugTln("RFUlistFirmware() .. ");
+  DebugTf("Looking for Firmware in [%s]\r\n", _REMOTE_UPDATESERVER);
+
+  HTTPClient http;
+  http.begin(_REMOTE_UPDATESERVER);
+  int httpCode = http.GET();
+  
+  DynamicJsonDocument doc(1024);
+  JsonArray fileArray = doc.to<JsonArray>();
+  
+  if (httpCode > 0) 
+  {
+    int contentLength = http.getSize();
+    if (contentLength > 0) 
+    {
+      char* htmlContent = (char*)malloc(contentLength + 1);
+      if (htmlContent) 
       {
-        int hrefPos = htmlContent.lastIndexOf("href=\"", pos);
-        if (hrefPos != -1 && hrefPos < pos) {
-          int startPos = hrefPos + 6; // Move past 'href="'
-          int endPos = htmlContent.indexOf("\"", startPos);
-          if (endPos != -1 && endPos > startPos) 
+        int bytesRead = http.getStream().readBytes(htmlContent, contentLength);
+        htmlContent[bytesRead] = '\0'; // Null-terminate the string
+
+        const char* pos = htmlContent;
+        const char* htmlEnd = htmlContent + bytesRead;
+        while ((pos = strstr(pos, ".bin")) != NULL) 
+        {
+          const char* hrefPos = reverse_strstr(htmlContent, "href=\"", pos);
+          if (hrefPos != NULL && hrefPos < pos) 
           {
-            String fileName = htmlContent.substring(startPos, endPos);
-            if (fileName.endsWith(".bin")) 
+            const char* startPos = hrefPos + 6; // Move past 'href="'
+            const char* endPos = strchr(startPos, '"');
+            if (endPos != NULL && endPos > startPos) 
             {
-              // Check for duplicates
-              bool isDuplicate = false;
-              for (int i = 0; i < fileCount; i++) 
+              char fileName[256];
+              size_t fileNameLen = endPos - startPos;
+              if (fileNameLen < sizeof(fileName)) 
               {
-                if (fileNames[i] == fileName) 
+                strncpy(fileName, startPos, fileNameLen);
+                fileName[fileNameLen] = '\0';
+                if (strstr(fileName, ".bin") == fileName + strlen(fileName) - 4) 
                 {
-                  isDuplicate = true;
-                  break;
+                  // Check for duplicates
+                  bool isDuplicate = false;
+                  for (JsonVariant v : fileArray) 
+                  {
+                    if (strcmp(v.as<const char*>(), fileName) == 0) 
+                    {
+                      isDuplicate = true;
+                      break;
+                    }
+                  }
+                  if (!isDuplicate) 
+                  {
+                    fileArray.add(fileName);
+                    nrVersions++;
+                  }
                 }
-              }
-              if (!isDuplicate) 
-              {
-                fileNames[fileCount] = fileName;
-                fileCount++;
               }
             }
           }
+          pos += 4; // Move past ".bin"
         }
-        pos += 4; // Move past ".bin"
+        free(htmlContent);
       }
-      
-      // Create options string
-      for (int i = 0; i < fileCount; i++) 
+      else 
       {
-        options += "<option value='" + fileNames[i] + "'>" + fileNames[i] + "</option>";
+        DebugTln("Memory allocation failed");
+        fileArray.add("Memory allocation failed");
       }
-      
-      if (fileCount == 0) 
-      {
-        options = "<option value=''>none</option>";
-      }
+    }
+    else 
+    {
+      DebugTln("Empty content received");
+      fileArray.add("Empty content received");
+    }
+  } 
+  else 
+  {
+    DebugTln("Error fetching versions ...");
+    fileArray.add("Error fetching versions");
+  }
+  http.end();
+
+  if (nrVersions == 0)
+  {
+    DebugTln("No Updates found ...");
+    fileArray.add("No Updates Found");
+  }
+
+  serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
+  DebugTln(jsonBuff);
+  httpServer.send(200, "application/json", jsonBuff);
+
+} // RFUlistFirmware()
+
+//===========================================================================================
+void handleRemoteUpdate()
+{
+  bool SPIFFSfile = false;
+  File file;
+  char updateServer[100] = {};
+  DebugTln("handleRemoteUpdate() ...");
+
+  if (httpServer.method() == HTTP_GET) 
+  {
+    // Probeer het HTML-bestand te openen vanaf SPIFFS
+    DebugTln("check SPIFFS for [/DSMRemoteUpd.html] page ...");
+    if (_FSYS.exists("/DSMRemoteUpd.html")) 
+    {
+      file = _FSYS.open("/DSMRemoteUpd.html", "r");
+      SPIFFSfile = true;
     } 
     else 
     {
-      options = "<option value=''>Error fetching versions</option>";
+      DebugTln("File not found");
+      SPIFFSfile = false;
     }
-    http.end();
+    
+    if (!SPIFFSfile) 
+    {
+      // Als het bestand niet gevonden wordt, geef een foutmelding terug
+      DebugTln("File not found, serving hardcoded page");
+      // Static fallback HTML
+      httpServer.send(200, "text/html", RFUindexHtml);
+    } 
+    else 
+    {
+      // Als het bestand bestaat, stream het naar de client
+      DebugTln("YES! File found, serving SPIFFS page");
+      size_t fileSize = file.size();
+      // Allocate buffer on the heap
+      char* buffer = new char[fileSize + 1]; // +1 for null-termination
+      file.readBytes(buffer, fileSize);
+      buffer[fileSize] = '\0';  // Null-terminate the string
+      if (Verbose2) {DebugTf("File size: %d bytes\r\n\n%s\r\n", fileSize, buffer);}
+      
+      // Send the file contents as response
+      httpServer.setContentLength(fileSize);
+      httpServer.send(200, "text/html", buffer);
 
-    // Display the HTML form with JavaScript and dropdown
-    String html = "<html>"
-                  "<head>"
-                  "<script>"
-                  "function submitForm(action) {"
-                  "  var form = document.getElementById('updateForm');"
-                  "  var select = form.elements['newVersionNr'];"
-                  "  if (action === 'Update' && (select.value === '' || select.value === 'none')) {"
-                  "    alert('Please select a valid version');"
-                  "    return;"
-                  "  }"
-                  "  var actionInput = document.createElement('input');"
-                  "  actionInput.type = 'hidden';"
-                  "  actionInput.name = 'action';"
-                  "  actionInput.value = action;"
-                  "  form.appendChild(actionInput);"
-                  "  form.submit();"
-                  "}"
-                  "</script>"
-                  "</head>"
-                  "<body>"
-                  "<h2>Remote Update</h2>"
-                  "<form id='updateForm' method='POST'>"
-                  "Select Version: <select name='newVersionNr'>" + options + "</select><br><br>"
-                  "<button type='button' onclick='submitForm(\"Update\")'>Update</button>"
-                  "<button type='button' onclick='submitForm(\"Return\")'>Return</button>"
-                  "</form>"
-                  "</body>"
-                  "</html>";
-    httpServer.send(200, "text/html", html);
+      // Clean up
+      delete[] buffer;
+    }
+    file.close();  // Close the file after streaming
   } 
   else if (httpServer.method() == HTTP_POST) 
   {
-    String newVersionNr = httpServer.arg("newVersionNr");
-    String action = httpServer.arg("action");
+    char newVersionNr[32] = {};
+    char action[16] = {};
     
-    String message;
-    if (action == "Update") 
+    strlcpy(newVersionNr, httpServer.arg("newVersionNr").c_str(), sizeof(newVersionNr));
+    strlcpy(action, httpServer.arg("action").c_str(), sizeof(action));
+    
+    if (strncmp(action, "Update", 6) == 0) 
     {
-      DebugTf("Update requested. New version: %s\r\n", newVersionNr.c_str());
-      message = "Update requested. New version: " + newVersionNr;
-      snprintf(updateServer, sizeof(updateServer), "https://www.aandewiel.nl/updates/DSMRlogger32/%s", newVersionNr.c_str());
-            
+      DebugTf("Update requested. New version: %s\r\n", newVersionNr);
+      if (strncmp(newVersionNr, "No Updates Found", 16) == 0)
+      {
+        DebugTf("(%s) No Firmware Update!\r\n", __FUNCTION__);
+        doRedirect("Wait for redirect ...", 5, "/FSmanager.html", false);
+        return;
+      }
+//      char message[64];
+//      snprintf(message, sizeof(message), "Update requested. New version: %s", newVersionNr);
+      snprintf(updateServer, sizeof(updateServer), "%s/%s", _REMOTE_UPDATESERVER, newVersionNr);
+      
       UpdateManager updateManager;
 
       DebugTf("(%s) Starting Firmware upload!\r\n", __FUNCTION__);
       doRedirect("Wait for update to complete ...", 120, "/", false);
-      DebugTln("After 'doRedirect()' ..");
       //-- Shorthand
       updateManager.updateFirmware(updateServer, [](u_int8_t progress) 
       {
@@ -509,28 +696,14 @@ void handleRemoteUpdate()
         delay(3000);
       }
     }
-    else if (action == "Return") 
+    else if (strncmp(action, "Return", 6) == 0) 
     {
       DebugTln("Return requested. No update performed.");
-      message = "Return requested. No update performed.";
     }
-    
-    String response = "<html><body>"
-                      "<h2 id='message'>" + message + "</h2>"
-                      "<script>"
-                      "setTimeout(function() {"
-                      "  document.getElementById('message').innerText = 'Redirecting...';"
-                      "  setTimeout(function() {"
-                      "    window.location.href = '/FSmanager.html';"
-                      "  }, 1000);"
-                      "}, 2000);"
-                      "</script>"
-                      "</body></html>";
-    
-    httpServer.send(200, "text/html", response);
+    doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
   }
-}
 
+} //  handleRemoteUpdate()
 
 //===========================================================================================
 void formatFS()      // Formatiert das Filesystem

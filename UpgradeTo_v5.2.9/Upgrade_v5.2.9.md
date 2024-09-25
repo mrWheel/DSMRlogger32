@@ -25,11 +25,16 @@ Alleen de folder `UpgradeTo_v5.2.9`is van belang.
 ## voer nu de volgende stappen één voor één en in deze volgorde uit
 *  Start de FSmanager (het icoontje van het *Filing Cabinet*)
 *  Download de drie `RING-bestanden` naar je computer.
-*  Sluit de DSMRlogger32 nog even niet aan op je computer
-*  In een ***Command Window*** toets je in:
+*  Download eventueel het `DSMRdevSettings.json` bestand naar je computer.
+*  Sluit de DSMRlogger32 nog even niet aan op je computer.
+*  Start een ***Command Window***
+*  Zorg dat je in de map `UpgradeTo_v5.2.9` staat (`cd`)
+*  Nu toets je in:
 ```
            python3 Upgrade_v5.2.9.py <COM poort>
 ```
+<space>   Je moet &lt;COM poort&gt; uiteraard vervangen door de poort waar de DSMRlogger32 op is (wordt) aangesloten)
+
 <space>    De uitvoer die je nu ziet moet er ongeveer zo uitzien:
 ```
       python3 Upgrade_v5.2.9.py /dev/cu.usbserial-3224142
@@ -118,9 +123,12 @@ Alleen de folder `UpgradeTo_v5.2.9`is van belang.
 ```
 <space>      De DSMRlogger32 zal nu opnieuw opstarten met de nieuwe Firmware!
 *  Upload de drie bewaarde `RING-bestanden`
+*  Upload eventueel het `DSMRdevSettings.json` bestand
 *  ReBoot de DSMRlogger32
 
 In de GUI kun je zien dat de Fimware v5.2.9 aktief is.
+
+![Screenshot 2024-09-25 at 15 28 02](https://github.com/user-attachments/assets/ee61d6a7-fb1d-4bea-9db8-522707e0b86c)
 
 Om de (nieuwe) functionaliteit te testen ga je weer naar de FSmanager
 
@@ -137,4 +145,4 @@ Wacht nu af tot de DSMRlogger32 geReboot is.
 
 ![Wait4UpdateComplete](https://github.com/user-attachments/assets/1796d7c6-e05b-4290-b7aa-663da387dbd5)
 
-      
+Kijk in de GUI of de juiste firmware nu gebruikt wordt.

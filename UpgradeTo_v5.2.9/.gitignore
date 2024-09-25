@@ -5,6 +5,7 @@
 .vscode/launch.json
 .vscode/ipch
 build
+**changes
 **update.txt
 __pycache__
 venv

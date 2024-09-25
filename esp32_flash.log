@@ -1,0 +1,15 @@
+2024-09-25 12:54:37,247 - ESP32_Flasher - INFO - Starting ESP32 flashing process for port: /dev/cu.usbserial-3224142
+2024-09-25 12:54:37,247 - ESP32_Flasher - INFO - Working directory: /Users/WillemA/Documents/platformioProjects/DSMRlogger32/DSMRlogger32/UpgradeTo_v5.3.0/../UpgradeTo_v5.3.0
+2024-09-25 12:54:37,247 - ESP32_Flasher - INFO - Executing command: /usr/local/opt/python@3.12/bin/python3.12 esptool.py --chip esp32 --port /dev/cu.usbserial-3224142 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware_v5.2.9.bin 0x3D0000 spiffs_v5.2.9.bin
+2024-09-25 12:54:37,316 - ESP32_Flasher - ERROR - Error flashing ESP32: Command '['/usr/local/opt/python@3.12/bin/python3.12', 'esptool.py', '--chip', 'esp32', '--port', '/dev/cu.usbserial-3224142', '--baud', '921600', '--before', 'default_reset', '--after', 'hard_reset', 'write_flash', '-z', '--flash_mode', 'dio', '--flash_freq', '80m', '--flash_size', 'detect', '0x1000', 'bootloader.bin', '0x8000', 'partitions.bin', '0x10000', 'firmware_v5.2.9.bin', '0x3D0000', 'spiffs_v5.2.9.bin']' returned non-zero exit status 1.
+2024-09-25 12:54:37,317 - ESP32_Flasher - DEBUG - Command output:
+
+2024-09-25 12:54:37,317 - ESP32_Flasher - INFO - ESP32 flashing process completed.
+2024-09-25 12:55:34,696 - ESP32_Flasher - INFO - Starting ESP32 flashing process for port: /dev/cu.usbserial-3224142
+2024-09-25 12:55:34,697 - ESP32_Flasher - INFO - Working directory: /Users/WillemA/Documents/platformioProjects/DSMRlogger32/DSMRlogger32/UpgradeTo_v5.3.0
+2024-09-25 12:55:34,697 - ESP32_Flasher - INFO - Executing command: /usr/local/opt/python@3.12/bin/python3.12 esptool.py --chip esp32 --port /dev/cu.usbserial-3224142 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware_v5.2.9.bin 0x3D0000 spiffs_v5.2.9.bin
+2024-09-25 12:55:34,782 - ESP32_Flasher - ERROR - Error flashing ESP32: Command '['/usr/local/opt/python@3.12/bin/python3.12', 'esptool.py', '--chip', 'esp32', '--port', '/dev/cu.usbserial-3224142', '--baud', '921600', '--before', 'default_reset', '--after', 'hard_reset', 'write_flash', '-z', '--flash_mode', 'dio', '--flash_freq', '80m', '--flash_size', 'detect', '0x1000', 'bootloader.bin', '0x8000', 'partitions.bin', '0x10000', 'firmware_v5.2.9.bin', '0x3D0000', 'spiffs_v5.2.9.bin']' returned non-zero exit status 1.
+2024-09-25 12:55:34,782 - ESP32_Flasher - DEBUG - Command output:
+
+2024-09-25 12:55:34,782 - ESP32_Flasher - INFO - ESP32 flashing process completed.
+2024-09-25 12:55:34,783 - ESP32_Flasher - INFO - Log file created at: /Users/WillemA/Documents/platformioProjects/DSMRlogger32/DSMRlogger32/UpgradeTo_v5.3.0/esp32_flash.log

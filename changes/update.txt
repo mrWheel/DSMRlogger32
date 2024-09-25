@@ -1,0 +1,90 @@
+Changes to Upgrade_v5.3.0.py:
+
+1. Removed directory change operation.
+2. Updated file paths to use relative paths within the 'UpgradeTo_v5.3.0' folder.
+3. Updated the flash_esp32 function to work with the current directory structure.
+
+Updated Upgrade_v5.3.0.py content:
+
+import sys
+import os
+import subprocess
+import logging
+
+def setup_logger():
+    logger = logging.getLogger('ESP32_Flasher')
+    logger.setLevel(logging.DEBUG)
+    
+    # Create console handler
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    
+    # Create formatter and add it to the handler
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    
+    # Add the handler to the logger
+    logger.addHandler(ch)
+    
+    return logger
+
+def flash_esp32(port, logger):
+    logger.info(f"Working directory: {os.getcwd()}")
+
+    # Check if all required files exist
+    required_files = [
+        'bootloader.bin',
+        'esptool.py',
+        'firmware_v5.2.9.bin',
+        'partitions.bin',
+        'spiffs_v5.2.9.bin'
+    ]
+    for file in required_files:
+        if not os.path.exists(file):
+            logger.error(f"Error: {file} not found in {os.getcwd()}")
+            return
+
+    # Flashing command
+    cmd = [
+        sys.executable,
+        'esptool.py',
+        '--chip', 'esp32',
+        '--port', port,
+        '--baud', '230400',
+        '--before', 'default_reset',
+        '--after', 'hard_reset',
+        'write_flash', '-z',
+        '--flash_mode', 'dio',
+        '--flash_freq', '80m',
+        '--flash_size', 'detect',
+        '0x1000', 'bootloader.bin',
+        '0x8000', 'partitions.bin',
+        '0x10000', 'firmware_v5.2.9.bin',
+        '0x3D0000', 'spiffs_v5.2.9.bin'
+    ]
+
+    logger.info(f"Executing command: {' '.join(cmd)}")
+
+    try:
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        logger.info("ESP32 flashed successfully!")
+        logger.debug(f"Command stdout:\n{result.stdout}")
+        logger.debug(f"Command stderr:\n{result.stderr}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error flashing ESP32: {e}")
+        logger.debug(f"Command stdout:\n{e.stdout}")
+        logger.debug(f"Command stderr:\n{e.stderr}")
+
+if __name__ == "__main__":
+    logger = setup_logger()
+    
+    if len(sys.argv) != 2:
+        logger.error("Usage: python Upgrade_v5.3.0.py <serial_port>")
+        sys.exit(1)
+    
+    serial_port = sys.argv[1]
+    logger.info(f"Starting ESP32 flashing process for port: {serial_port}")
+    flash_esp32(serial_port, logger)
+    logger.info("ESP32 flashing process completed.")
+
+Note: Ensure that all required files (bootloader.bin, esptool.py, firmware_v5.2.9.bin, partitions.bin, spiffs_v5.2.9.bin) are present in the same directory as Upgrade_v5.3.0.py.

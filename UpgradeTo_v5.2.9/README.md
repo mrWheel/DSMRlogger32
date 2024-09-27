@@ -18,8 +18,20 @@ Voor de upgrade heb je het programma `Upgrade_v5.2.9.py` nodig, dat is geschreve
 Daarnaast heb je een **FTDI**- of een **USB naar seriële**-kabel nodig om de DSMRlogger32 op je computer aan te sluiten. Er zijn verschillende kabels beschikbaar en de prijzen kunnen sterk variëren. Het is daarom verstandig om even onderzoek te doen naar welke kabel voor jou het meest geschikt is.
 
 **Let er wél op dat het een bordje of kabel is voor 3.3 volt (3v3) anders kun je de DSMRlogger32 beschadigen.**
-
-<plaatjes>
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/d6805e39-ade9-483e-86ab-36b01dbc8c08" alt="Screenshot" width="300" /></td>
+    <td>FTDI kabel<br>Let erop dat de aansluitingen overeenkomen met die van de DSMRlogger32</td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/e75c3f27-0207-47ec-b9bc-96043f2fdd75" alt="Kabel2" width="300" /> </td>
+   <td>USB naar TTL-Seriële kabel<br>Vcc hoeft niet te worden aangesloten<br>Alleen GND, TX en RX aansluiten</td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/a1290a11-28c9-411c-b0a3-dfec98c60c2c" alt="Kabel3" width="300" /> </td>
+    <td>FTDI bordje<br>Let erop dat de aansluitingen overeenkomen met die van de DSMRlogger32</td>
+  </tr>
+</table>
 
 Een FTDI **3v3** kabel of bordje is aanbevolen. Hiermee wordt de DSMRlogger32 automatisch in de juiste flash mode gezet door het programma `Upgrade_v5.2.9.py`. Als je een *FTDI*- of *USB naar TTL*-kabel gebruikt die dit niet automatisch doet, zoals *USB naar TTL*-kabels met drie of vier aansluitingen, kun je de volgende foutmelding krijgen:
 ```

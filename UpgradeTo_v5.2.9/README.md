@@ -162,21 +162,21 @@ DSMRlogger32_Flasher - INFO - DSMRlogger32 flashing process completed.
 
 In de GUI kun je nu zien dat firmware versie v5.2.9 actief is.
 
-![Screenshot 2024-09-25 at 15 28 02](https://github.com/user-attachments/assets/ee61d6a7-fb1d-4bea-9db8-522707e0b86c)
+<img src="https://github.com/user-attachments/assets/ee61d6a7-fb1d-4bea-9db8-522707e0b86c"  alt="GUI Versie" width="800" />
 
 Om de nieuwe functionaliteit te testen, ga je terug naar de FSmanager.
 
-![UpdateRemote_Button](https://github.com/user-attachments/assets/728f35e3-c8d9-41c7-a2c1-9ad37167232e)
+<img src="https://github.com/user-attachments/assets/728f35e3-c8d9-41c7-a2c1-9ad37167232e"  alt="FSmanager" width="800" />
 
 Klik nu op de knop [Update Remote].<br>
 In het scherm dat verschijnt, selecteer je de gewenste versie van de firmware.
 
-![UpdateRemote](https://github.com/user-attachments/assets/7d34b2e0-8e21-4627-a104-1c31d218b7fe)
+<img src="https://github.com/user-attachments/assets/7d34b2e0-8e21-4627-a104-1c31d218b7fe"  alt="Remote Update" width="800" />
 
 (In dit geval **v5.3.0**), waarna je op [Update] klikt.
 
 Wacht tot de DSMRlogger32 opnieuw is opgestart.
 
-![Wait4UpdateComplete](https://github.com/user-attachments/assets/1796d7c6-e05b-4290-b7aa-663da387dbd5)
+<img src="https://github.com/user-attachments/assets/1796d7c6-e05b-4290-b7aa-663da387dbd5"  alt="Wait a bit.." width="600" />
 
 Controleer in de GUI of de juiste firmware nu actief is.

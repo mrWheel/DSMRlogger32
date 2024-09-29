@@ -391,6 +391,12 @@ void handleFileUpload()
   HTTPUpload &upload = httpServer.upload();
   if (upload.status == UPLOAD_FILE_START)
   {
+    //-- Datei geselecteerd
+    if (upload.filename.length() < 2)
+    {
+      DebugTln("No file selected! Abort.");
+      return;
+    }
     //-- Dateinamen auf 30 Zeichen kürzen
     if (upload.filename.length() > 30)
     {

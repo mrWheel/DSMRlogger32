@@ -205,6 +205,7 @@ char actualArray[][35] = { "timestamp"
                            , "mbus2_delivered"
                            , "mbus3_delivered"
                            , "mbus4_delivered"
+                           , "relay_state"
                            , "\0"
                          };
 

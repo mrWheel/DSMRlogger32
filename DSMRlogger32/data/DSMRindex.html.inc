@@ -36,6 +36,10 @@
       <a id='bFieldsTab'    class='nav-item tabButton'>all Fields</a>
       <a id='bSysInfoTab'   class='nav-item tabButton'>Systeem Info</a>
       <a id='bAPIdocTab'    class='nav-item tabButton'>API Docs</a>
+                         <!-- gauge.svg -->
+      <a id='bGauges' class='nav-img'  href="/DSMRgauges.html">
+        <img src="/DSMRgauges.png" alt="gauges" style="width:20px; height:20px;">
+      </a>
                <!-- https://www.compart.com/en/unicode/category/So -->
                          <!-- other symbol, File Cabinet -->
       <a id='FSmanager'     class='nav-img'>&#128452; &nbsp;</a>

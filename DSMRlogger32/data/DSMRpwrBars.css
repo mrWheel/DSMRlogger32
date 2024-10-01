@@ -44,6 +44,9 @@ body {
 }
 
 .nav-container {
+  display: flex;
+  justify-content: space-between; /* Space between left and right */
+  align-items: center;        /* Align items vertically */
   background: #00bffe;
   padding: 10px;
 }
@@ -59,9 +62,21 @@ body {
   color: black;
 }
 
+.nav-left {
+  display: flex;              /* Flex container for left items */
+  align-items: center;        /* Center items vertically */
+  flex-wrap: nowrap;          /* Prevent wrapping */
+}
+
+
 .nav-left label {
   color: white;
   margin-left: 15px;
+}
+
+#relayState {
+  margin-left: auto;          /* This pushes relayState to the far right */
+  color: rgb(145, 236, 10);               /* Text color for relay state */
 }
 
 .pwrbar-container {

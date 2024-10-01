@@ -8,6 +8,7 @@ let pwrBars = [];
 let currentUnit = 'Amps';
 let refreshTimer = UPDATE_INTERVAL
 let refreshInterval; // Store the interval ID globally
+let relayState = 0;
 let maxNetPower = 0;
 let barLength = 0; // Variable to store the calculated bar length
 let containerPadding = 20; // Padding on each side of the bar container
@@ -200,6 +201,19 @@ function fetchData()
       .then(json => {
           console.log('Received data:', json);
           const data = json.actual;
+          prevState = relayState;
+          relayState = data[`relay_state`] || 0;
+          if (relayState === 1)
+          {
+            if (prevState != relayState)  console.log('Relay is On');
+            document.getElementById('relayState').innerText = 'Relay is On';
+          }
+          else
+          {
+            if (prevState != relayState)  console.log('Relay is Off');
+            document.getElementById('relayState').innerText = '';
+          }
+          //console.log(`Relay state: ${relayState}`);
           let maxPower = 0;
           for (let i = 1; i <= PHASES; i++) 
           {

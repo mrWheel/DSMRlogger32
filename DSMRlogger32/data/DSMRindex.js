@@ -90,6 +90,10 @@
                                                 { console.log("newTab: goFSmanager");
                                                   location.href = "/FSmanager.html";
                                                 });
+    document.getElementById('bPwrBars').addEventListener('click',function() 
+                                                { console.log("Event: goDSMRpwrBars");
+                                                  location.href = "/DSMRpwrBars.html";
+                                                });
     document.getElementById('Settings').addEventListener('click',function() 
                                                 {openPage('settingsPage');});
     

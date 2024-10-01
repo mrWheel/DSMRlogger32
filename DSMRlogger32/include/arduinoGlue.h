@@ -281,6 +281,7 @@ struct actualDataStruct
   float     power_returned_l2;
   float     power_returned_l3;
   float     gas_delivered;
+  uint8_t   relay_state;  //-- 1=on, 0=off
 };
 
 //-- from DSMRlogger32.h

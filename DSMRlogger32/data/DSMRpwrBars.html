@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.ico">
+    <title>kW trend</title>
+    <link href="https://fonts.googleapis.com/css?family=Dosis:400,700" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="DSMRpwrBars.css">
+</head>
+<body>
+    <font face="Arial">
+      <div class="header">
+          <h1>
+              <span id="sysName">DSMR-logger32</span> &nbsp; &nbsp; &nbsp;
+              <span id="devName" style='font-size: small;'>-</span> &nbsp;
+              <span id="devVersion" style='font-size: small;'>[version]</span>
+              <span id="source" style='font-size: small;'> &nbsp; &nbsp; </span>
+              <span id='theTime' class='nav-clock'>00:00</span>
+          </h1>
+      </div>
+    </font>
+  
+    <div class="nav-container">
+        <div class='nav-left'>
+            <a id='bReturn' class='nav-item tabButton'>Return</a>
+            &nbsp; &nbsp; &nbsp; Units: 
+            <label>
+                <input type="radio" name="displayUnit" value="Amps" checked> Ampères
+            </label>
+            <label>
+                <input type="radio" name="displayUnit" value="Watts"> Watts
+            </label>
+            &nbsp; &nbsp; &nbsp; Refresh time:
+            <label>
+              <input type="radio" name="refreshTime" value="5000" checked> 5 sec.
+          </label>
+          <label>
+              <input type="radio" name="refreshTime" value="2000"> 2 sec.
+          </label>
+        </div>
+        <div id='relayState' class='nav-item tabButton'>-</div>    
+    </div>
+
+    <div class="pwrbar-container">
+        <div class="pwrbar" id="pwrbar-1">
+            <h2>Phase 1</h2>
+            <div class="bar-container">
+                <div class="scale"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="value">0 A</div>
+        </div>
+        <div class="pwrbar" id="pwrbar-2">
+            <h2>Phase 2</h2>
+            <div class="bar-container">
+                <div class="scale"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="value">0 A</div>
+        </div>
+        <div class="pwrbar" id="pwrbar-3">
+            <h2>Phase 3</h2>
+            <div class="bar-container">
+                <div class="scale"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="value">0 A</div>
+        </div>
+        <div class="pwrbar" id="pwrbar-total">
+            <h2>Total</h2>
+            <div class="bar-container">
+                <div class="scale"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="value">0 A</div>
+        </div>
+    </div>
+
+    <script src="DSMRpwrBars.js"></script>
+</body>
+</html>

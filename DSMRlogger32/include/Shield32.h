@@ -20,6 +20,7 @@ class Shield32
         void setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, uint32_t onDelay, uint32_t offDelay);
         void loop(int actualValue);
         void flipSwitch();
+        bool getRelayState();
 
     private:
         static int customTelnetVprintf(const char* fmt, va_list args);

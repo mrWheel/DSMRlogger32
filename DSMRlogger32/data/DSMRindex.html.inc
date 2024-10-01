@@ -36,13 +36,20 @@
       <a id='bFieldsTab'    class='nav-item tabButton'>all Fields</a>
       <a id='bSysInfoTab'   class='nav-item tabButton'>Systeem Info</a>
       <a id='bAPIdocTab'    class='nav-item tabButton'>API Docs</a>
+     <!-- pwrbar.svg 
+      <a id='bGauges' class='nav-img'  href="/DSMRpwrBars.html">
+        <img src="/DSMRgauges.png" alt="gauges" style="width:20px; height:20px;">
+      </a>
+    -->
                <!-- https://www.compart.com/en/unicode/category/So -->
+                         <!-- other symbol, Trigram for Heaven -->
+      <a id='bPwrBars'    class='nav-img' style='font-size: 2em; vertical-align: -55px;'>&#9776; &nbsp;</a>
                          <!-- other symbol, File Cabinet -->
-      <a id='FSmanager'     class='nav-img'>&#128452; &nbsp;</a>
+      <a id='FSmanager'   class='nav-img'>&#128452; &nbsp;</a>
                          <!-- other symbol, Pick -->
-      <a id='Settings'      class='nav-img'>&#9935; &nbsp;</a>
+      <a id='Settings'    class='nav-img'>&#9935; &nbsp;</a>
                          <!-- other symbol, Page with Curl -->
-      <a id='bSyslogTab'    class='nav-img'>&#128195; &nbsp;</a>
+      <a id='bSyslogTab'  class='nav-img'>&#128195; &nbsp;</a>
 
     </div>
   </div>

@@ -355,6 +355,7 @@ void sendDeviceInfo()
   char compileOptions[200] = "";
   char theTime[20] = {0};
 
+  DebugTln("/api/v2/dev/info");
   snprintf(theTime, sizeof(theTime), "%02d-%02d-%04d %02d:%02d:%02d"
                                                     , localtime(&now)->tm_mday
                                                     , localtime(&now)->tm_mon 
@@ -444,7 +445,7 @@ void sendDeviceInfo()
   doc["devinfo"]["reboots"]         = (int)nrReboots;
   doc["devinfo"]["last_reset_cpu0"] = lastResetCPU0;
   doc["devinfo"]["last_reset_cpu1"] = lastResetCPU1;
-  //rtc_get_reset_reason(0)
+  
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   //-dbg-DebugTln(jsonBuff);
 
@@ -780,6 +781,7 @@ void sendJsonV2smApi(const char *firstLevel)
   if (strcmp(firstLevel, "actual") == 0)
   {
     addToTable("gas_delivered", gasDelivered);
+    addToTable("relay_state", myShield.getRelayState());
   }
   //-- Allocate the JsonDocument
   SpiRamJsonDocument  doc(3000);
@@ -861,9 +863,7 @@ void sendJsonActualHist()
     if ( strlen(actualStore[s].timestamp) < 12) { continue; }
     //-- built JSON string ..
     snprintf(cRecnr, sizeof(cRecnr), "%d", i);
-    //JsonObject recNr = doc["store"][cRecnr].createNestedObject();
     JsonObject nestedRec = doc["store"][cRecnr].createNestedObject();
-    //JsonObject nestedRec = recNr["actual"].createNestedObject();
     nestedRec["actual"]["timestamp"]          = actualStore[s].timestamp;
     nestedRec["actual"]["power_delivered_l1"] = round3(actualStore[s].power_delivered_l1);
     nestedRec["actual"]["power_delivered_l2"] = round3(actualStore[s].power_delivered_l2);

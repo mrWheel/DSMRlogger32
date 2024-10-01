@@ -3,8 +3,11 @@
 
 //============ Includes ====================
 #include "arduinoGlue.h"
+#include "Shield32.h"
 
 DECLARE_TIMER_EXTERN(antiWearTimer);
+
+extern Shield32 myShield;
 
 //============ Prototypes ==================
 void processApiV2Sm(const char* apiId, const char* oneField);

@@ -186,6 +186,16 @@ void Shield32::loop(int actualValue)
 
 
 //--------------------------------------------------------------------------------------------
+bool Shield32::getRelayState()
+{
+  if (digitalRead(Shield32::_pinNr) == Shield32::_HIGH)
+        return 1;
+  else  return 0;
+
+} // flipSwitch()flipSwitch()
+
+
+//--------------------------------------------------------------------------------------------
 void Shield32::flipSwitch()
 {
   Shield32::_mustFlip = true;

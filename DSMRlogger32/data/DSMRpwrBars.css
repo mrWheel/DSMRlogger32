@@ -104,6 +104,23 @@ body {
   color: white;
   text-align: center;
 }
+.pwrbar h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+.pwrbar h2 .phase-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.voltage, .alternate-unit {
+  font-size: 0.8em;
+  padding-left: 20px;
+  padding-right: 20px;
+  color: white;
+}
 
 .bar-container {
   height: 40px;

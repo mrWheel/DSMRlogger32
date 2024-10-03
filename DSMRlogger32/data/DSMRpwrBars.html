@@ -8,6 +8,25 @@
     <title>kW trend</title>
     <link href="https://fonts.googleapis.com/css?family=Dosis:400,700" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="DSMRpwrBars.css">
+    <!--
+    <style>
+        .pwrbar h2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        .pwrbar h2 .phase-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .voltage, .alternate-unit {
+            font-size: 0.8em;
+            color: white;
+        }
+    </style>
+  -->
 </head>
 <body>
     <font face="Arial">
@@ -45,7 +64,7 @@
 
     <div class="pwrbar-container">
         <div class="pwrbar" id="pwrbar-1">
-            <h2>Phase 1</h2>
+            <h2><span class="alternate-unit"></span><span class="phase-text">Fase 1</span><span class="voltage"></span></h2>
             <div class="bar-container">
                 <div class="scale"></div>
                 <div class="bar"></div>
@@ -53,7 +72,7 @@
             <div class="value">0 A</div>
         </div>
         <div class="pwrbar" id="pwrbar-2">
-            <h2>Phase 2</h2>
+            <h2><span class="alternate-unit"></span><span class="phase-text">Fase 2</span><span class="voltage"></span></h2>
             <div class="bar-container">
                 <div class="scale"></div>
                 <div class="bar"></div>
@@ -61,7 +80,7 @@
             <div class="value">0 A</div>
         </div>
         <div class="pwrbar" id="pwrbar-3">
-            <h2>Phase 3</h2>
+            <h2><span class="alternate-unit"></span><span class="phase-text">Fase 3</span><span class="voltage"></span></h2>
             <div class="bar-container">
                 <div class="scale"></div>
                 <div class="bar"></div>
@@ -69,7 +88,7 @@
             <div class="value">0 A</div>
         </div>
         <div class="pwrbar" id="pwrbar-total">
-            <h2>Total</h2>
+            <h2><span class="alternate-unit"></span><span class="phase-text">Totaal</span><span class="voltage"></span></h2>
             <div class="bar-container">
                 <div class="scale"></div>
                 <div class="bar"></div>

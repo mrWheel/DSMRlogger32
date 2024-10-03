@@ -76,29 +76,30 @@ const char HELPER[] = R"(
 )";
 
 // Display the HTML form with JavaScript and dropdown
-
 const char RFUindexHtml[] = R"(
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Remote Update</title>
+            <link rel="stylesheet" type="text/css" href="DSMRindex.css">
+            <title>DSMR-logger32  (Remote Update)</title>
             <script>
-                async function fetchVersions() 
+                async function fetchVersions(type) 
                 {
                     try 
                     {
-                        const response = await fetch('/RFUlistFirmware');
+                        const response = await fetch(type === 'firmware' ? '/RFUlistFirmware' : '/RFUlistSpiffs');
                         if (!response.ok) 
                         {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         const filenames = await response.json();
 
-                        const select = document.getElementById('versionSelect');
-                        select.innerHTML = '<option value="">Select version</option>';
-                        filenames.forEach(file => {
+                        const select = document.getElementById(type === 'firmware' ? 'firmwareSelect' : 'spiffsSelect');
+                        select.innerHTML = `<option value="">Select ${type}</option>`;
+                        filenames.forEach(file => 
+                        {
                             const option = document.createElement('option');
                             option.value = file;
                             option.textContent = file;
@@ -107,19 +108,38 @@ const char RFUindexHtml[] = R"(
                     } 
                     catch (error) 
                     {
-                        console.error('Error fetching versions:', error);
-                        document.getElementById('versionSelect').innerHTML = `<option value="">Error fetching versions: ${error.message}</option>`;
+                        console.error(`Error fetching ${type} versions:`, error);
+                        document.getElementById(type === 'firmware' ? 'firmwareSelect' : 'spiffsSelect').innerHTML = `<option value="">Error fetching ${type} versions: ${error.message}</option>`;
                     }
                 }
 
                 function submitForm(action) 
                 {
                     const form = document.getElementById('updateForm');
-                    const select = form.elements['newVersionNr'];
-                    if (action === 'Update' && (select.value === '' || select.value === 'none')) 
+                    const firmwareSelect = form.elements['firmwareVersion'];
+                    const spiffsSelect = form.elements['spiffsVersion'];
+                    if (action === 'updateFirmware' && (firmwareSelect.value === '' || firmwareSelect.value === 'none'))
                     {
-                        alert('Please select a valid version');
+                        alert('Please select a valid firmware version');
                         return;
+                    }
+                    if (action === 'updateSpiffs' && (spiffsSelect.value === '' || spiffsSelect.value === 'none')) 
+                    {
+                        alert('Please select a valid spiffs version');
+                        return;
+                    }
+                    if (action === 'updateSpiffs') 
+                    {
+                      if (!confirm('Warning: Updating SPIFFS will erase all data on it.\n' +
+                                   'Please first download:\n' +
+                                   ' - RINGhours.csv\n' +
+                                   ' - RINGdays.csv\n' +
+                                   ' - RINGmonts.csv\n' +
+                                   'and the .json files: DSMRdevSettings.json and DSMRsmSettings.json\n' +
+                                   'Are you sure you want to proceed?')) 
+                      {
+                          return;
+                      }
                     }
                     const actionInput = document.createElement('input');
                     actionInput.type = 'hidden';
@@ -130,13 +150,16 @@ const char RFUindexHtml[] = R"(
                 }
             </script>
         </head>
-        <body onload='fetchVersions()'>
-            <h2>Remote Update</h2>
+        <body onload='fetchVersions("firmware"); fetchVersions("spiffs")'>
+            <h1>DSMR-logger32  (Remote Update)</h1>
             <form id="updateForm" method="POST">
-                Select Version: <select id="versionSelect" name="newVersionNr"></select><br><br>
-                <button type="button" onclick='submitForm("Update")'>Update</button>
+                Select Firmware: <select id="firmwareSelect" name="firmwareVersion"></select> &nbsp; &nbsp; &nbsp;
+                    <button type="button" onclick='submitForm("updateFirmware")'>Update Firmware</button><br><br>
+                Select Spiffs: <select id="spiffsSelect" name="spiffsVersion"></select> &nbsp; &nbsp; &nbsp;
+                    <button type="button" onclick='submitForm("updateSpiffs")'>Update SPIFFS</button><br><br><br>
                 <button type="button" onclick='submitForm("Return")'>Return</button>
             </form>
+            <br><br>
         </body>
         </html>
             )";
@@ -154,7 +177,9 @@ void setupFSmanager()
   httpServer.on("/ReBoot", reBootESP);
   httpServer.on("/local_update", HTTP_POST, sendResponce, handleLocalUpdate);  // Changed from "/upload" to "/local_update"
   httpServer.on("/RFUupdate", handleRemoteUpdate);  //-- route for remote update
-  httpServer.on("/RFUlistFirmware", RFUlistFirmware);   //-- route for list Firmware
+  //httpServer.on("/RFUlistFiles", RFUlistFiles);     //-- route for list Firmware
+  httpServer.on("/RFUlistFirmware", []() { RFUlistFiles("firmware"); });
+  httpServer.on("/RFUlistSpiffs",   []() { RFUlistFiles("spiffs"); });
 
   httpUpdater.setup(&httpServer);
 
@@ -502,12 +527,12 @@ const char* reverse_strstr(const char* haystack, const char* needle, const char*
 
 
 //===========================================================================================
-void RFUlistFirmware() 
+void RFUlistFiles(const char* startWith) 
 {
-  uint8_t nrVersions = 0;
+  uint8_t nrFiles = 0;
 
-  DebugTln("RFUlistFirmware() .. ");
-  DebugTf("Looking for Firmware in [%s]\r\n", _REMOTE_UPDATESERVER);
+  DebugTln("RFUlistFiles() .. ");
+  DebugTf("Looking for files starting with [%s] in [%s]\r\n", startWith, _REMOTE_UPDATESERVER);
 
   HTTPClient http;
   http.begin(_REMOTE_UPDATESERVER);
@@ -544,7 +569,8 @@ void RFUlistFirmware()
               {
                 strncpy(fileName, startPos, fileNameLen);
                 fileName[fileNameLen] = '\0';
-                if (strstr(fileName, ".bin") == fileName + strlen(fileName) - 4) 
+                if (strstr(fileName, ".bin") == fileName + strlen(fileName) - 4 &&
+                    strncmp(fileName, startWith, strlen(startWith)) == 0) 
                 {
                   // Check for duplicates
                   bool isDuplicate = false;
@@ -559,7 +585,7 @@ void RFUlistFirmware()
                   if (!isDuplicate) 
                   {
                     fileArray.add(fileName);
-                    nrVersions++;
+                    nrFiles++;
                   }
                 }
               }
@@ -583,100 +609,86 @@ void RFUlistFirmware()
   } 
   else 
   {
-    DebugTln("Error fetching versions ...");
-    fileArray.add("Error fetching versions");
+    DebugTln("Error fetching files ...");
+    fileArray.add("Error fetching files");
   }
   http.end();
 
-  if (nrVersions == 0)
+  if (nrFiles == 0)
   {
-    DebugTln("No Updates found ...");
-    fileArray.add("No Updates Found");
+    DebugTln("No matching files found ...");
+    fileArray.add("No matching files found");
   }
 
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   DebugTln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
-} // RFUlistFirmware()
+} // RFUlistFiles()
+
 
 //===========================================================================================
 void handleRemoteUpdate()
 {
   bool SPIFFSfile = false;
   File file;
-  char updateServer[100] = {};
+  char updateServerURI[100] = {};
   DebugTln("handleRemoteUpdate() ...");
 
   if (httpServer.method() == HTTP_GET) 
   {
-    // Probeer het HTML-bestand te openen vanaf SPIFFS
-    DebugTln("check SPIFFS for [/DSMRemoteUpd.html] page ...");
-    if (_FSYS.exists("/DSMRemoteUpd.html")) 
-    {
-      file = _FSYS.open("/DSMRemoteUpd.html", "r");
-      SPIFFSfile = true;
-    } 
-    else 
-    {
-      DebugTln("File not found");
-      SPIFFSfile = false;
-    }
-    
-    if (!SPIFFSfile) 
-    {
-      // Als het bestand niet gevonden wordt, geef een foutmelding terug
-      DebugTln("File not found, serving hardcoded page");
-      // Static fallback HTML
       httpServer.send(200, "text/html", RFUindexHtml);
-    } 
-    else 
-    {
-      // Als het bestand bestaat, stream het naar de client
-      DebugTln("YES! File found, serving SPIFFS page");
-      size_t fileSize = file.size();
-      // Allocate buffer on the heap
-      char* buffer = new char[fileSize + 1]; // +1 for null-termination
-      file.readBytes(buffer, fileSize);
-      buffer[fileSize] = '\0';  // Null-terminate the string
-      if (Verbose2) {DebugTf("File size: %d bytes\r\n\n%s\r\n", fileSize, buffer);}
-      
-      // Send the file contents as response
-      httpServer.setContentLength(fileSize);
-      httpServer.send(200, "text/html", buffer);
-
-      // Clean up
-      delete[] buffer;
-    }
-    file.close();  // Close the file after streaming
   } 
   else if (httpServer.method() == HTTP_POST) 
   {
-    char newVersionNr[32] = {};
     char action[16] = {};
-    
-    strlcpy(newVersionNr, httpServer.arg("newVersionNr").c_str(), sizeof(newVersionNr));
-    strlcpy(action, httpServer.arg("action").c_str(), sizeof(action));
-    
-    if (strncmp(action, "Update", 6) == 0) 
-    {
-      DebugTf("Update requested. New version: %s\r\n", newVersionNr);
-      if (strncmp(newVersionNr, "No Updates Found", 16) == 0)
-      {
-        DebugTf("(%s) No Firmware Update!\r\n", __FUNCTION__);
-        doRedirect("Wait for redirect ...", 5, "/FSmanager.html", false);
-        return;
-      }
-//      char message[64];
-//      snprintf(message, sizeof(message), "Update requested. New version: %s", newVersionNr);
-      snprintf(updateServer, sizeof(updateServer), "%s/%s", _REMOTE_UPDATESERVER, newVersionNr);
-      
-      UpdateManager updateManager;
+    char newVersionNr[32] = {};
 
-      DebugTf("(%s) Starting Firmware upload!\r\n", __FUNCTION__);
-      doRedirect("Wait for update to complete ...", 120, "/", false);
+    for(int a=0; a<httpServer.args(); a++)
+    {
+      if (Verbose1) DebugTf("arg[%d]: [%s] = [%s]\r\n", a, httpServer.argName(a).c_str(), httpServer.arg(a).c_str());
+    }
+
+    strlcpy(action, httpServer.arg("action").c_str(), sizeof(action));
+    DebugTf("action: [%s]\r\n", action);
+
+    if (strncmp(action, "Return", 6) == 0) 
+    {
+      DebugTln("Return requested. No update performed.");
+      doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
+    }
+
+    if (strncmp(action, "updateFirmware", 14) == 0) 
+        strlcpy(newVersionNr, httpServer.arg("firmwareVersion").c_str(), sizeof(newVersionNr));
+    else if (strncmp(action, "updateSpiffs", 12) == 0) 
+        strlcpy(newVersionNr, httpServer.arg("spiffsVersion").c_str(), sizeof(newVersionNr));
+    else
+    {
+      DebugTln("Invalid POST data received");
+      doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
+      return;
+    }
+    
+    DebugTf("Update requested. New version: %s\r\n", newVersionNr);
+    if (strncmp(newVersionNr, "No Updates Found", 16) == 0)
+    {
+      DebugTf("(%s) No Firmware Update!\r\n", __FUNCTION__);
+      doRedirect("Wait for redirect ...", 5, "/FSmanager.html", false);
+      return;
+    }
+    snprintf(updateServerURI, sizeof(updateServerURI), "%s/%s", _REMOTE_UPDATESERVER, newVersionNr);
+
+    DebugTf("updateServerURI(): newVersionNr [%s]\r\n", newVersionNr);
+    
+    UpdateManager updateManager;
+
+    DebugTf("(%s) Starting %s upload!\r\n", __FUNCTION__, action);
+
+    if (strncmp(action, "updateFirmware", 14) == 0)
+    {
+      doRedirect("Wait for firmware update to complete ...", 120, "/", false);      
       //-- Shorthand
-      updateManager.updateFirmware(updateServer, [](u_int8_t progress) 
+      updateManager.updateFirmware(updateServerURI, [](u_int8_t progress) 
       {
         if ((progress % 70) == 0) 
         {
@@ -685,29 +697,47 @@ void handleRemoteUpdate()
         }
         else Debug('.');
       });
-      if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_ERROR)) 
-      { 
-        DebugTf("\r\n(%s) Update ERROR\r\n", __FUNCTION__);
-        httpServer.send(200, "text/html", "Update ERROR!");
-        delay(1000);
-        ESP.restart();
-        delay(3000);
-      }
-      if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_OK)) 
-      { 
-        Debugf("\r\n(%s) Update OK\r\n", __FUNCTION__);
-        httpServer.send(200, "text/html", "Update Succesfull!");
-        delay(1000);
-        ESP.restart();
-        delay(3000);
-      }
     }
-    else if (strncmp(action, "Return", 6) == 0) 
+    else if (strncmp(action, "updateSpiffs", 12) == 0)
     {
-      DebugTln("Return requested. No update performed.");
+      doRedirect("Wait for spiffs update to complete ...", 80, "/", false);      
+      //-- Shorthand
+      updateManager.updateSpiffs(updateServerURI, [](u_int8_t progress) 
+      {
+        if ((progress % 70) == 0) 
+        {
+          Debugln('.');
+          pulseHeart();
+        }
+        else Debug('.');
+      });
     }
-    doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
+    else
+    {
+      DebugTf("(%s) Invalid update action!\r\n", __FUNCTION__);
+      doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
+      return;
+    }
+
+    if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_ERROR)) 
+    { 
+      DebugTf("\r\n(%s) Update ERROR\r\n", __FUNCTION__);
+      httpServer.send(200, "text/html", "Update ERROR!");
+      delay(1000);
+      ESP.restart();
+      delay(3000);
+    }
+    if (updateManager.feedback(UPDATE_FEEDBACK_UPDATE_OK)) 
+    { 
+      Debugf("\r\n(%s) Update OK\r\n", __FUNCTION__);
+      httpServer.send(200, "text/html", "Update Succesfull!");
+      delay(1000);
+      ESP.restart();
+      delay(3000);
+    }
   }
+
+  doRedirect("Back to FSmanager", 2, "/FSmanager.html", false);
 
 } //  handleRemoteUpdate()
 

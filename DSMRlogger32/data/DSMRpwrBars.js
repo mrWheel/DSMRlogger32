@@ -6,6 +6,9 @@ const MAX_CURRENT = 16; // Maximum current in Amperes
 
 let pwrBars = [];
 let currentUnit = 'Amps';
+let voltage_l1 = 230;
+let voltage_l2 = 230;
+let voltage_l3 = 230;
 let refreshTimer = UPDATE_INTERVAL
 let refreshInterval; // Store the interval ID globally
 let relayState = 0;
@@ -22,6 +25,8 @@ const OFFSET_PX = -20; // Offset to shift bars slightly to the left (in pixels)
  *                  - bar: The HTML element for the bar
  *                  - value: The HTML element for the value
  *                  - scale: The HTML element for the scale
+ *                  - voltage: The HTML element for the voltage display
+ *                  - alternateUnit: The HTML element for the alternate unit display
  */
 function createPwrBar(id) 
 {
@@ -29,7 +34,9 @@ function createPwrBar(id)
         element: document.getElementById(id),
         bar: document.querySelector(`#${id} .bar`),
         value: document.querySelector(`#${id} .value`),
-        scale: document.querySelector(`#${id} .scale`)
+        scale: document.querySelector(`#${id} .scale`),
+        voltage: document.querySelector(`#${id} .voltage`),
+        alternateUnit: document.querySelector(`#${id} .alternate-unit`)
     };
 }
 
@@ -186,6 +193,33 @@ function updatePwrBar(pwrbar, value)
 }
 
 /******************************************************************************************
+ * Updates the voltage display for a power bar.
+ * @param {object} pwrbar The power bar object to be updated
+ * @param {number} voltage The voltage value to be displayed
+ * @return {void}
+ */
+function updateVoltageDisplay(pwrbar, voltage) 
+{
+    if (pwrbar.voltage) {
+        pwrbar.voltage.textContent = `${voltage.toFixed(1)}V`;
+    }
+}
+
+/******************************************************************************************
+ * Updates the alternate unit display for a power bar.
+ * @param {object} pwrbar The power bar object to be updated
+ * @param {number} value The value to be displayed (in Watts if bar shows Amps, or in Amps if bar shows Watts)
+ * @return {void}
+ */
+function updateAlternateUnitDisplay(pwrbar, value) 
+{
+    if (pwrbar.alternateUnit) {
+        const unit = currentUnit === 'Amps' ? 'W' : 'A';
+        pwrbar.alternateUnit.textContent = `${value.toFixed(1)}${unit}`;
+    }
+}
+
+/******************************************************************************************
  * Fetches data from the API, updates the power bars and scales accordingly.
  * The API endpoint is /api/v2/sm/actual.
  * The data is processed and each phase is updated with the net power (delivered - returned).
@@ -193,8 +227,7 @@ function updatePwrBar(pwrbar, value)
  * The maximum net power is used to update the scale of the power bars.
  * @return {void}
  */
-function fetchData() 
-{
+function fetchData() {
   console.log('Fetching data from api/v2/sm/actual');
   fetch(`${APIGW}v2/sm/actual`)
       .then(response => response.json())
@@ -213,26 +246,37 @@ function fetchData()
             if (prevState != relayState)  console.log('Relay is Off');
             document.getElementById('relayState').innerText = '';
           }
-          //console.log(`Relay state: ${relayState}`);
+          
+          // Update voltage variables
+          voltage_l1 = data[`voltage_l1`] || 230;
+          voltage_l2 = data[`voltage_l2`] || 230;
+          voltage_l3 = data[`voltage_l3`] || 230;
+          
           let maxPower = 0;
           for (let i = 1; i <= PHASES; i++) 
           {
               const delivered = data[`power_delivered_l${i}`] || 0;
               const returned = data[`power_returned_l${i}`] || 0;
               const netPower = returned - delivered; // Negative for delivered, positive for returned
-              const displayValue = currentUnit === 'Amps' ? (netPower * 1000 / 230) : (netPower * 1000);
+              const voltage = eval(`voltage_l${i}`);
+              const displayValue = currentUnit === 'Amps' ? (netPower * 1000 / voltage) : (netPower * 1000);
+              const alternateValue = currentUnit === 'Amps' ? (netPower * 1000) : (netPower * 1000 / voltage);
               maxPower = Math.max(maxPower, Math.abs(displayValue));
-              //console.log(`Phase ${i}: delivered = ${delivered}, returned = ${returned}, netPower = ${netPower}, displayValue = ${displayValue}`);
               updatePwrBar(pwrBars[i - 1], displayValue);
+              updateVoltageDisplay(pwrBars[i - 1], voltage);
+              updateAlternateUnitDisplay(pwrBars[i - 1], alternateValue);
           }
           
           const totalDelivered = data.power_delivered || 0;
           const totalReturned = data.power_returned || 0;
           const totalNetPower = totalReturned - totalDelivered;
-          const totalDisplayValue = currentUnit === 'Amps' ? (totalNetPower * 1000 / 230) : (totalNetPower * 1000);
+          const avgVoltage = (voltage_l1 + voltage_l2 + voltage_l3) / 3;
+          const totalDisplayValue = currentUnit === 'Amps' ? (totalNetPower * 1000 / avgVoltage) : (totalNetPower * 1000);
+          const totalAlternateValue = currentUnit === 'Amps' ? (totalNetPower * 1000) : (totalNetPower * 1000 / avgVoltage);
           maxPower = Math.max(maxPower, Math.abs(totalDisplayValue));
-          //console.log(`Total: delivered = ${totalDelivered}, returned = ${totalReturned}, netPower = ${totalNetPower}, displayValue = ${totalDisplayValue}`);
           updatePwrBar(pwrBars[3], totalDisplayValue);
+          updateVoltageDisplay(pwrBars[3], avgVoltage);
+          updateAlternateUnitDisplay(pwrBars[3], totalAlternateValue);
 
           maxNetPower = maxPower;
           updateScales();
@@ -305,7 +349,6 @@ function init()
     
     document.querySelectorAll('input[name="displayUnit"]').forEach((elem) => {
         elem.addEventListener("change", function(event) {
-            fetchData();
             console.log(`Changing unit to ${event.target.value}`);
             currentUnit = event.target.value;
             updateScales();

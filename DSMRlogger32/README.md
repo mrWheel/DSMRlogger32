@@ -19,11 +19,13 @@ As of now the DSMRlogger32 firmware is ported to `VSCode` with the `PlatformIO` 
     <td>Nieuwe functionaliteit
         <br>2024-10-03: Met deze update is het niet alleen mogelijk om firmware updates
         van de Remote Server te halen en te flashen maar ook het SPIFFS bestandsysteem
-        kan nu via [Update Remote] worden geflashed.<br>
+        kan nu via [Update Remote] worden geflashed.<br><br>
         Er is een nieuw soort presentatie met horizontale 'bars'. Dit is een voortborduring
         op de Gauges van HJM. Deze voldoen helaas niet bij installaties met zonnepanelen
         vandaar deze nieuwe functionaliteit. Je kunt deze zien door op het icoontje
         <big>&#9776</big> te klikken.<br>
+        <img src="https://github.com/user-attachments/assets/771a1c53-b6a2-42fd-8ff1-f9a5da964dea" alt="pwrBars" width="400">
+        <br><br>
         Om deze nieuwe update te kunnen gebruiken moet je éérst de firmware updaten en
         daarná het SPIFFS bestand systeem. Vergeet niet om je RING en `.json` bestanden
         te downloaden en na de update weer terug te zetten.

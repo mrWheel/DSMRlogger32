@@ -7,7 +7,8 @@
 
 DECLARE_TIMER_EXTERN(antiWearTimer);
 
-extern Shield32 relays0;
+extern Shield32 relay0;
+extern Shield32 relay1;
 extern time_t   now;
    
 //============ Prototypes ==================

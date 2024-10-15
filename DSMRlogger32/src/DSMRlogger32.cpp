@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.4.1 (14-11-2024)";
+const char* _FW_VERSION = "v5.4.2 (15-11-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
@@ -540,13 +540,20 @@ void setup()
   }
 
   //================ Start Shield =====================================
-  relays0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
+  relay0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
                             , shieldSetting[0]->activeStart
                             , shieldSetting[0]->activeStop
                             , shieldSetting[0]->onThreshold
                             , shieldSetting[0]->offThreshold
                             , shieldSetting[0]->onDelay
                             , shieldSetting[0]->offDelay);
+  relay1.setup(shieldSetting[1]->GPIOpin, shieldSetting[1]->inversed
+                            , shieldSetting[1]->activeStart
+                            , shieldSetting[1]->activeStop
+                            , shieldSetting[1]->onThreshold
+                            , shieldSetting[1]->offThreshold
+                            , shieldSetting[1]->onDelay
+                            , shieldSetting[1]->offDelay);
 
 
   //================ Start Slimme Meter ===============================
@@ -609,21 +616,33 @@ void doTaskShield()
 
   if (digitalRead(_FLASH_BUTTON) == LOW)
   {
-    relays0.flipSwitch();
+    relay0.flipSwitch();
+    relay1.flipSwitch();
   }
   if (DUE(shieldTimer))
   {
     if (Verbose1) DebugTln("doTaskShield..");
-    if (relays0.isActive(thisTimeMinutes))
+    if (relay0.isActive(thisTimeMinutes))
     {
       //-- do whats needed for the Shield
       actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
-      relays0.loop(actPower);
+      relay0.loop(actPower);
     }
     else
     {
-      DebugTln("Shield is inactive");
-      relays0.setRelayState(LOW);
+      DebugTln("Relay[0] is inactive");
+      relay0.setRelayState(LOW);
+    }
+    if (relay1.isActive(thisTimeMinutes))
+    {
+      //-- do whats needed for the Shield
+      actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
+      relay1.loop(actPower);
+    }
+    else
+    {
+      DebugTln("Relay[1] is inactive");
+      relay1.setRelayState(LOW);
     }
   }
   

@@ -46,10 +46,10 @@
             <a id='bReturn' class='nav-item tabButton'>Return</a>
             &nbsp; &nbsp; &nbsp; Units: 
             <label>
-                <input type="radio" name="displayUnit" value="Amps" checked> Ampères
+                <input type="radio" name="displayUnit" value="Amps"> Ampères
             </label>
             <label>
-                <input type="radio" name="displayUnit" value="Watts"> Watts
+                <input type="radio" name="displayUnit" value="Watts" checked> Watts
             </label>
             &nbsp; &nbsp; &nbsp; Refresh time:
             <label>
@@ -59,7 +59,22 @@
               <input type="radio" name="refreshTime" value="2000"> 2 sec.
           </label>
         </div>
-        <div id='relayState' class='nav-item tabButton'>-</div>    
+        <div class="switch-container">
+          <div id="switchWrapper0" class="switch-wrapper hidden">
+              <span class="switch-label">SW0</span>
+              <label class="switch">
+                  <input type="checkbox" id="relayToggle0">
+                  <span class="slider round"></span>
+              </label>
+          </div>
+          <div id="switchWrapper1" class="switch-wrapper hidden">
+              <span class="switch-label">SW1</span>
+              <label class="switch">
+                  <input type="checkbox" id="relayToggle1">
+                  <span class="slider round"></span>
+              </label>
+          </div>
+      </div>
     </div>
 
     <div class="pwrbar-container">

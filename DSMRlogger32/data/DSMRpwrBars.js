@@ -5,7 +5,7 @@ const MAX_POWER = 3700; // Maximum power in Watts
 const MAX_CURRENT = 16; // Maximum current in Amperes
 
 let pwrBars = [];
-let currentUnit = 'Amps';
+let currentUnit = 'Watts';
 let voltage_l1 = 230;
 let voltage_l2 = 230;
 let voltage_l3 = 230;
@@ -234,17 +234,33 @@ function fetchData() {
       .then(json => {
           console.log('Received data:', json);
           const data = json.actual;
-          prevState = relayState;
-          relayState = data[`relay_state0`] || 0;
-          if (relayState === 1)
-          {
-            if (prevState != relayState)  console.log('Relay is On');
-            document.getElementById('relayState').innerText = 'Relay is On';
+          
+          // Handle SW0
+          const relayActive0 = data[`relay_active0`] || 0;
+          const switchWrapper0 = document.getElementById('switchWrapper0');
+          if (relayActive0 === 1) {
+              switchWrapper0.classList.remove('hidden');
+              prevState = relayState;
+              relayState = data[`relay_state0`] || 0;
+              const relayToggle0 = document.getElementById('relayToggle0');
+              relayToggle0.checked = relayState === 1;
+              if (prevState !== relayState) {
+                  console.log('SW0 is ' + (relayState === 1 ? 'On' : 'Off'));
+              }
+          } else {
+              switchWrapper0.classList.add('hidden');
           }
-          else
-          {
-            if (prevState != relayState)  console.log('Relay is Off');
-            document.getElementById('relayState').innerText = '';
+          
+          // Handle SW1
+          const relayActive1 = data[`relay_active1`] || 0;
+          const switchWrapper1 = document.getElementById('switchWrapper1');
+          if (relayActive1 === 1) {
+              switchWrapper1.classList.remove('hidden');
+              const relayState1 = data[`relay_state1`] || 0;
+              const relayToggle1 = document.getElementById('relayToggle1');
+              relayToggle1.checked = relayState1 === 1;
+          } else {
+              switchWrapper1.classList.add('hidden');
           }
           
           // Update voltage variables
@@ -371,6 +387,35 @@ function init()
     console.log(`refreshTimer = ${refreshTimer}`);
     refreshInterval = setInterval(fetchData, refreshTimer);
     setInterval(refreshDevTime, 10000); // Update time every 10 seconds
+
+    document.getElementById('relayToggle0').addEventListener('change', function(event) {
+      toggleRelay(0, event.target.checked);
+  });
+
+    document.getElementById('relayToggle1').addEventListener('change', function(event) {
+        toggleRelay(1, event.target.checked);
+  });
+}
+
+function toggleRelay(relayNumber, isChecked) {
+  const newState = isChecked ? 1 : 0;
+  //fetch(`${APIGW}v2/sm/relays`, {
+  fetch(`${APIGW}v2/dev/relays`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ [`relay_state${relayNumber}`]: newState }),
+  })
+  .then(response => response.json())
+  .then(data => {
+      console.log(`Relay ${relayNumber} state updated:`, data);
+      fetchData(); // Refresh data to confirm the change
+  })
+  .catch((error) => {
+      console.error('Error:', error);
+      event.target.checked = !event.target.checked; // Revert the toggle if there's an error
+  });
 }
 
 window.onload = init;

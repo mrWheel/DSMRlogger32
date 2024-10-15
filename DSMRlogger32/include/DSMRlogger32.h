@@ -30,7 +30,7 @@
 #include "wifiEvents.h"
 #include "Shield32.h"
 
-Shield32 myShield;
+Shield32 relays0;
 
 #include "arduinoGlue.h"
 
@@ -152,17 +152,18 @@ WiFiClient        wifiClient;
 
 MyData            tlgrmData;
 
-char              *tlgrmTmpData;
-char              *tlgrmRaw;
-char              *jsonBuff;
-char              *gMsg;
-char              *fChar;
+char                  *tlgrmTmpData;
+char                  *tlgrmRaw;
+char                  *jsonBuff;
+char                  *gMsg;
+char                  *fChar;
 
-fieldTableStruct  *fieldTable; 
-uint16_t          fieldTableCount = 0;
-settingSmStruct   *smSetting;
-settingDevStruct  *devSetting;
-actualDataStruct  *actualStore;
+fieldTableStruct      *fieldTable; 
+uint16_t              fieldTableCount = 0;
+settingSmStruct       *smSetting;
+settingDevStruct      *devSetting;
+settingShieldStruct   *shieldSetting[2];
+actualDataStruct      *actualStore;
 
 time_t      actT;
 

@@ -162,6 +162,7 @@ void _debugBOL(const char *fn, int line);
 #define _FIELDTABLE_CVALUE_LEN 100
 #define _SETTINGS_FILE        "/DSMRsmSettings.json"
 #define _SYSTEM_FILE          "/DSMRdevSettings.json"
+#define _SHIELD_FILE          "/DSMRShieldSettings.json"
 #define _STATUS_FILE          "/DSMRstatus.csv"
 #define LED_ON                 LOW
 #define LED_OFF               HIGH
@@ -261,12 +262,18 @@ struct settingDevStruct
   char      MQTTtopTopic[_MQTT_TOPTOPIC_LEN];
   int32_t   MQTTinterval;
   int16_t   MQTTbrokerPort;
-  int8_t    ShieldGpio;
-  int8_t    ShieldInversed;
-  int16_t   ShieldOnThreshold;
-  int16_t   ShieldOffThreshold;
-  int32_t   ShieldOnDelay;   //-- seconden
-  int32_t   ShieldOffDelay;  //-- seconden
+};
+
+struct settingShieldStruct
+{
+  int8_t    GPIOpin;      //-- only -1, 13 or 14
+  int8_t    inversed;
+  uint16_t  activeStart;  //-- minuten
+  uint16_t  activeStop;   //-- minuten
+  int16_t   onThreshold;
+  int16_t   offThreshold;
+  int32_t   onDelay;      //-- seconden
+  int32_t   offDelay;     //-- seconden
 };
 
 //-- from DSMRlogger32.h
@@ -679,16 +686,17 @@ extern bool            lostWiFiConnection;                		//-- from wifiEvents
 //-- used in DSMRlogger32.cpp
 extern int             lostWiFiCount;                     		//-- from wifiEvents
 
-extern char              *tlgrmTmpData;
-extern char              *tlgrmRaw;
-extern char              *jsonBuff;
-extern char              *gMsg;
-extern char              *fChar;
+extern char                 *tlgrmTmpData;
+extern char                 *tlgrmRaw;
+extern char                 *jsonBuff;
+extern char                 *gMsg;
+extern char                 *fChar;
 
-extern fieldTableStruct  *fieldTable; 
-extern settingSmStruct   *smSetting;
-extern settingDevStruct  *devSetting;
-extern actualDataStruct  *actualStore;
+extern fieldTableStruct     *fieldTable; 
+extern settingSmStruct      *smSetting;
+extern settingDevStruct     *devSetting;
+extern settingShieldStruct  *shieldSetting[2];
+extern actualDataStruct     *actualStore;
 
 
 //============ Function Prototypes =========
@@ -747,10 +755,13 @@ void readSmSettings(bool show);
 void updateSmSettings(const char *field, const char *newValue);
 //-- Used in: settingsStuff.cpp, FSYSstuff.cpp
 void writeDevSettings(bool show);                           
+void writeShieldSettings(bool show);                           
 //-- Used in: DSMRlogger32.cpp, settingsStuff.cpp, menuStuff.cpp
-void readDevSettings(bool show);                            
+void readDevSettings(bool show); 
+void readShieldSettings(bool show); 
 //-- Used in: settingsStuff.cpp, restAPI.cpp
 void updateDevSettings(const char *field, const char *newValue);
+void updateShieldSettings(const char *field, const char *newValue);
 //-- from restAPI.ino -----------
 //-- Used in: FSmanager.cpp, restAPI.cpp, DSMRlogger32.cpp
 void processAPI();                                          

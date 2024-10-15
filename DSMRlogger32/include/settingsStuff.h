@@ -5,7 +5,7 @@
 #include "arduinoGlue.h"
 #include "Shield32.h"
 
-extern Shield32 myShield;
+extern Shield32 relays0;
 
 
 
@@ -15,7 +15,7 @@ DECLARE_TIMER_EXTERN(nextTelegram);
 DECLARE_TIMER_EXTERN(oledSleepTimer);
 
 void showDevSettings();   
-bool isValidGpio(int newGpio);   
+void showShieldSettings();   
 
 //============ Added by Convertor ==========
 #endif // SETTINGSSTUFF_H

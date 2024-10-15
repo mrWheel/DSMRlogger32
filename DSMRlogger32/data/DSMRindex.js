@@ -128,10 +128,12 @@
                                                 {openPage('mainPage');});
     document.getElementById('bEditMonths').addEventListener('click',function()
                                                 {openTab('tabEditMonths');});
-    document.getElementById('bEditSmSettings').addEventListener('click',function()
-                                                {openTab('tabEditSmSettings');});
     document.getElementById('bEditDevSettings').addEventListener('click',function()
                                                 {openTab('tabEditDevSettings');});
+    document.getElementById('bEditSmSettings').addEventListener('click',function()
+                                                {openTab('tabEditSmSettings');});
+    document.getElementById('bEditShieldSettings').addEventListener('click',function()
+                                                {openTab('tabEditShieldSettings');});
     document.getElementById('bUndo').addEventListener('click',function() 
                                                 {undoReload();});
     document.getElementById('bSave').addEventListener('click',function() 
@@ -278,7 +280,13 @@
       document.getElementById('tabEditDevSettings').style.display = 'block';
       refreshDevSettings();
     
-    }
+    } else if (tabName == "tabEditShieldSettings") 
+      {
+        console.log("newTab: tabEditShieldSettings");
+        document.getElementById('tabEditShieldSettings').style.display = 'block';
+        refreshShieldSettings();
+      
+      }
 
   } // openTab()
   
@@ -301,7 +309,7 @@
       document.getElementById("mainPage").style.display = "none";  
       data = {};
       needBootsTrapMain = true;
-      openTab('tabEditSmSettings');
+      openTab('tabEditDevSettings');
       if (needBootsTrapSettings)   bootsTrapSettings();
     }
     else if (pageName == "systemPage") 
@@ -1711,6 +1719,100 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       document.getElementById('message').innerHTML = newVersionMsg;
 
   } // refreshDevSettings()
+    
+  
+  //============================================================================  
+  function refreshShieldSettings()
+  {
+    console.log("refreshShieldSettings() ..");
+    data = {};
+    fetch(APIGW+"v2/dev/shield")
+      .then(response => response.json())
+      .then(json => {
+        console.log("then(json => ..)");
+        sysData = json.shield;
+        for( let i in sysData )
+        {
+          let fieldName=sysData[i].name;
+          console.log("["+fieldName+"]=>["+sysData[i].value+"]");
+          var system = document.getElementById('shield');
+          if( ( document.getElementById("shieldR_"+fieldName)) == null )
+          {
+            var rowDiv = document.createElement("div");
+            rowDiv.setAttribute("class", "shieldDiv");
+            rowDiv.setAttribute("id", "shieldR_"+fieldName);
+            rowDiv.setAttribute("style", "text-align: right;");
+            rowDiv.style.marginLeft = "10px";
+            rowDiv.style.marginRight = "10px";
+            rowDiv.style.width = "450px";
+            rowDiv.style.border = "thick solid lightblue";
+            rowDiv.style.background = "lightblue";
+            //--- field Name ---
+              var fldDiv = document.createElement("div");
+                  fldDiv.setAttribute("style", "margin-right: 10px;");
+                  fldDiv.style.width = "250px";
+                  fldDiv.style.float = 'left';
+                  fldDiv.textContent = translateToHuman(fieldName);
+
+                  rowDiv.appendChild(fldDiv);
+            //--- input ---
+              var inputDiv = document.createElement("div");
+                  inputDiv.setAttribute("style", "text-align: left;");
+
+                    var sInput = document.createElement("INPUT");
+                    sInput.setAttribute("id", "setFld_"+fieldName);
+
+                    if (sysData[i].type == "s")
+                    {
+                      sInput.setAttribute("type", "text");
+                      sInput.setAttribute("maxlength", sysData[i].maxlen);
+                    }
+                    else if (sysData[i].type == "f")
+                    {
+                      sInput.setAttribute("type", "number");
+                      sInput.max = sysData[i].max;
+                      sInput.min = sysData[i].min;
+                      sInput.step = (sysData[i].min + sysData[i].max) / 1000;
+                      sInput.setAttribute("maxlength", 10); //-- 21-12-2022
+                    }
+                    else if (sysData[i].type == "i")
+                    {
+                      sInput.setAttribute("type", "number");
+                      sInput.max = sysData[i].max;
+                      sInput.min = sysData[i].min;
+                      sInput.step = (sysData[i].min + sysData[i].max) / 1000;
+                      sInput.step = 1;
+                      sInput.setAttribute("maxlength", 10); //-- 21-12-2022
+                    }
+                    sInput.setAttribute("value", sysData[i].value);
+                    sInput.addEventListener('change',
+                                function() { setBackGround("setFld_"+fieldName, "lightgray"); },
+                                            false
+                                );
+                  inputDiv.appendChild(sInput);
+                  
+            rowDiv.appendChild(inputDiv);
+            system.appendChild(rowDiv);
+          }
+          else
+          {
+            document.getElementById("setFld_"+fieldName).style.background = "white";
+            document.getElementById("setFld_"+fieldName).value = sysData[i].value;
+          }
+        }
+        //console.log("-->done..");
+      })
+      .catch(function(error) 
+      {
+        var p = document.createElement('p');
+        p.appendChild(
+          document.createTextNode('Error: ' + error.message)
+        );
+      });     
+
+      document.getElementById('message').innerHTML = newVersionMsg;
+
+  } // refreshShieldSettings()
   
   
   //============================================================================  
@@ -1936,8 +2038,13 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       data = {};
       refreshDevSettings();
 
+    } else if (activeTab == "tabEditShieldSettings") {
+      console.log("undoReload(): reload System..");
+      data = {};
+      refreshShieldSettings();
+
     } else {
-      console.log("undoReload(): I don't knwo what to do ..");
+      console.log("undoReload(): I don't know what to do ..");
     }
 
   } // undoReload()
@@ -1956,7 +2063,11 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
     {
       saveDevSettings();
     }
-    else if (activeTab == "tabEditMonths")
+    else if (activeTab == "tabEditShieldSettings")
+      {
+        saveShieldSettings();
+      }
+      else if (activeTab == "tabEditMonths")
     {
       saveMeterReadings();
     }
@@ -2011,6 +2122,28 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
     }, 1000);
     
   } // saveDevSettings()
+  
+  
+  //============================================================================  
+  function saveShieldSettings() 
+  {
+    for(var i in sysData)
+    {
+      var fldId  = sysData[i].name;
+      var newVal = document.getElementById("setFld_"+fldId).value;
+      if (sysData[i].value != newVal)
+      {
+        console.log("save data ["+fldId+"] => from["+sysData[i].value+"] to["+newVal+"]");
+        sendPostShieldSetting(fldId, newVal);
+      }
+    }    
+    // delay refresh as all fetch functions are asynchroon!!
+    setTimeout(function() 
+    {
+      refreshShieldSettings();
+    }, 1000);
+    
+  } // saveShieldSettings()
   
   
   //============================================================================  
@@ -2115,6 +2248,35 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
       });
       
   } // sendPostDevSetting()
+
+    
+  //============================================================================  
+  function sendPostShieldSetting(field, value) 
+  {
+    const jsonString = {"name" : field, "value" : value};
+    //console.log("send JSON:["+jsonString+"]");
+    const other_params = {
+        headers : { "content-type" : "application/json; charset=UTF-8"},
+        body : JSON.stringify(jsonString),
+        method : "POST",
+        mode : "cors"
+    };
+
+    //-fetch(APIGW+"v2/dev/system", other_params)
+    fetch(APIGW+"v2/dev/shield", other_params)
+      .then(function(response) {
+            //console.log(response.status );    //=> number 100–599
+            //console.log(response.statusText); //=> String
+            //console.log(response.headers);    //=> Headers
+            //console.log(response.url);        //=> String
+            //console.log(response.text());
+            //return response.text()
+      }, function(error) 
+      {
+        console.log("Error["+error.message+"]"); //=> String
+      });
+      
+  } // sendPostShieldSetting()
 
     
   //============================================================================  
@@ -2655,12 +2817,11 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
           ,[ "sm_has_fase_info",          "SM Has Fase Info [0=Nee, 1=Ja]" ]
           ,[ "smhasfaseinfo",             "SM Has Fase Info [0=Nee, 1=Ja]" ]
           ,[ "ssid",                      "WiFi SSID" ]
-          ,[ "shield_gpio",               "Shield Gpio [-1=not used]" ]
-          ,[ "shield_inversed",           "Shield Inversed Logic [0=Nee, 1=Ja]" ]
-          ,[ "shield_on_treshold",        "Shield 'Aan' drempel" ]
-          ,[ "shield_off_treshold",       "Shield 'Uit' drempel'" ]
-          ,[ "shield_on_delay",           "Shield 'Aan' vertraging [sec.]" ]
-          ,[ "shield_off_delay",          "Shield 'Uit' vertraging [sec.]" ]
+          ,[ "inversed0",                 "Relay-0 Inversed Logic [0=Nee, 1=Ja]" ]
+          ,[ "onThreshold0",              "Relay-0 'Aan' drempel" ]
+          ,[ "offThreshold0",             "Relay-0 'Uit' drempel'" ]
+          ,[ "onDelay0",                  "Relay-0 'Aan' vertraging [sec.]" ]
+          ,[ "offDelay0",                 "Relay-0 'Uit' vertraging [sec.]" ]
           ,[ "telegram_count",            "Aantal verwerkte Telegrammen" ]
           ,[ "telegram_errors",           "Aantal Foutieve Telegrammen" ]
           ,[ "telegram_interval",         "Telegram Lees Interval [Sec.]" ]

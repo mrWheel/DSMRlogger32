@@ -235,7 +235,7 @@ function fetchData() {
           console.log('Received data:', json);
           const data = json.actual;
           prevState = relayState;
-          relayState = data[`relay_state`] || 0;
+          relayState = data[`relay_state0`] || 0;
           if (relayState === 1)
           {
             if (prevState != relayState)  console.log('Relay is On');

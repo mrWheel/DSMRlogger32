@@ -2,7 +2,7 @@
 ***************************************************************************
 **  Program  : DSMRlogger32 (restAPI)
 */
-const char* _FW_VERSION = "v5.4.0 (03-11-2024)";
+const char* _FW_VERSION = "v5.4.1 (14-11-2024)";
 /*
 **  Copyright (c) 2022, 2023, 2024 Willem Aandewiel
 **
@@ -204,17 +204,8 @@ void setup()
   setupSysLogger(_FW_VERSION);
 
   readDevSettings(true);
+  readShieldSettings(true);
 
-/*****
-  pinMode(devSetting->ShieldGpio,  OUTPUT);
-  for(int i=0; i<50; i++)
-  {
-    digitalWrite(devSetting->ShieldGpio, HIGH);
-    delay(500);
-    digitalWrite(devSetting->ShieldGpio, LOW);
-    delay(200);
-  }
-*****/
 
   if (devSetting->runAPmode > 0)
   {
@@ -549,11 +540,13 @@ void setup()
   }
 
   //================ Start Shield =====================================
-  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed
-                            , devSetting->ShieldOnThreshold
-                            , devSetting->ShieldOffThreshold
-                            , devSetting->ShieldOnDelay
-                            , devSetting->ShieldOffDelay);
+  relays0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
+                            , shieldSetting[0]->activeStart
+                            , shieldSetting[0]->activeStop
+                            , shieldSetting[0]->onThreshold
+                            , shieldSetting[0]->offThreshold
+                            , shieldSetting[0]->onDelay
+                            , shieldSetting[0]->offDelay);
 
 
   //================ Start Slimme Meter ===============================
@@ -611,18 +604,27 @@ void delayms(unsigned long delay_ms)
 void doTaskShield()
 {
   int actPower = 0;
+  time(&now);
+  int thisTimeMinutes = (localtime(&now)->tm_hour * 60) + localtime(&now)->tm_min;
 
   if (digitalRead(_FLASH_BUTTON) == LOW)
   {
-    myShield.flipSwitch();
+    relays0.flipSwitch();
   }
   if (DUE(shieldTimer))
   {
-    //if (Verbose1) 
-      DebugTln("doTaskShield..");
-    //-- do whats needed for the Shield
-    actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
-    myShield.loop(actPower);
+    if (Verbose1) DebugTln("doTaskShield..");
+    if (relays0.isActive(thisTimeMinutes))
+    {
+      //-- do whats needed for the Shield
+      actPower = (int)(tlgrmData.power_returned *1000) + (int)(tlgrmData.power_delivered *-1000);
+      relays0.loop(actPower);
+    }
+    else
+    {
+      DebugTln("Shield is inactive");
+      relays0.setRelayState(LOW);
+    }
   }
   
 } //  doTaskShield()

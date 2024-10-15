@@ -20,16 +20,27 @@ static const char *TAG = "Shield32";
 Shield32::Shield32() {}
 
 //--------------------------------------------------------------------------------------------
-void Shield32::setup(int pinNr, int8_t inversedLogic, int onValue, int offValue, uint32_t onDelay, uint32_t offDelay)
+void Shield32::setup(int pinNr, int8_t inversedLogic, int activeStart, int activeStop, int onValue, int offValue, uint32_t onDelay, uint32_t offDelay)
 {
   esp_log_level_set("Shield32", ESP_LOG_INFO);
   Shield32::_pinNr          = pinNr;
   Shield32::_inversedLogic  = inversedLogic;
+  Shield32::_activeStart    = activeStart;
+  Shield32::_activeStop     = activeStop;
   Shield32::_onValue        = onValue;
   Shield32::_offValue       = offValue;
   Shield32::_onDelay        = onDelay;
   Shield32::_offDelay       = offDelay;
-  Shield32::_switchDelay  = millis() + (Shield32::_onDelay * 1000);
+  if (Shield32::_onDelay > (30*1000)) 
+  {
+    //-- wait 30 seconds before activating the Shield
+    Shield32::_switchDelay  = millis() + (30 *1000);  
+  }
+  else
+  {
+    //-- wait onDelay seconds before activating the Shield
+    Shield32::_switchDelay  = millis() + (Shield32::_onDelay *1000);  
+  }
 
   if (Shield32::_inversedLogic)
   {
@@ -184,6 +195,27 @@ void Shield32::loop(int actualValue)
 
 } //  loop()
 
+//--------------------------------------------------------------------------------------------
+bool Shield32::isActive(int thisTimeMinutes)
+{
+    // Case 1: start == eind, altijd actief
+    if (_activeStart == _activeStop) 
+    {
+        return true;
+    }
+    // Case 2: start <= eind, eenvoudig interval op dezelfde dag
+    if (_activeStart <= _activeStop) 
+    {
+        // Het actieve interval is tussen start en eind
+        return (bool)(thisTimeMinutes >= _activeStart && thisTimeMinutes < _activeStop);
+    } 
+    // Case 3: start > eind, het interval gaat over middernacht heen
+    else 
+    {
+        // Het actieve interval is van start tot middernacht, OF van middernacht tot eind
+        return (bool)(thisTimeMinutes >= _activeStart || thisTimeMinutes < _activeStop);
+    }
+} //  isActive()
 
 //--------------------------------------------------------------------------------------------
 bool Shield32::getRelayState()
@@ -192,7 +224,16 @@ bool Shield32::getRelayState()
         return 1;
   else  return 0;
 
-} // flipSwitch()flipSwitch()
+} // getRelayState()
+
+//--------------------------------------------------------------------------------------------
+void Shield32::setRelayState(bool state)
+{
+  if (state)
+        digitalWrite(Shield32::_pinNr, Shield32::_HIGH);
+  else  digitalWrite(Shield32::_pinNr, Shield32::_LOW);
+
+} // setRelayState()
 
 
 //--------------------------------------------------------------------------------------------
@@ -200,7 +241,7 @@ void Shield32::flipSwitch()
 {
   Shield32::_mustFlip = true;
 
-} // flipSwitch()flipSwitch()
+} // flipSwitch()
 
 
 /***************************************************************************

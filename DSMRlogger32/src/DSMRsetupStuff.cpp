@@ -130,6 +130,15 @@ void setupPsram()
   //DebugTf("Used [%d]bytes, Psram Free [%d]bytes [after]\r\n", (PsramStart - PsramEnd), ESP.getFreePsram() );
   PsramStart  = PsramEnd;
 
+  shieldSetting[0]  = (settingShieldStruct *) ps_malloc( sizeof(settingShieldStruct) );
+  shieldSetting[1]  = (settingShieldStruct *) ps_malloc( sizeof(settingShieldStruct) );
+  PsramEnd    = ESP.getFreePsram();
+  //DebugTf("Claim [%d]bytes for shieldSetting\r\n", sizeof(settingShieldStruct) );
+  memset(shieldSetting[0], 0, sizeof(settingShieldStruct) );
+  memset(shieldSetting[1], 0, sizeof(settingShieldStruct) );
+  //DebugTf("Used [%d]bytes, Psram Free [%d]bytes [after]\r\n", (PsramStart - PsramEnd), ESP.getFreePsram() );
+  PsramStart  = PsramEnd;
+
   fieldTable  = (fieldTableStruct *) ps_malloc( sizeof(fieldTableStruct) * 100 );
   PsramEnd    = ESP.getFreePsram();
   //DebugTf("Claim [%d]bytes for fieldTable\r\n", (sizeof(fieldTableStruct) *100) );

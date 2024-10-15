@@ -244,6 +244,66 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
     }
     return;
   }
+
+  if (strcmp(apiId, "shield") == 0)
+  {
+    DebugTln("Handle /api/v2/dev/shield..");
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      //------------------------------------------------------------
+      // json string: {"name":"mqtt_broker","value":"192.168.1.2"}
+      // json string: {"name":"mqtt_interval","value":12}
+      // json string: {"name":"hostname","value":"abc"}
+      //------------------------------------------------------------
+      DebugTln(httpServer.arg(0));
+      //-- Allocate the JsonDocument
+      SpiRamJsonDocument  doc(3000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      DebugTln(jsonBuff);
+      char field[30]     = {0};
+      char newValue[101] = {0};
+      //-- convert HH:MM to minutes
+      String fieldName = doc["name"];
+      String fieldValue = {};
+      if ((fieldName.substring(0, 16) == "shld_activeStart") || (fieldName.substring(0, 15) == "shld_activeStop"))
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        fieldValue = doc["value"].as<String>();
+        // Split the string into hours and minutes
+        int separatorIndex = fieldValue.indexOf(':');
+        uint8_t hours = fieldValue.substring(0, separatorIndex).toInt();    // Extract hours part
+        uint8_t minutes = fieldValue.substring(separatorIndex + 1).toInt(); // Extract minutes part
+        // Convert HH:MM back to minutes
+        uint16_t tmpValue = (hours * 60) + minutes;
+        doc["value"] = String(tmpValue);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, tmpValue, doc["value"].as<String>().c_str());
+      }
+      if (fieldName.substring(0, 12) == "shld_GPIOpin") 
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        int8_t fieldInt8 = doc["value"].as<int>();
+        if (fieldInt8 < 0)  fieldInt8 = -1;
+        else if (fieldInt8 > 13) fieldInt8 = 14;
+        else fieldInt8 = 13;
+        doc["value"] = String(fieldInt8);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, fieldInt8, doc["value"].as<String>().c_str());
+      }
+      strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
+      strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
+      updateShieldSettings(field, newValue);
+      DebugTf("DSMReditor: Shield Field[%s] changed to [%s]\r\n", field, newValue);
+      writeToSysLog("DSMReditor: Shield Field[%s] changed to [%s]", field, newValue);
+      memset(field,    0, sizeof(field));
+      memset(newValue, 0, sizeof(newValue));
+      httpServer.send(200, "application/json", httpServer.arg(0));
+    }
+    else
+    {
+      sendShieldSettings();
+    }
+    return;
+  }
   
   if (strcmp(apiId, "debug") == 0)
   {
@@ -428,12 +488,14 @@ void sendDeviceInfo()
   doc["devinfo"]["telegram_interval"] = (int)devSetting->TelegramInterval;
   doc["devinfo"]["telegram_count"]  = (int)telegramCount;
   doc["devinfo"]["telegram_errors"] = (int)telegramErrors;
-  doc['devinfo']["shield_gpio"]         = (int)devSetting->ShieldGpio;
-  doc['devinfo']["shield_inversed"]     = (int)devSetting->ShieldInversed;
-  doc['devinfo']["shield_on_treshold"]  = (int)devSetting->ShieldOnThreshold;
-  doc['devinfo']["shield_off_treshold"] = (int)devSetting->ShieldOffThreshold;
-  doc['devinfo']["shield_on_delay"]     = (int)devSetting->ShieldOnDelay;
-  doc['devinfo']["shield_off_delay"]    = (int)devSetting->ShieldOffDelay;
+  doc['devinfo']["shld_gpio"]           = (int)shieldSetting[0]->GPIOpin;
+  doc['devinfo']["shld_inversed0"]      = (int)shieldSetting[0]->inversed;
+  doc['devinfo']["shld_activeStart0"]   = (int)shieldSetting[0]->activeStart;
+  doc['devinfo']["shld_activeStop0"]    = (int)shieldSetting[0]->activeStop;
+  doc['devinfo']["shld_onThreshold0"]   = (int)shieldSetting[0]->onThreshold;
+  doc['devinfo']["shld_offThreshold0"]  = (int)shieldSetting[0]->offThreshold;
+  doc['devinfo']["shld_onDelay0"]       = (int)shieldSetting[0]->onDelay;
+  doc['devinfo']["shld_offDelay0"]      = (int)shieldSetting[0]->offDelay;
 
   snprintf(gMsg,  _GMSG_LEN, "%s:%04d", devSetting->MQTTbroker, devSetting->MQTTbrokerPort);
   doc["devinfo"]["mqtt_broker"]     = gMsg;
@@ -716,49 +778,97 @@ void sendDevSettings()
   nestedRec["type"]     = "i"; 
   nestedRec["min"]      = 0; nestedRec["max"] = 600; 
 
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_gpio";
-  nestedRec["value"]    =  devSetting->ShieldGpio;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = -1; nestedRec["max"] = 33; 
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_inversed";
-  nestedRec["value"]    =  devSetting->ShieldInversed;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = 0; nestedRec["max"] = 1; 
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_on_treshold";
-  nestedRec["value"]    =  devSetting->ShieldOnThreshold;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = -10000; nestedRec["max"] = 10000;
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_off_treshold";
-  nestedRec["value"]    =  devSetting->ShieldOffThreshold;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = -10000; nestedRec["max"] = 10000;
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_on_delay";
-  nestedRec["value"]    =  devSetting->ShieldOnDelay;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = 0; nestedRec["max"] = 36000; //-- tien uur (in seconden)
-
-  nestedRec = doc["system"].createNestedObject();
-  nestedRec["name"]     =  "shield_off_delay";
-  nestedRec["value"]    =  devSetting->ShieldOffDelay;
-  nestedRec["type"]     = "i"; 
-  nestedRec["min"]      = 0; nestedRec["max"] = 36000; //-- tien uur (in seconden)
-
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
   //-dbg-Debugln(jsonBuff);
   httpServer.send(200, "application/json", jsonBuff);
 
 } // sendDevSettings()
+
+
+//=======================================================================
+void sendShieldSettings()
+{
+  DebugTln("sending Shield32 settings ...\r");
+
+  char timeBuff[10] = {};
+  uint16_t hours   = 0;
+  uint16_t minutes = 0;
+
+  memset(jsonBuff, 0, _JSONBUFF_LEN);
+
+  //-- Allocate the JsonDocument
+  SpiRamJsonDocument  doc(3000);
+  JsonObject nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_GPIOpin0";
+  nestedRec["value"]  =  shieldSetting[0]->GPIOpin;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -1; nestedRec["max"] = 14; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_inversed0";
+  nestedRec["value"]  =  shieldSetting[0]->inversed;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 1; 
+  
+  DebugTf("shld_activeStart0: %d\r\n", shieldSetting[0]->activeStart);
+  nestedRec  = doc["shield"].createNestedObject();
+  nestedRec["name"]     =  "shld_activeStart0";
+  // Convert time in minutes to HH:MM format
+  hours   = shieldSetting[0]->activeStart / 60;
+  minutes = shieldSetting[0]->activeStart % 60;
+  // Create the HH:MM formatted string
+  //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
+  snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
+  DebugTf("hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  nestedRec["value"]    =  timeBuff;
+  nestedRec["type"]     = "s"; 
+  nestedRec["maxlen"]   = 6; 
+
+  DebugTf("shld_activeStop0: %d\r\n", shieldSetting[0]->activeStop);
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]     =  "shld_activeStop0";
+  // Convert time in minutes to HH:MM format
+  hours   = shieldSetting[0]->activeStop / 60;
+  minutes = shieldSetting[0]->activeStop % 60;
+  // Create the HH:MM formatted string
+  //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
+  snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
+  DebugTf("hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  nestedRec["value"]    =  timeBuff;
+  nestedRec["type"]     = "s"; 
+  nestedRec["maxlen"]   = 6; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_onThreshold0";
+  nestedRec["value"]  =  shieldSetting[0]->onThreshold;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -10000; nestedRec["max"] = 10000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_offThreshold0";
+  nestedRec["value"]  =  shieldSetting[0]->offThreshold;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -10000; nestedRec["max"] = 10000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_onDelay0";
+  nestedRec["value"]  =  shieldSetting[0]->onDelay;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 36000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_offDelay0";
+  nestedRec["value"]  =  shieldSetting[0]->offDelay;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 36000; 
+  
+  serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
+  serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+  Debugln(jsonBuff);
+  httpServer.send(200, "application/json", jsonBuff);
+
+} // sendShieldSettings()
 
 
 //=======================================================================
@@ -780,8 +890,12 @@ void sendJsonV2smApi(const char *firstLevel)
   tlgrmData.applyEach(buildJsonV2ApiSm());
   if (strcmp(firstLevel, "actual") == 0)
   {
+    time(&now);
     addToTable("gas_delivered", gasDelivered);
-    addToTable("relay_state", myShield.getRelayState());
+    uint16_t nowMinutes = (localtime(&now)->tm_hour*60) + localtime(&now)->tm_min;
+    DebugTf("[%02d:%02d] >>>> nowMinutes[%d]\r\n", localtime(&now)->tm_hour, localtime(&now)->tm_min, nowMinutes);
+    addToTable("relay_active0", (int)relays0.isActive(nowMinutes));
+    addToTable("relay_state0", (int)relays0.getRelayState());
   }
   //-- Allocate the JsonDocument
   SpiRamJsonDocument  doc(3000);

@@ -281,13 +281,6 @@ void writeDevSettings(bool show)
   doc["mqttPassword"]       = devSetting->MQTTpasswd;
   doc["mqttInterval"]       = devSetting->MQTTinterval;
   doc["mqttTopTopic"]       = devSetting->MQTTtopTopic;
-  //-- Shield Stuff
-  doc["shieldGpio"]         = devSetting->ShieldGpio;
-  doc["shieldInversed"]     = devSetting->ShieldInversed;
-  doc["shieldOnThreshold"]  = devSetting->ShieldOnThreshold; 
-  doc["shieldOffThreshold"] = devSetting->ShieldOffThreshold;
-  doc["shieldOnDelay"]      = devSetting->ShieldOnDelay;
-  doc["shieldOffDelay"]     = devSetting->ShieldOffDelay;
 
   //DebugTln("---------------------------------------------------");
   //serializeJsonPretty(doc, Serial);
@@ -308,25 +301,10 @@ void writeDevSettings(bool show)
   if (devSetting->NeoBrightness <  10)   devSetting->NeoBrightness = 10;
   if (devSetting->NeoBrightness > 250)   devSetting->NeoBrightness = 250;
   if (devSetting->TelegramInterval  < 2) devSetting->TelegramInterval = 10;
-  if (!isValidGpio(devSetting->ShieldGpio))
-  {
-      devSetting->ShieldGpio = -1;
-  }
-  if (devSetting->ShieldInversed < 0)     devSetting->ShieldInversed = 0;  
-  if (devSetting->ShieldInversed > 1)     devSetting->ShieldInversed = 1;  
-  if (devSetting->ShieldOnThreshold < devSetting->ShieldOffThreshold) devSetting->ShieldOnThreshold = devSetting->ShieldOffThreshold;
-  if (devSetting->ShieldOnDelay <     0)  devSetting->ShieldOnDelay =     0;
-  if (devSetting->ShieldOnDelay > 36000)  devSetting->ShieldOnDelay = 36000;
-  if (devSetting->ShieldOffDelay <     0) devSetting->ShieldOffDelay =     0;
-  if (devSetting->ShieldOffDelay > 36000) devSetting->ShieldOffDelay = 36000;
 
   DebugTf("Change nextTelegram timer to [%d] seconds ..\r\n", devSetting->TelegramInterval);
   CHANGE_INTERVAL_SEC(nextTelegram,   devSetting->TelegramInterval);
   CHANGE_INTERVAL_MIN(oledSleepTimer, devSetting->OledSleep);
-
-  myShield.setup(devSetting->ShieldGpio, devSetting->ShieldInversed
-                                       , devSetting->ShieldOnThreshold, devSetting->ShieldOffThreshold
-                                       , devSetting->ShieldOnDelay, devSetting->ShieldOffDelay);
 
   if (show) { showDevSettings(); }
 
@@ -357,12 +335,7 @@ void readDevSettings(bool show)
     devSetting->TelegramInterval    = 10;
     devSetting->MQTTinterval        = 0;
     strlcpy(devSetting->MQTTtopTopic, _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1));
-    devSetting->ShieldGpio          = -1;
-    devSetting->ShieldInversed      = 0;
-    devSetting->ShieldOnThreshold   = 0;
-    devSetting->ShieldOffThreshold  = 0;
-    devSetting->ShieldOnDelay       = 0;
-    devSetting->ShieldOffDelay      = 0;
+    DebugTln(F(" .. going to writeDevSettings!"));
     writeDevSettings(false);
   }
 
@@ -410,12 +383,6 @@ void readDevSettings(bool show)
   if (doc["mqttPassword"])  { strlcpy(devSetting->MQTTpasswd, doc["mqttPassword"] | "", (_MQTT_PASSWD_LEN -1)); }
   if (doc["mqttInterval"])  { devSetting->MQTTinterval        = doc["mqttInterval"].as<int>(); }
   if (doc["mqttTopTopic"])  { strlcpy(devSetting->MQTTtopTopic, doc["mqttTopTopic"] | _DEFAULT_HOSTNAME, (_MQTT_TOPTOPIC_LEN -1)); }
-  if (doc["shieldGpio"])           { devSetting->ShieldGpio         = doc["shieldGpio"].as<int>(); }
-  if (doc["shieldInversed"])       { devSetting->ShieldInversed     = doc["shieldInversed"].as<int>(); }
-  if (doc["shieldOnThreshold"])    { devSetting->ShieldOnThreshold  = doc["shieldOnThreshold"].as<int>(); }
-  if (doc["shieldOffThreshold"])   { devSetting->ShieldOffThreshold = doc["shieldOffThreshold"].as<int>(); }
-  if (doc["shieldOnDelay"])        { devSetting->ShieldOnDelay      = doc["shieldOnDelay"].as<int>(); }
-  if (doc["shieldOffDelay"])       { devSetting->ShieldOffDelay     = doc["shieldOffDelay"].as<int>(); }
 
   devSetting->NoHourSlots  = readRingHistoryDepth(HOURS_FILE,  RNG_HOURS);
   if (devSetting->NoHourSlots > 190) devSetting->NoHourSlots  = 190;
@@ -448,6 +415,142 @@ void readDevSettings(bool show)
 
 
 //=======================================================================
+void writeShieldSettings(bool show)
+{
+  yield();
+  DebugTf("Writing to [%s] ..\r\n", _SHIELD_FILE);
+
+  File file = _FSYS.open(_SHIELD_FILE, "w"); // open for reading and writing
+  if (!file)
+  {
+    DebugTf("open(%s, 'w') FAILED!!! --> Bailout\r\n", _SHIELD_FILE);
+    return;
+  }
+  yield();
+
+  DebugTln("Start writing shieldSetting's ..");
+  //-- Allocate the JsonDocument
+  SpiRamJsonDocument  doc(3000);
+
+  //-- Fill JSON document from settings
+  doc["shld_GPIOpin0"]      = shieldSetting[0]->GPIOpin;
+  doc["shld_inversed0"]     = shieldSetting[0]->inversed;
+  doc["shld_activeStart0"]  = shieldSetting[0]->activeStart;
+  doc["shld_activeStop0"]   = shieldSetting[0]->activeStop;
+  doc["shld_onThreshold0"]  = shieldSetting[0]->onThreshold; 
+  doc["shld_offThreshold0"] = shieldSetting[0]->offThreshold;
+  doc["shld_onDelay0"]      = shieldSetting[0]->onDelay;
+  doc["shld_offDelay0"]     = shieldSetting[0]->offDelay;
+
+  DebugTln("---------------------------------------------------");
+  serializeJsonPretty(doc, Serial);
+  Debugln();
+  DebugTln("---------------------------------------------------");
+  // Serialize JSON to file
+  bool success = serializeJsonPretty(doc, file) > 0;
+  if (!success)
+  {
+    DebugTln("\r\nFailed to serialize and write shieldSetting's to file ");
+  }
+
+  file.close();
+  
+  if (shieldSetting[0]->GPIOpin != 13 && shieldSetting[0]->GPIOpin != 14)  shieldSetting[0]->GPIOpin = -1;  
+  if (shieldSetting[0]->inversed < 0)         shieldSetting[0]->inversed = 0;  
+  if (shieldSetting[0]->inversed > 1)         shieldSetting[0]->inversed = 1;  
+  if (shieldSetting[0]->activeStart <    0)   shieldSetting[0]->activeStart =    0;
+  if (shieldSetting[0]->activeStart > 1439)   shieldSetting[0]->activeStart = 1439;  //-- 23:59
+  if (shieldSetting[0]->activeStop  <    0)   shieldSetting[0]->activeStop  =    0;
+  if (shieldSetting[0]->activeStop  > 1439)   shieldSetting[0]->activeStop  = 1439;  //-- 23:59
+  if (shieldSetting[0]->onThreshold < shieldSetting[0]->offThreshold) shieldSetting[0]->onThreshold = shieldSetting[0]->offThreshold;
+  if (shieldSetting[0]->onDelay  <     0)     shieldSetting[0]->onDelay =      0;
+  if (shieldSetting[0]->onDelay  > 36000)     shieldSetting[0]->onDelay =  36000;
+  if (shieldSetting[0]->offDelay <     0)     shieldSetting[0]->offDelay =     0;
+  if (shieldSetting[0]->offDelay > 36000)     shieldSetting[0]->offDelay = 36000;
+
+  relays0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
+                                       , shieldSetting[0]->activeStart, shieldSetting[0]->activeStop
+                                       , shieldSetting[0]->onThreshold, shieldSetting[0]->offThreshold
+                                       , shieldSetting[0]->onDelay, shieldSetting[0]->offDelay);
+
+  if (show) { showShieldSettings(); }
+
+  Debugln("done ..");
+
+} // writeShieldSettings()
+
+
+//=======================================================================
+void readShieldSettings(bool show)
+{
+  String sTmp, nColor;
+  String words[10];
+
+  File file;
+
+  DebugTf(" %s ..\r\n", _SHIELD_FILE);
+
+  if (!_FSYS.exists(_SHIELD_FILE))
+  {
+    DebugTln(F(" .. file not found! --> created file!"));
+    shieldSetting[0]->GPIOpin      = -1;
+    shieldSetting[0]->inversed      = 0;
+    shieldSetting[0]->activeStart   = 0;
+    shieldSetting[0]->activeStop    = 0;
+    shieldSetting[0]->onThreshold   = 0;
+    shieldSetting[0]->offThreshold  = 0;
+    shieldSetting[0]->onDelay       = 0;
+    shieldSetting[0]->offDelay      = 0;
+    DebugTln(F(" .. going to writeShieldSettings!"));
+    writeShieldSettings(false);
+  }
+
+  file = _FSYS.open(_SHIELD_FILE, "r");
+  if (!file)
+  {
+    DebugTf(" .. something went wrong opening [%s]\r\n", _SHIELD_FILE);
+    delay(100);
+  }
+
+  DebugTln("Reading Shield Setting's\r");
+  //-- Allocate the JsonDocument (size by trail and error)
+  SpiRamJsonDocument  doc(3000);
+
+  //-- Parse the JSON object in the file
+  DeserializationError err = deserializeJson(doc, file);
+
+  //-- This may fail if the JSON is invalid
+  if (err)
+  {
+    DebugTln("Failed to deserialize shieldSetting's: ");
+    Debugln(err.f_str());
+    file.close();
+    return;
+  }
+
+  file.close();
+
+  serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
+  //Debugln(jsonBuff);
+  
+  //-- Extract shieldSetting settings from the JSON document
+  if (doc["shld_GPIOpin0"])        { shieldSetting[0]->GPIOpin      = doc["shld_GPIOpin0"].as<int>(); }
+  if (doc["shld_inversed0"])       { shieldSetting[0]->inversed     = doc["shld_inversed0"].as<int>(); }
+  if (doc["shld_activeStart0"])    { shieldSetting[0]->activeStart  = doc["shld_activeStart0"].as<int>(); }
+  if (doc["shld_activeStop0"])     { shieldSetting[0]->activeStop   = doc["shld_activeStop0"].as<int>(); }
+  if (doc["shld_onThreshold0"])    { shieldSetting[0]->onThreshold  = doc["shld_onThreshold0"].as<int>(); }
+  if (doc["shld_offThreshold0"])   { shieldSetting[0]->offThreshold = doc["shld_offThreshold0"].as<int>(); }
+  if (doc["shld_onDelay0"])        { shieldSetting[0]->onDelay      = doc["shld_onDelay0"].as<int>(); }
+  if (doc["shld_offDelay0"])       { shieldSetting[0]->offDelay     = doc["shld_offDelay0"].as<int>(); }
+
+  if (show) { showShieldSettings(); }
+
+  DebugTln(F(" .. done\r"));
+
+} // readShieldSettings()
+
+
+//=======================================================================
 void showDevSettings()
 {
     Debugln("\r\n==== System settings ============================================\r");
@@ -477,23 +580,27 @@ void showDevSettings()
     Debugf("          MQTT send Interval : %d\r\n", devSetting->MQTTinterval);
     Debugf("              MQTT top Topic : %s\r\n", devSetting->MQTTtopTopic);
 
-    Debugln(F("\r\n==== SHIELD settings ============================================\r"));
-    if (isValidGpio(devSetting->ShieldGpio))
-        Debugf( "                 Shield GPIO : %d\r\n", devSetting->ShieldGpio);
-    else 
-    {
-        devSetting->ShieldGpio = -1;
-        Debugf( "                 Shield GPIO : %s\r\n", "Not Used");
-    }
-    Debugf("   Shield Has Inverted Logic : %s\r\n", (devSetting->ShieldInversed ? "Yes":"No"));
-    Debugf("         Shield On Threshold : %d [Watt]\r\n", devSetting->ShieldOnThreshold);
-    Debugf("        Shield Off Threshold : %d [Watt]\r\n", devSetting->ShieldOffThreshold);
-    Debugf("      Shield Relays On Delay : %d [seconden]\r\n", devSetting->ShieldOnDelay);
-    Debugf("     Shield Relays Off Delay : %d [seconden]\r\n", devSetting->ShieldOffDelay);
-
     Debugln("-\r");
 
 } //  showDevSettings()
+
+
+//=======================================================================
+void showShieldSettings()
+{
+    Debugln(F("\r\n==== SHIELD settings ============================================\r"));
+    Debugf("           Relays-0 GPIO pin : %d \r\n", shieldSetting[0]->GPIOpin);
+    Debugf(" Relays-0 Has Inverted Logic : %s\r\n", (shieldSetting[0]->inversed ? "Yes":"No"));
+    Debugf("       Relays-0 Start Active : %02d:%02d \r\n", (shieldSetting[0]->activeStart / 60), (shieldSetting[0]->activeStart % 60));
+    Debugf("        Relays-0 Stop Active : %02d:%02d \r\n", (shieldSetting[0]->activeStop  / 60), (shieldSetting[0]->activeStop  % 60));
+    Debugf("       Relays-0 On Threshold : %d [Watt]\r\n", shieldSetting[0]->onThreshold);
+    Debugf("      Relays-0 Off Threshold : %d [Watt]\r\n", shieldSetting[0]->offThreshold);
+    Debugf("           Relays-0 On Delay : %d [seconden]\r\n", shieldSetting[0]->onDelay);
+    Debugf("          Relays-0 Off Delay : %d [seconden]\r\n", shieldSetting[0]->offDelay);
+
+    Debugln("-\r");
+
+} //  showShieldSettings()
 
 
 //=======================================================================
@@ -600,43 +707,29 @@ void updateDevSettings(const char *field, const char *newValue)
   }
   if (!strcasecmp(field, "mqtt_toptopic"))      strlcpy(devSetting->MQTTtopTopic, newValue, 20);
 
-  if (!strcasecmp(field, "shield_gpio")) 
-  {
-    if (isValidGpio(String(newValue).toInt())) 
-          devSetting->ShieldGpio = String(newValue).toInt();
-    else  devSetting->ShieldGpio = -1;
-
-
-  }
-  if (!strcasecmp(field, "shield_inversed"))      devSetting->ShieldInversed      = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_on_treshold"))   devSetting->ShieldOnThreshold   = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_off_treshold"))  devSetting->ShieldOffThreshold  = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_on_delay"))      devSetting->ShieldOnDelay       = String(newValue).toInt();
-  if (!strcasecmp(field, "shield_off_delay"))     devSetting->ShieldOffDelay      = String(newValue).toInt();
-
   writeDevSettings(false);
 
 } // updateDevSettings()
 
 
-
 //=======================================================================
-//-- Function to check if a value exists in a predefined set of values
-bool isValidGpio(int newGpio) 
+void updateShieldSettings(const char *field, const char *newValue)
 {
-  int validGpios[] = {2,12,13,14,15,16,17,19,25,26,27,32,33}; //-- List of shield GPIO pins
-  int size = sizeof(validGpios) / sizeof(validGpios[0]);      //-- Calculate the array size
+  DebugTf("-> field[%s], newValue[%s]\r\n", field, newValue);
 
-  for (int i = 0; i < size; ++i) 
-  {
-      if (newGpio == validGpios[i]) 
-      {
-          return true;  //-- Return true if the value is found
-      }
-  }
-  return false;  //-- Return false if not found
+  if (!strcasecmp(field, "shld_GPIOpin0"))      shieldSetting[0]->GPIOpin       = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_inversed0"))     shieldSetting[0]->inversed      = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_activeStart0"))  shieldSetting[0]->activeStart   = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_activeStop0"))   shieldSetting[0]->activeStop    = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_onThreshold0"))  shieldSetting[0]->onThreshold   = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_offThreshold0")) shieldSetting[0]->offThreshold  = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_onDelay0"))      shieldSetting[0]->onDelay       = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_offDelay0"))     shieldSetting[0]->offDelay      = String(newValue).toInt();
 
-} // isValidGpio()
+  writeShieldSettings(true);
+
+} // updateShieldSettings()
+
 
 /***************************************************************************
 *

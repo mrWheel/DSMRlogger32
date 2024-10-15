@@ -332,12 +332,13 @@
 
   <div class="nav-container">
     <div class='nav-left'>
-      <a id='bTerug'            class='nav-item tabButton'>Terug</a>
-      <a id='bEditMonths'       class='nav-item tabButton'>Meterstanden</a>
-      <a id='bEditSmSettings'   class='nav-item tabButton'>Settings</a>
-      <a id='bEditDevSettings'  class='nav-item tabButton'>System</a>
-      <a id='bUndo'             class='nav-item tabButton'>Herstel</a>
-      <a id='bSave'             class='nav-item tabButton'>Opslaan</a>
+      <a id='bTerug'              class='nav-item tabButton'>Terug</a>
+      <a id='bEditMonths'         class='nav-item tabButton'>Meterstanden</a>
+      <a id='bEditDevSettings'    class='nav-item tabButton'>System</a>
+      <a id='bEditSmSettings'     class='nav-item tabButton'>Settings</a>
+      <a id='bEditShieldSettings' class='nav-item tabButton'>Shield32</a>
+      <a id='bUndo'               class='nav-item tabButton'>Herstel</a>
+      <a id='bSave'               class='nav-item tabButton'>Opslaan</a>
     </div>
   </div>  <!-- END nav-container -->
 
@@ -371,11 +372,18 @@
   </div>  <!-- END tabSettings -->
   
   <div id="tabEditDevSettings" class="tabName outer-div" style="display:none">
-    <!-- START network Tab System -->
+    <!-- START Device Tab System -->
     <br>
       <div id="system" class="inner-div" style="width: 500px;">
       </div> 
-  </div>  <!-- END tabSystem -->
+  </div>  <!-- END tabDevice -->
+  
+  <div id="tabEditShieldSettings" class="tabName outer-div" style="display:none">
+    <!-- START Shield Tab System -->
+    <br>
+      <div id="shield" class="inner-div" style="width: 500px;">
+      </div> 
+  </div>  <!-- END shieldSystem -->
   
   <!-- END Tabbladen -->
 

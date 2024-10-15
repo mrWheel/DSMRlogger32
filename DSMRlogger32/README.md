@@ -15,6 +15,14 @@ As of now the DSMRlogger32 firmware is ported to `VSCode` with the `PlatformIO` 
 <table>
   <tr><th>Versie</th><th align="Left">Opmerking</th></tr>
   <tr>
+    <td valign="top">5.4.2</td>
+    <td>Nieuwe functionaliteit
+        <br>2024-10-15: Add second relay on shield.<br>
+        Ieder relay kan afzonderlijk binnen een tijdsframe worden in- en uitgeschakeld.<br>
+        Het is het beste om zowel de firmware alsook SPIFFS te updaten.
+    </td>
+  </tr>
+  <tr>
     <td valign="top">5.4.0</td>
     <td>Nieuwe functionaliteit
         <br>2024-10-03: Met deze update is het niet alleen mogelijk om firmware updates

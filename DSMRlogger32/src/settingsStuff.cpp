@@ -442,6 +442,15 @@ void writeShieldSettings(bool show)
   doc["shld_onDelay0"]      = shieldSetting[0]->onDelay;
   doc["shld_offDelay0"]     = shieldSetting[0]->offDelay;
 
+  doc["shld_GPIOpin1"]      = shieldSetting[1]->GPIOpin;
+  doc["shld_inversed1"]     = shieldSetting[1]->inversed;
+  doc["shld_activeStart1"]  = shieldSetting[1]->activeStart;
+  doc["shld_activeStop1"]   = shieldSetting[1]->activeStop;
+  doc["shld_onThreshold1"]  = shieldSetting[1]->onThreshold; 
+  doc["shld_offThreshold1"] = shieldSetting[1]->offThreshold;
+  doc["shld_onDelay1"]      = shieldSetting[1]->onDelay;
+  doc["shld_offDelay1"]     = shieldSetting[1]->offDelay;
+
   DebugTln("---------------------------------------------------");
   serializeJsonPretty(doc, Serial);
   Debugln();
@@ -463,15 +472,38 @@ void writeShieldSettings(bool show)
   if (shieldSetting[0]->activeStop  <    0)   shieldSetting[0]->activeStop  =    0;
   if (shieldSetting[0]->activeStop  > 1439)   shieldSetting[0]->activeStop  = 1439;  //-- 23:59
   if (shieldSetting[0]->onThreshold < shieldSetting[0]->offThreshold) shieldSetting[0]->onThreshold = shieldSetting[0]->offThreshold;
-  if (shieldSetting[0]->onDelay  <     0)     shieldSetting[0]->onDelay =      0;
-  if (shieldSetting[0]->onDelay  > 36000)     shieldSetting[0]->onDelay =  36000;
-  if (shieldSetting[0]->offDelay <     0)     shieldSetting[0]->offDelay =     0;
-  if (shieldSetting[0]->offDelay > 36000)     shieldSetting[0]->offDelay = 36000;
+  if (shieldSetting[0]->onDelay  <       0)   shieldSetting[0]->onDelay =      0;
+  if (shieldSetting[0]->onDelay  >   36000)   shieldSetting[0]->onDelay =  36000;
+  if (shieldSetting[0]->offDelay <       0)   shieldSetting[0]->offDelay =     0;
+  if (shieldSetting[0]->offDelay >   36000)   shieldSetting[0]->offDelay = 36000;
 
-  relays0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
+  relay0.setup(shieldSetting[0]->GPIOpin, shieldSetting[0]->inversed
                                        , shieldSetting[0]->activeStart, shieldSetting[0]->activeStop
                                        , shieldSetting[0]->onThreshold, shieldSetting[0]->offThreshold
                                        , shieldSetting[0]->onDelay, shieldSetting[0]->offDelay);
+
+  if (shieldSetting[1]->GPIOpin != 13 && shieldSetting[1]->GPIOpin != 14)  shieldSetting[1]->GPIOpin = -1;  
+  if (shieldSetting[0]->GPIOpin > 0 && shieldSetting[1]->GPIOpin > 0)
+  {  
+    if (shieldSetting[0]->GPIOpin == 13) {shieldSetting[1]->GPIOpin = 14; } 
+    if (shieldSetting[0]->GPIOpin == 14) {shieldSetting[1]->GPIOpin = 13; } 
+  }
+  if (shieldSetting[1]->inversed < 0)         shieldSetting[1]->inversed = 0;  
+  if (shieldSetting[1]->inversed > 1)         shieldSetting[1]->inversed = 1;  
+  if (shieldSetting[1]->activeStart <    0)   shieldSetting[1]->activeStart =    0;
+  if (shieldSetting[1]->activeStart > 1439)   shieldSetting[1]->activeStart = 1439;  //-- 23:59
+  if (shieldSetting[1]->activeStop  <    0)   shieldSetting[1]->activeStop  =    0;
+  if (shieldSetting[1]->activeStop  > 1439)   shieldSetting[1]->activeStop  = 1439;  //-- 23:59
+  if (shieldSetting[1]->onThreshold < shieldSetting[1]->offThreshold) shieldSetting[1]->onThreshold = shieldSetting[1]->offThreshold;
+  if (shieldSetting[1]->onDelay  <       0)   shieldSetting[1]->onDelay =      0;
+  if (shieldSetting[1]->onDelay  >   36000)   shieldSetting[1]->onDelay =  36000;
+  if (shieldSetting[1]->offDelay <       0)   shieldSetting[1]->offDelay =     0;
+  if (shieldSetting[1]->offDelay >   36000)   shieldSetting[1]->offDelay = 36000;
+
+  relay1.setup(shieldSetting[1]->GPIOpin, shieldSetting[1]->inversed
+                                       , shieldSetting[1]->activeStart, shieldSetting[1]->activeStop
+                                       , shieldSetting[1]->onThreshold, shieldSetting[1]->offThreshold
+                                       , shieldSetting[1]->onDelay, shieldSetting[1]->offDelay);
 
   if (show) { showShieldSettings(); }
 
@@ -501,6 +533,14 @@ void readShieldSettings(bool show)
     shieldSetting[0]->offThreshold  = 0;
     shieldSetting[0]->onDelay       = 0;
     shieldSetting[0]->offDelay      = 0;
+    shieldSetting[1]->GPIOpin      = -1;
+    shieldSetting[1]->inversed      = 0;
+    shieldSetting[1]->activeStart   = 0;
+    shieldSetting[1]->activeStop    = 0;
+    shieldSetting[1]->onThreshold   = 0;
+    shieldSetting[1]->offThreshold  = 0;
+    shieldSetting[1]->onDelay       = 0;
+    shieldSetting[1]->offDelay      = 0;
     DebugTln(F(" .. going to writeShieldSettings!"));
     writeShieldSettings(false);
   }
@@ -542,6 +582,15 @@ void readShieldSettings(bool show)
   if (doc["shld_offThreshold0"])   { shieldSetting[0]->offThreshold = doc["shld_offThreshold0"].as<int>(); }
   if (doc["shld_onDelay0"])        { shieldSetting[0]->onDelay      = doc["shld_onDelay0"].as<int>(); }
   if (doc["shld_offDelay0"])       { shieldSetting[0]->offDelay     = doc["shld_offDelay0"].as<int>(); }
+
+  if (doc["shld_GPIOpin1"])        { shieldSetting[1]->GPIOpin      = doc["shld_GPIOpin1"].as<int>(); }
+  if (doc["shld_inversed1"])       { shieldSetting[1]->inversed     = doc["shld_inversed1"].as<int>(); }
+  if (doc["shld_activeStart1"])    { shieldSetting[1]->activeStart  = doc["shld_activeStart1"].as<int>(); }
+  if (doc["shld_activeStop1"])     { shieldSetting[1]->activeStop   = doc["shld_activeStop1"].as<int>(); }
+  if (doc["shld_onThreshold1"])    { shieldSetting[1]->onThreshold  = doc["shld_onThreshold1"].as<int>(); }
+  if (doc["shld_offThreshold1"])   { shieldSetting[1]->offThreshold = doc["shld_offThreshold1"].as<int>(); }
+  if (doc["shld_onDelay1"])        { shieldSetting[1]->onDelay      = doc["shld_onDelay1"].as<int>(); }
+  if (doc["shld_offDelay1"])       { shieldSetting[1]->offDelay     = doc["shld_offDelay1"].as<int>(); }
 
   if (show) { showShieldSettings(); }
 
@@ -588,15 +637,38 @@ void showDevSettings()
 //=======================================================================
 void showShieldSettings()
 {
-    Debugln(F("\r\n==== SHIELD settings ============================================\r"));
-    Debugf("           Relays-0 GPIO pin : %d \r\n", shieldSetting[0]->GPIOpin);
-    Debugf(" Relays-0 Has Inverted Logic : %s\r\n", (shieldSetting[0]->inversed ? "Yes":"No"));
-    Debugf("       Relays-0 Start Active : %02d:%02d \r\n", (shieldSetting[0]->activeStart / 60), (shieldSetting[0]->activeStart % 60));
-    Debugf("        Relays-0 Stop Active : %02d:%02d \r\n", (shieldSetting[0]->activeStop  / 60), (shieldSetting[0]->activeStop  % 60));
-    Debugf("       Relays-0 On Threshold : %d [Watt]\r\n", shieldSetting[0]->onThreshold);
-    Debugf("      Relays-0 Off Threshold : %d [Watt]\r\n", shieldSetting[0]->offThreshold);
-    Debugf("           Relays-0 On Delay : %d [seconden]\r\n", shieldSetting[0]->onDelay);
-    Debugf("          Relays-0 Off Delay : %d [seconden]\r\n", shieldSetting[0]->offDelay);
+    Debugln(F("\r\n==== SHIELD settings === relay0 =================================\r"));
+    if (shieldSetting[0]->GPIOpin == -1)
+    {
+      Debugf("                     Relay-0 : not configured!");    
+    }
+    else
+    {
+      Debugf("            Relay-0 GPIO pin : %d \r\n", shieldSetting[0]->GPIOpin);
+      Debugf("  Relay-0 Has Inverted Logic : %s\r\n", (shieldSetting[0]->inversed ? "Yes":"No"));
+      Debugf("        Relay-0 Start Active : %02d:%02d \r\n", (shieldSetting[0]->activeStart / 60), (shieldSetting[0]->activeStart % 60));
+      Debugf("         Relay-0 Stop Active : %02d:%02d \r\n", (shieldSetting[0]->activeStop  / 60), (shieldSetting[0]->activeStop  % 60));
+      Debugf("        Relay-0 On Threshold : %d [Watt]\r\n", shieldSetting[0]->onThreshold);
+      Debugf("       Relay-0 Off Threshold : %d [Watt]\r\n", shieldSetting[0]->offThreshold);
+      Debugf("            Relay-0 On Delay : %d [seconden]\r\n", shieldSetting[0]->onDelay);
+      Debugf("           Relay-0 Off Delay : %d [seconden]\r\n", shieldSetting[0]->offDelay);
+    }
+    Debugln(F("\r\n==== SHIELD settings === relay1 =================================\r"));
+    if (shieldSetting[1]->GPIOpin == -1)
+    {
+      Debugf("                     Relay-1 : not configured!");    
+    }
+    else
+    {
+      Debugf("            Relay-1 GPIO pin : %d \r\n", shieldSetting[1]->GPIOpin);
+      Debugf("  Relay-1 Has Inverted Logic : %s\r\n", (shieldSetting[1]->inversed ? "Yes":"No"));
+      Debugf("        Relay-1 Start Active : %02d:%02d \r\n", (shieldSetting[1]->activeStart / 60), (shieldSetting[1]->activeStart % 60));
+      Debugf("         Relay-1 Stop Active : %02d:%02d \r\n", (shieldSetting[1]->activeStop  / 60), (shieldSetting[1]->activeStop  % 60));
+      Debugf("        Relay-1 On Threshold : %d [Watt]\r\n", shieldSetting[1]->onThreshold);
+      Debugf("       Relay-1 Off Threshold : %d [Watt]\r\n", shieldSetting[1]->offThreshold);
+      Debugf("            Relay-1 On Delay : %d [seconden]\r\n", shieldSetting[1]->onDelay);
+      Debugf("           Relay-1 Off Delay : %d [seconden]\r\n", shieldSetting[1]->offDelay);
+    }
 
     Debugln("-\r");
 
@@ -717,6 +789,7 @@ void updateShieldSettings(const char *field, const char *newValue)
 {
   DebugTf("-> field[%s], newValue[%s]\r\n", field, newValue);
 
+  //---------------- relay0 -------------------------------------------------------------------------------
   if (!strcasecmp(field, "shld_GPIOpin0"))      shieldSetting[0]->GPIOpin       = String(newValue).toInt();
   if (!strcasecmp(field, "shld_inversed0"))     shieldSetting[0]->inversed      = String(newValue).toInt();
   if (!strcasecmp(field, "shld_activeStart0"))  shieldSetting[0]->activeStart   = String(newValue).toInt();
@@ -725,6 +798,15 @@ void updateShieldSettings(const char *field, const char *newValue)
   if (!strcasecmp(field, "shld_offThreshold0")) shieldSetting[0]->offThreshold  = String(newValue).toInt();
   if (!strcasecmp(field, "shld_onDelay0"))      shieldSetting[0]->onDelay       = String(newValue).toInt();
   if (!strcasecmp(field, "shld_offDelay0"))     shieldSetting[0]->offDelay      = String(newValue).toInt();
+  //---------------- relay1 -------------------------------------------------------------------------------
+  if (!strcasecmp(field, "shld_GPIOpin1"))      shieldSetting[1]->GPIOpin       = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_inversed1"))     shieldSetting[1]->inversed      = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_activeStart1"))  shieldSetting[1]->activeStart   = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_activeStop1"))   shieldSetting[1]->activeStop    = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_onThreshold1"))  shieldSetting[1]->onThreshold   = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_offThreshold1")) shieldSetting[1]->offThreshold  = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_onDelay1"))      shieldSetting[1]->onDelay       = String(newValue).toInt();
+  if (!strcasecmp(field, "shld_offDelay1"))     shieldSetting[1]->offDelay      = String(newValue).toInt();
 
   writeShieldSettings(true);
 

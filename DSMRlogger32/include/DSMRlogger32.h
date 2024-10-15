@@ -30,7 +30,8 @@
 #include "wifiEvents.h"
 #include "Shield32.h"
 
-Shield32 relays0;
+Shield32 relay0;
+Shield32 relay1;
 
 #include "arduinoGlue.h"
 

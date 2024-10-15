@@ -212,6 +212,27 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
     return;
   }
 
+  if (strcmp(apiId, "relays") == 0)
+  {
+    DebugTln("Handle /api/v2/dev/relays..");
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      SpiRamJsonDocument  doc(2000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      if (doc.containsKey("relay_state0")) 
+      {
+        relay0.setRelayState(doc["relay_state0"].as<int>());
+      }
+      if (doc.containsKey("relay_state1")) 
+      {
+        relay1.setRelayState(doc["relay_state1"].as<int>());
+      }
+      httpServer.send(200, "application/json", httpServer.arg(0));
+      return;
+    }
+  }
+
   if (strcmp(apiId, "settings") == 0)
   {
     DebugTln("Handle /api/v2/dev/settings..");
@@ -811,7 +832,7 @@ void sendShieldSettings()
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 1; 
   
-  DebugTf("shld_activeStart0: %d\r\n", shieldSetting[0]->activeStart);
+  DebugTf("[0] shld_activeStart0: %d\r\n", shieldSetting[0]->activeStart);
   nestedRec  = doc["shield"].createNestedObject();
   nestedRec["name"]     =  "shld_activeStart0";
   // Convert time in minutes to HH:MM format
@@ -820,12 +841,12 @@ void sendShieldSettings()
   // Create the HH:MM formatted string
   //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
   snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
-  DebugTf("hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  DebugTf("[0] hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
   nestedRec["value"]    =  timeBuff;
   nestedRec["type"]     = "s"; 
   nestedRec["maxlen"]   = 6; 
 
-  DebugTf("shld_activeStop0: %d\r\n", shieldSetting[0]->activeStop);
+  DebugTf("[0] shld_activeStop0: %d\r\n", shieldSetting[0]->activeStop);
   nestedRec = doc["shield"].createNestedObject();
   nestedRec["name"]     =  "shld_activeStop0";
   // Convert time in minutes to HH:MM format
@@ -834,7 +855,7 @@ void sendShieldSettings()
   // Create the HH:MM formatted string
   //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
   snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
-  DebugTf("hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  DebugTf("[0] hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
   nestedRec["value"]    =  timeBuff;
   nestedRec["type"]     = "s"; 
   nestedRec["maxlen"]   = 6; 
@@ -862,7 +883,71 @@ void sendShieldSettings()
   nestedRec["value"]  =  shieldSetting[0]->offDelay;
   nestedRec["type"]   = "i"; 
   nestedRec["min"] = 0; nestedRec["max"] = 36000; 
+
+//------------ shieldSetting[1] ---------------------------------------
+  nestedRec["name"]   = "shld_GPIOpin1";
+  nestedRec["value"]  =  shieldSetting[1]->GPIOpin;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -1; nestedRec["max"] = 14; 
   
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_inversed1";
+  nestedRec["value"]  =  shieldSetting[1]->inversed;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 1; 
+  
+  DebugTf("shld_activeStart1: %d\r\n", shieldSetting[1]->activeStart);
+  nestedRec  = doc["shield"].createNestedObject();
+  nestedRec["name"]     =  "shld_activeStart1";
+  // Convert time in minutes to HH:MM format
+  hours   = shieldSetting[1]->activeStart / 60;
+  minutes = shieldSetting[1]->activeStart % 60;
+  // Create the HH:MM formatted string
+  //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
+  snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
+  DebugTf("[1] hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  nestedRec["value"]    =  timeBuff;
+  nestedRec["type"]     = "s"; 
+  nestedRec["maxlen"]   = 6; 
+
+  DebugTf("shld_activeStop1: %d\r\n", shieldSetting[1]->activeStop);
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]     =  "shld_activeStop1";
+  // Convert time in minutes to HH:MM format
+  hours   = shieldSetting[1]->activeStop / 60;
+  minutes = shieldSetting[1]->activeStop % 60;
+  // Create the HH:MM formatted string
+  //timeBuff = String(hours) + ":" + (minutes < 10 ? "0" : "") + String(minutes);
+  snprintf(timeBuff, sizeof(timeBuff), "%02d:%02d", hours, minutes);
+  DebugTf("[1] hours[%02d] minutes[%02d] => timeBuff: [%s]\r\n", hours, minutes, timeBuff);
+  nestedRec["value"]    =  timeBuff;
+  nestedRec["type"]     = "s"; 
+  nestedRec["maxlen"]   = 6; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_onThreshold1";
+  nestedRec["value"]  =  shieldSetting[1]->onThreshold;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -10000; nestedRec["max"] = 10000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_offThreshold1";
+  nestedRec["value"]  =  shieldSetting[1]->offThreshold;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = -10000; nestedRec["max"] = 10000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_onDelay1";
+  nestedRec["value"]  =  shieldSetting[1]->onDelay;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 36000; 
+  
+  nestedRec = doc["shield"].createNestedObject();
+  nestedRec["name"]   = "shld_offDelay1";
+  nestedRec["value"]  =  shieldSetting[1]->offDelay;
+  nestedRec["type"]   = "i"; 
+  nestedRec["min"] = 0; nestedRec["max"] = 36000; 
+
   serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
   serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
   Debugln(jsonBuff);
@@ -894,8 +979,10 @@ void sendJsonV2smApi(const char *firstLevel)
     addToTable("gas_delivered", gasDelivered);
     uint16_t nowMinutes = (localtime(&now)->tm_hour*60) + localtime(&now)->tm_min;
     DebugTf("[%02d:%02d] >>>> nowMinutes[%d]\r\n", localtime(&now)->tm_hour, localtime(&now)->tm_min, nowMinutes);
-    addToTable("relay_active0", (int)relays0.isActive(nowMinutes));
-    addToTable("relay_state0", (int)relays0.getRelayState());
+    addToTable("relay_active0", (int)relay0.isActive(nowMinutes));
+    addToTable("relay_state0", (int)relay0.getRelayState());
+    addToTable("relay_active1", (int)relay1.isActive(nowMinutes));
+    addToTable("relay_state1", (int)relay1.getRelayState());
   }
   //-- Allocate the JsonDocument
   SpiRamJsonDocument  doc(3000);

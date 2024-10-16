@@ -90,11 +90,12 @@ function determineMaxScale(maxValue, isAmpere)
   if (isAmpere) 
   {
     //console.log("Determining max scale for Ampere ["+maxValue+"]");
-    if (Math.abs(maxValue) < 1) return 1;
-    if (Math.abs(maxValue) >= 1 && Math.abs(maxValue) < 2) return 2;
-    if (Math.abs(maxValue) >= 2 && Math.abs(maxValue) < 5) return 5;
-    if (Math.abs(maxValue) >= 5 && Math.abs(maxValue) < 10) return 10;
-    return 16;
+    if (Math.abs(maxValue) <   1) return 1;
+    if (Math.abs(maxValue) >=  1 && Math.abs(maxValue) <  2) return 2;
+    if (Math.abs(maxValue) >=  2 && Math.abs(maxValue) <  5) return 5;
+    if (Math.abs(maxValue) >=  5 && Math.abs(maxValue) < 10) return 10;
+    if (Math.abs(maxValue) >= 10 && Math.abs(maxValue) < 16) return 16;
+    return 25;
   } 
   else 
   {
@@ -103,7 +104,8 @@ function determineMaxScale(maxValue, isAmpere)
     if (Math.abs(maxValue) >= 250 && Math.abs(maxValue) < 500) return 500;
     if (Math.abs(maxValue) >= 500 && Math.abs(maxValue) < 1200) return 1200;
     if (Math.abs(maxValue) >= 1200 && Math.abs(maxValue) < 2500) return 2500;
-    return 3700;
+    if (Math.abs(maxValue) >= 2500 && Math.abs(maxValue) < 3500) return 3500;
+    return 5500;
   }
 }
 

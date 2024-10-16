@@ -81,7 +81,7 @@ void UpdateManager::updateSpiffs(const char *url, ProgressCallback callback)
 void UpdateManager::startUpdate() 
 {
 	ESP_LOGI(TAG, "Update: Updating firmware: %s\n", _url);
-	Serial.printf("(%s) Update: Updating firmware: %s\n", __FUNCTION__, _url);
+	//Serial.printf("(%s) Update: Updating firmware: %s\n", __FUNCTION__, _url);
 
 	_lastPercentage = 0;
 

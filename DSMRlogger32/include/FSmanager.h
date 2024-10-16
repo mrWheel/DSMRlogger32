@@ -5,6 +5,7 @@
 #include "arduinoGlue.h"
 #include <HTTPClient.h>
 #include "UpdateManager.h"
+#include <update.h>
 
 //============ Prototypes ==================
 bool handleList();                                          

@@ -19,7 +19,7 @@ void pulseHeart(bool force)
   
   if (force || ((millis()-pulseTimer) > _PULSE_TIME))
   {
-    DebugTln("Send Heartbeat to WD ...");
+    if (force) { DebugTln("Send Heartbeat to WD ..."); }
     pulseTimer = millis();
     digitalWrite(_PIN_HEARTBEAT, !digitalRead(_PIN_HEARTBEAT));
     //-- neo 0 White

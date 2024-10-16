@@ -451,10 +451,10 @@ void writeShieldSettings(bool show)
   doc["shld_onDelay1"]      = shieldSetting[1]->onDelay;
   doc["shld_offDelay1"]     = shieldSetting[1]->offDelay;
 
-  DebugTln("---------------------------------------------------");
-  serializeJsonPretty(doc, Serial);
-  Debugln();
-  DebugTln("---------------------------------------------------");
+  //DebugTln("---------------------------------------------------");
+  //serializeJsonPretty(doc, Serial);
+  //Debugln();
+  //DebugTln("---------------------------------------------------");
   // Serialize JSON to file
   bool success = serializeJsonPretty(doc, file) > 0;
   if (!success)

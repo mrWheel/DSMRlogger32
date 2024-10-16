@@ -166,6 +166,65 @@ const char RFUindexHtml[] = R"(
 
 const char Header[] = "HTTP/1.1 303 OK\r\nLocation:FSmanager.html\r\nCache-Control: no-cache\r\n";
 
+// This function defines the content of the update page
+void handleUpdatePage() {
+  // Simple update page with [Update Firmware], [Update SPIFFS], and [Return] buttons
+  httpServer.send(200, "text/html",
+    "<h1>DSMR-logger32  (Local Update)</h1>"
+    "<style>"
+    "  body { background-color: lightblue; }"
+    "  .file-input { display: none; }"
+    "  .file-label { display: inline-block; padding: 6px 12px; cursor: pointer; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; width: 180px; text-align: center; }"
+    "  .update-form { display: flex; align-items: center; margin-bottom: 10px; }"
+    "  .filename-label { margin: 0 10px; min-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }"
+    "  .submit-button { width: 150px; }"
+    "  .error-message { color: red; margin-left: 10px; }"
+    "</style>"
+    "<form method='POST' action='/update' enctype='multipart/form-data' class='update-form' id='firmware-form'>"
+    "<input type='file' name='update' id='firmware-file' class='file-input' accept='.bin'>"
+    "<label for='firmware-file' class='file-label'>Choose Firmware File</label>"
+    "<span id='firmware-label' class='filename-label'></span>"
+    "<input type='submit' value='Update Firmware' class='submit-button' id='firmware-submit' disabled>"
+    "<span id='firmware-error' class='error-message'></span>"
+    "</form>"
+    "<form method='POST' action='/update?spiffs=1' enctype='multipart/form-data' class='update-form' id='spiffs-form'>"
+    "<input type='file' name='update' id='spiffs-file' class='file-input' accept='.bin'>"
+    "<label for='spiffs-file' class='file-label'>Choose SPIFFS File</label>"
+    "<span id='spiffs-label' class='filename-label'></span>"
+    "<input type='submit' value='Update SPIFFS' class='submit-button' id='spiffs-submit' disabled>"
+    "<span id='spiffs-error' class='error-message'></span>"
+    "</form>"
+    "<button onclick=\"location.href='/'\" style='width: 150px;'>Cancel Update</button>"
+    "<script>"
+    "function updateFileName(inputId, labelId, submitId, errorId) {"
+    "  const input = document.getElementById(inputId);"
+    "  const label = document.getElementById(labelId);"
+    "  const submit = document.getElementById(submitId);"
+    "  const error = document.getElementById(errorId);"
+    "  input.addEventListener('change', function(e) {"
+    "    const file = e.target.files[0];"
+    "    if (file) {"
+    "      if (file.name.toLowerCase().endsWith('.bin')) {"
+    "        label.textContent = file.name;"
+    "        submit.disabled = false;"
+    "        error.textContent = '';"
+    "      } else {"
+    "        label.textContent = '';"
+    "        submit.disabled = true;"
+    "        error.textContent = 'Please select a .bin file';"
+    "      }"
+    "    } else {"
+    "      label.textContent = '';"
+    "      submit.disabled = true;"
+    "      error.textContent = '';"
+    "    }"
+    "  });"
+    "}"
+    "updateFileName('firmware-file', 'firmware-label', 'firmware-submit', 'firmware-error');"
+    "updateFileName('spiffs-file', 'spiffs-label', 'spiffs-submit', 'spiffs-error');"
+    "</script>");
+}
+
 
 //===========================================================================================
 void setupFSmanager()
@@ -175,11 +234,88 @@ void setupFSmanager()
   httpServer.on("/upload", HTTP_POST, []() {}, handleFileUpload);
   httpServer.on("/listFS", listFS);
   httpServer.on("/ReBoot", reBootESP);
-  httpServer.on("/local_update", HTTP_POST, sendResponce, handleLocalUpdate);  // Changed from "/upload" to "/local_update"
   httpServer.on("/RFUupdate", handleRemoteUpdate);  //-- route for remote update
-  //httpServer.on("/RFUlistFiles", RFUlistFiles);     //-- route for list Firmware
   httpServer.on("/RFUlistFirmware", []() { RFUlistFiles("firmware"); });
   httpServer.on("/RFUlistSpiffs",   []() { RFUlistFiles("spiffs"); });
+
+  //-- Override the update handler to include the resetWatchdog() call
+  httpServer.on("/update", HTTP_POST, []() 
+  {
+    // This block is executed when the update finishes
+    if (Update.hasError()) 
+    {
+      writeToSysLog("Update failed!");
+      httpServer.send(200, "text/html", "Update Failed! <a href='/'>Return to Home</a>");
+    } 
+    else 
+    {
+      //httpServer.send(200, "text/html", "Update Successful! Rebooting... <a href='/'>Return to Home</a>");
+      writeToSysLog("Update successful!");
+      delay(100);
+      ESP.restart();
+    }
+  }, []() 
+  {
+    // Perform the actual update based on the incoming file
+    HTTPUpload& upload = httpServer.upload();
+    if (upload.status == UPLOAD_FILE_START) 
+    {
+      DebugTf("Update: %s\n", upload.filename.c_str());
+      writeToSysLog("Update [%s]... ", upload.filename.c_str());
+
+      // Call the watchdog reset function only once when update begins
+      resetWatchdog();
+      if (httpServer.arg("spiffs") == "1")
+            doRedirect("Wait for SPIFFS update to complete ...", 40, "/", false);      
+      else  doRedirect("Wait for firmware update to complete ...", 60, "/", false);      
+
+      // Check if we're updating SPIFFS or the firmware and start accordingly
+      int updateSize = (httpServer.arg("spiffs") == "1") ? 0x80000 : 0x180000;  // 512KB for SPIFFS, 1.5MB for Firmware
+      if (!Update.begin(updateSize, (httpServer.arg("spiffs") == "1") ? U_SPIFFS : U_FLASH)) 
+      {
+        Update.printError(Serial);
+      }
+    } 
+    else if (upload.status == UPLOAD_FILE_WRITE) 
+    {
+      // Write the uploaded data to the flash memory
+      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) 
+      {
+        Update.printError(Serial);
+      } 
+      else 
+      {
+        // Print a dot to show progress
+        Debug('.');
+        //-- poke WatchDog
+        pulseHeart(false);
+
+      }
+    } else if (upload.status == UPLOAD_FILE_END) 
+    {
+      // Finish the update
+      if (Update.end(true)) 
+      {
+        DebugTf("Update Success: %u bytes\n", upload.totalSize);
+        writeToSysLog("Update Success: %u bytes", upload.totalSize);
+        delay(100);  // Delay a little to allow the response to be sent
+        ESP.restart();  // Restart the ESP32 after successful update
+      } 
+      else 
+      {
+        Update.printError(Serial);
+      }
+    } else if (upload.status == UPLOAD_FILE_ABORTED) 
+    {
+      DebugTln("Update Aborted");
+      writeToSysLog("Update Aborted!");
+      httpServer.send(500, "text/plain", "Update Aborted!  <a href='/'>Return to Home</a>");
+      Update.end();
+    }
+  });
+
+  // Serve the update page
+  httpServer.on("/update_local", HTTP_GET, handleUpdatePage);
 
   httpUpdater.setup(&httpServer);
 
@@ -207,7 +343,8 @@ void setupFSmanager()
       }
     }
   });
-}
+
+} //  setupFS()
 
 
 //===========================================================================================
@@ -446,60 +583,6 @@ void handleFileUpload()
 
 } // handleFileUpload()
 
-
-//===========================================================================================
-void handleLocalUpdate()
-{
-  // Dateien ins Filesystem schreiben
-  static File fsUploadFile;
-
-  HTTPUpload &upload = httpServer.upload();
-  if (upload.status == UPLOAD_FILE_START)
-  {
-    if (upload.filename.length() > 31)
-    {
-      // Dateinamen kürzen
-      upload.filename = upload.filename.substring(upload.filename.length() - 31, upload.filename.length());
-    }
-    //-- Poke WatchDog
-    pulseHeart(true);
-
-    if (httpServer.arg(0) == "/") //-- root!
-    {
-      fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
-      DebugTf("FileUpload Name: %s\r\n",  upload.filename.c_str());
-      writeToSysLog("FileUpload: [%s]",  upload.filename.c_str());
-    }
-    else
-    {
-      fsUploadFile = _FSYS.open("/" + httpServer.arg(0) + "/" + httpServer.urlDecode(upload.filename), "w");
-      DebugTf("FileUpload Name: /%s/%s\r\n", httpServer.arg(0), upload.filename.c_str());
-      writeToSysLog("FileUpload Name: /%s/%s", httpServer.arg(0), upload.filename.c_str());
-    }
-    if (!fsUploadFile)
-    {
-      DebugTf("Failed to open [%s] in [%s]\r\n", upload.filename, httpServer.arg(0));
-      writeToSysLog("Failed to open [%s] in [%s]", upload.filename, httpServer.arg(0));
-      //-- poke WatchDog
-      pulseHeart(true);
-      return;
-    }
-  }
-  else if (upload.status == UPLOAD_FILE_WRITE)
-  {
-    DebugTf("FileUpload Data: %u\r\n", upload.currentSize);
-    fsUploadFile.write(upload.buf, upload.currentSize);
-    //-- poke WatchDog
-    pulseHeart(true);
-  }
-  else if (upload.status == UPLOAD_FILE_END)
-  {
-    DebugTf("FileUpload Size: %u\r\n", upload.totalSize);
-    fsUploadFile.close();
-    //-- poke WatchDog
-    pulseHeart(true);
-  }
-} // handleLocalUpdate()
 
 
 //===========================================================================================

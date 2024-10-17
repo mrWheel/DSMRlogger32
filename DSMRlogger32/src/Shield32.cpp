@@ -198,18 +198,23 @@ void Shield32::loop(int actualValue)
 //--------------------------------------------------------------------------------------------
 bool Shield32::isActive(int thisTimeMinutes)
 {
-    // Case 1: start == eind, altijd actief
+    //-- Case 0: GPIOpin not configured, altijd in-actief
+    if (Shield32::_pinNr == -1)
+    {
+      return false;
+    }
+    //-- Case 1: start == eind, altijd actief
     if (_activeStart == _activeStop) 
     {
         return true;
     }
-    // Case 2: start <= eind, eenvoudig interval op dezelfde dag
+    //-- Case 2: start <= eind, eenvoudig interval op dezelfde dag
     if (_activeStart <= _activeStop) 
     {
         // Het actieve interval is tussen start en eind
         return (bool)(thisTimeMinutes >= _activeStart && thisTimeMinutes < _activeStop);
     } 
-    // Case 3: start > eind, het interval gaat over middernacht heen
+    //-- Case 3: start > eind, het interval gaat over middernacht heen
     else 
     {
         // Het actieve interval is van start tot middernacht, OF van middernacht tot eind

@@ -893,6 +893,7 @@ void sendShieldSettings()
   nestedRec["min"] = 0; nestedRec["max"] = 36000; 
 
 //------------ shieldSetting[1] ---------------------------------------
+  nestedRec = doc["shield"].createNestedObject();
   nestedRec["name"]   = "shld_GPIOpin1";
   nestedRec["value"]  =  shieldSetting[1]->GPIOpin;
   nestedRec["type"]   = "i"; 

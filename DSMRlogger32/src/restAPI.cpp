@@ -70,6 +70,14 @@ void processAPI()
     processApiV2Dev(URI, words[4].c_str(), words[5].c_str(), words[6].c_str());
     return;
   }
+
+  //-- api/v2/shield ..
+  if (words[3] == "shield")
+  {
+    processApiV2Shield(URI, words[4].c_str(), words[5].c_str(), words[6].c_str());
+    return;
+  }
+
   //-- api/v2/hist ..
   if (words[3] == "hist")
   {
@@ -338,6 +346,163 @@ void processApiV2Dev(const char *URI, const char *apiId, const char *word5, cons
 
 
 //====================================================
+void processApiV2Shield(const char *URI, const char *apiId, const char *word5, const char *word6)
+{
+  DebugTf("apiId[%s], word5[%s], word6[%s]\r\n", apiId, word5, word6);
+  if (strcmp(apiId, "info") == 0)
+  {
+    sendShieldInfo();
+    return;
+  }
+  
+  if (strcmp(apiId, "relays") == 0)
+  {
+    DebugTln("Handle /api/v2/shield/relays..");
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      SpiRamJsonDocument  doc(2000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      if (doc.containsKey("relay_state0")) 
+      {
+        relay0.setRelayState(doc["relay_state0"].as<int>());
+      }
+      if (doc.containsKey("relay_state1")) 
+      {
+        relay1.setRelayState(doc["relay_state1"].as<int>());
+      }
+      httpServer.send(200, "application/json", httpServer.arg(0));
+      return;
+    }
+  }
+
+  if (strcmp(apiId, "settings") == 0)
+  {
+    DebugTln("Handle /api/v2/shield/settings..");
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      DebugTln(httpServer.arg(0));
+      //-- Allocate the JsonDocument
+      SpiRamJsonDocument  doc(3000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      DebugTln(jsonBuff);
+      char field[30]     = {0};
+      char newValue[101] = {0};
+      //-- convert HH:MM to minutes
+      String fieldName = doc["name"];
+      String fieldValue = {};
+      if ((fieldName.substring(0, 16) == "shld_activeStart") || (fieldName.substring(0, 15) == "shld_activeStop"))
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        fieldValue = doc["value"].as<String>();
+        // Split the string into hours and minutes
+        int separatorIndex = fieldValue.indexOf(':');
+        uint8_t hours = fieldValue.substring(0, separatorIndex).toInt();    // Extract hours part
+        uint8_t minutes = fieldValue.substring(separatorIndex + 1).toInt(); // Extract minutes part
+        // Convert HH:MM back to minutes
+        uint16_t tmpValue = (hours * 60) + minutes;
+        doc["value"] = String(tmpValue);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, tmpValue, doc["value"].as<String>().c_str());
+      }
+      if (fieldName.substring(0, 12) == "shld_GPIOpin") 
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        int8_t fieldInt8 = doc["value"].as<int>();
+        if (fieldInt8 < 0)  fieldInt8 = -1;
+        else if (fieldInt8 > 13) fieldInt8 = 14;
+        else fieldInt8 = 13;
+        doc["value"] = String(fieldInt8);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, fieldInt8, doc["value"].as<String>().c_str());
+      }
+      strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
+      strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
+      updateShieldSettings(field, newValue);
+      DebugTf("DSMReditor: Shield Field[%s] changed to [%s]\r\n", field, newValue);
+      writeToSysLog("DSMReditor: Shield Field[%s] changed to [%s]", field, newValue);
+      memset(field,    0, sizeof(field));
+      memset(newValue, 0, sizeof(newValue));
+      httpServer.send(200, "application/json", httpServer.arg(0));
+    }
+    else
+    {
+      sendShieldSettings();
+    }
+    return;
+  }
+/*****
+  if (strcmp(apiId, "shield") == 0)
+  {
+    DebugTln("Handle /api/v2/dev/shield..");
+    if (httpServer.method() == HTTP_PUT || httpServer.method() == HTTP_POST)
+    {
+      //------------------------------------------------------------
+      // json string: {"name":"mqtt_broker","value":"192.168.1.2"}
+      // json string: {"name":"mqtt_interval","value":12}
+      // json string: {"name":"hostname","value":"abc"}
+      //------------------------------------------------------------
+      DebugTln(httpServer.arg(0));
+      //-- Allocate the JsonDocument
+      SpiRamJsonDocument  doc(3000);
+      DeserializationError err = deserializeJson(doc, httpServer.arg(0).c_str());
+      serializeJson(doc, jsonBuff, _JSONBUFF_LEN);
+      DebugTln(jsonBuff);
+      char field[30]     = {0};
+      char newValue[101] = {0};
+      //-- convert HH:MM to minutes
+      String fieldName = doc["name"];
+      String fieldValue = {};
+      if ((fieldName.substring(0, 16) == "shld_activeStart") || (fieldName.substring(0, 15) == "shld_activeStop"))
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        fieldValue = doc["value"].as<String>();
+        // Split the string into hours and minutes
+        int separatorIndex = fieldValue.indexOf(':');
+        uint8_t hours = fieldValue.substring(0, separatorIndex).toInt();    // Extract hours part
+        uint8_t minutes = fieldValue.substring(separatorIndex + 1).toInt(); // Extract minutes part
+        // Convert HH:MM back to minutes
+        uint16_t tmpValue = (hours * 60) + minutes;
+        doc["value"] = String(tmpValue);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, tmpValue, doc["value"].as<String>().c_str());
+      }
+      if (fieldName.substring(0, 12) == "shld_GPIOpin") 
+      {
+        DebugTf("... Found [%s]\r\n", fieldName.c_str());
+        int8_t fieldInt8 = doc["value"].as<int>();
+        if (fieldInt8 < 0)  fieldInt8 = -1;
+        else if (fieldInt8 > 13) fieldInt8 = 14;
+        else fieldInt8 = 13;
+        doc["value"] = String(fieldInt8);
+        DebugTf("[%s]: set to newValue[%d/%s]\r\n", fieldName, fieldInt8, doc["value"].as<String>().c_str());
+      }
+      strlcpy(field,    doc["name"]  | "UNKNOWN",  sizeof(field));
+      strlcpy(newValue, doc["value"] | "0",        sizeof(newValue));
+      updateShieldSettings(field, newValue);
+      DebugTf("DSMReditor: Shield Field[%s] changed to [%s]\r\n", field, newValue);
+      writeToSysLog("DSMReditor: Shield Field[%s] changed to [%s]", field, newValue);
+      memset(field,    0, sizeof(field));
+      memset(newValue, 0, sizeof(newValue));
+      httpServer.send(200, "application/json", httpServer.arg(0));
+    }
+    else
+    {
+      sendShieldSettings();
+    }
+    return;
+  }
+  *****/
+
+  if (strcmp(apiId, "debug") == 0)
+  {
+    sendDeviceDebug(URI, word5);
+    return;
+  }
+  
+  sendApiNotFound(URI);
+
+} // processApiV2Shield()
+
+//====================================================
 //-- /api/v2/hist/            - list all entries desc
 //-- /api/v2/hist/<limit>     - list <limit> enties desc
 //-- /api/v2/hist/{desc|asc}  - list all entries {desc|asc}
@@ -543,6 +708,55 @@ void sendDeviceInfo()
   httpServer.send(200, "application/json", jsonBuff);
 
 } // sendDeviceInfo()
+
+
+//=======================================================================
+void sendShieldInfo()
+{
+  char compileOptions[200] = "";
+  char theTime[20] = {0};
+  time(&now);
+  int thisTimeMinutes = (localtime(&now)->tm_hour * 60) + localtime(&now)->tm_min;
+
+  DebugTln("/api/v2/shield/info");
+
+//  char gMsg[_GMSG_LEN] = {};
+  memset(jsonBuff, 0, _JSONBUFF_LEN);
+  
+  //-- Allocate the JsonDocument
+  SpiRamJsonDocument  doc(3000);
+  doc["shieldinfo"];
+  doc["shieldinfo"]["shld_GPIOpin0"]       = (int)shieldSetting[0]->GPIOpin;
+  if (relay0.isActive(thisTimeMinutes))
+        doc["shieldinfo"]["shld_active0"] = "yes";
+  else  doc["shieldinfo"]["shld_active0"] = "no";
+  doc["shieldinfo"]["shld_inversed0"]      = (int)shieldSetting[0]->inversed;
+  doc["shieldinfo"]["shld_activeStart0"]   = (int)shieldSetting[0]->activeStart;
+  doc["shieldinfo"]["shld_activeStop0"]    = (int)shieldSetting[0]->activeStop;
+  doc["shieldinfo"]["shld_onThreshold0"]   = (int)shieldSetting[0]->onThreshold;
+  doc["shieldinfo"]["shld_offThreshold0"]  = (int)shieldSetting[0]->offThreshold;
+  doc["shieldinfo"]["shld_onDelay0"]       = (int)shieldSetting[0]->onDelay;
+  doc["shieldinfo"]["shld_offDelay0"]      = (int)shieldSetting[0]->offDelay;
+  doc["shieldinfo"]["shld_GPIOpin1"]       = (int)shieldSetting[1]->GPIOpin;
+
+  if (relay1.isActive(thisTimeMinutes))
+        doc["shieldinfo"]["shld_active1"] = "yes";
+  else  doc["shieldinfo"]["shld_active1"] = "no";
+  doc["shieldinfo"]["shld_inversed1"]      = (int)shieldSetting[1]->inversed;
+  doc["shieldinfo"]["shld_activeStart1"]   = (int)shieldSetting[1]->activeStart;
+  doc["shieldinfo"]["shld_activeStop1"]    = (int)shieldSetting[1]->activeStop;
+  doc["shieldinfo"]["shld_onThreshold1"]   = (int)shieldSetting[1]->onThreshold;
+  doc["shieldinfo"]["shld_offThreshold1"]  = (int)shieldSetting[1]->offThreshold;
+  doc["shieldinfo"]["shld_onDelay1"]       = (int)shieldSetting[1]->onDelay;
+  doc["shieldinfo"]["shld_offDelay1"]      = (int)shieldSetting[1]->offDelay;
+
+  serializeJsonPretty(doc, jsonBuff, _JSONBUFF_LEN);
+  DebugTln(jsonBuff);
+
+  httpServer.send(200, "application/json", jsonBuff);
+
+} // sendShieldInfo()
+
 
 
 //=======================================================================

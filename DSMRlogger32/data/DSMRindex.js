@@ -1483,8 +1483,8 @@ http://DSMR-ESP32.local/api/v2/sm/settings</pre>", false);
 
   addAPIdoc("v2/sm/telegram",   "raw telegram as send by the Smart Meter including all \"\\r\\n\" line endings", false);
 
-  addAPIdoc("v2/shield/info",      "Device info in JSON format", true);
-  addAPIdoc("v2/shield/settings",  "System settings in JSON format", true);
+  addAPIdoc("v2/shield/info",      "Shield info in JSON format", true);
+  addAPIdoc("v2/shield/settings",  "Shield settings in JSON format", true);
 
   addAPIdoc("v2/hist/actual",   "History data last reads in JSON format", true);
   addAPIdoc("v2/hist/hours",    "History data per hour in JSON format", true);

@@ -559,24 +559,170 @@ void handleFileUpload()
       DebugTln("No file selected! Abort.");
       return;
     }
+    
     //-- Dateinamen auf 30 Zeichen kürzen
     if (upload.filename.length() > 30)
     {
       upload.filename = upload.filename.substring(upload.filename.length() - 30, upload.filename.length());
     }
+    
     DebugTln("FileUpload Name: " + upload.filename);
-    fsUploadFile = SPIFFS.open("/" + httpServer.urlDecode(upload.filename), "w");
+    writeToSysLog("Upload file: %s ", upload.filename.c_str());
+    
+    // DIAGNOSTIC LOGGING - ADD THESE LINES:
+    String decodedFilename = httpServer.urlDecode(upload.filename);
+    String fullPath = "/" + decodedFilename;
+    
+    DebugTf("Original filename: [%s]\r\n", upload.filename.c_str());
+    DebugTf("Decoded filename: [%s]\r\n", decodedFilename.c_str());
+    DebugTf("Full path: [%s]\r\n", fullPath.c_str());
+    
+    // Check filesystem status
+    DebugTf("Filesystem mounted: %s\r\n", _FSYS.begin() ? "YES" : "NO");
+    DebugTf("Total space: %d bytes\r\n", _FSYS.totalBytes());
+    DebugTf("Used space: %d bytes\r\n", _FSYS.usedBytes());
+    DebugTf("Free space: %d bytes\r\n", _FSYS.totalBytes() - _FSYS.usedBytes());
+    
+    // Check if file already exists
+    DebugTf("File already exists: %s\r\n", _FSYS.exists(fullPath) ? "YES" : "NO");
+    
+    // Attempt to open file for writing
+    DebugTf("Attempting to open file: [%s]\r\n", fullPath.c_str());
+    fsUploadFile = _FSYS.open(fullPath, "w");
+    
+    if (fsUploadFile)
+    {
+      DebugTln("SUCCESS: File opened for writing");
+    }
+    else
+    {
+      DebugTln("ERROR: Failed to open file for writing!");
+      writeToSysLog("ERROS: Failed to open file for writing: %s", fullPath.c_str());
+      
+      // Try alternative approaches to diagnose the issue
+      DebugTln("Trying to open with FILE_WRITE mode...");
+      fsUploadFile = _FSYS.open(fullPath, FILE_WRITE);
+      if (fsUploadFile)
+      {
+        DebugTln("SUCCESS: File opened with FILE_WRITE mode");
+      }
+      else
+      {
+        DebugTln("ERROR: Still failed with FILE_WRITE mode");
+        
+        // Check if we can create a test file
+        DebugTln("Testing filesystem write capability...");
+        File testFile = _FSYS.open("/test_write.tmp", "w");
+        if (testFile)
+        {
+          testFile.println("test");
+          testFile.close();
+          _FSYS.remove("/test_write.tmp");
+          DebugTln("Filesystem write test: PASSED");
+        }
+        else
+        {
+          DebugTln("Filesystem write test: FAILED - filesystem may be read-only or corrupted");
+          writeToSysLog("Filesystem write test: FAILED - filesystem may be read-only or corrupted");
+        }
+      }
+    }
   }
+
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
     DebugTln("FileUpload Data: " + (String)upload.currentSize);
+    pulseHeart(false);  //-- pulse the heartbeat LED
+    
+    // ADD DIAGNOSTIC CHECK
+    if (!fsUploadFile)
+    {
+      DebugTln("ERROR: fsUploadFile is NULL - file was not opened properly!");
+      DebugTf("Attempting to re-open file: /%s\r\n", httpServer.urlDecode(upload.filename).c_str());
+      fsUploadFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "w");
+      if (!fsUploadFile)
+      {
+        DebugTln("ERROR: Still cannot open file for writing!");
+        return;  // Abort this chunk
+      }
+      else
+      {
+        DebugTln("SUCCESS: File re-opened for writing");
+      }
+    }
+    
     if (fsUploadFile)
-      fsUploadFile.write(upload.buf, upload.currentSize);
+    {
+      size_t bytesWritten = 0;
+      size_t totalBytesWritten = 0;
+      uint8_t retryCount = 0;
+      const uint8_t maxRetries = 5;
+      
+      DebugTf("Starting write: %d bytes to write\r\n", upload.currentSize);
+      
+      while (totalBytesWritten < upload.currentSize && retryCount < maxRetries)
+      {
+        bytesWritten = fsUploadFile.write(upload.buf + totalBytesWritten, 
+                                        upload.currentSize - totalBytesWritten);
+        totalBytesWritten += bytesWritten;
+        
+        DebugTf("Write attempt: %d bytes written, total: %d/%d\r\n", 
+                bytesWritten, totalBytesWritten, upload.currentSize);
+        
+        if (totalBytesWritten < upload.currentSize)
+        {
+          retryCount++;
+          DebugTf("Write incomplete: %d/%d bytes (retry %d/%d)\r\n", 
+                  totalBytesWritten, upload.currentSize, retryCount, maxRetries);
+          
+          // Force file system sync
+          fsUploadFile.flush();
+          
+          // Exponential backoff delay: 10ms, 20ms, 40ms, 80ms, 160ms
+          delay(10 << (retryCount - 1));
+          
+          pulseHeart(false);  // Keep heartbeat alive during retries
+        }
+      }
+      
+      if (totalBytesWritten != upload.currentSize)
+      {
+        DebugTf("ERROR: Final write failed - wrote %d of %d bytes after %d retries!\r\n", 
+                totalBytesWritten, upload.currentSize, retryCount);
+        writeToSysLog("File write error: %d/%d bytes after %d retries", 
+                      totalBytesWritten, upload.currentSize, retryCount);
+      }
+      else
+      {
+        DebugTf("SUCCESS: Wrote all %d bytes\r\n", totalBytesWritten);
+      }
+    }
+    else
+    {
+      DebugTln("ERROR: fsUploadFile is still NULL after retry!");
+    }
   }
+
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (fsUploadFile)
+    {
       fsUploadFile.close();
+      // Verify file size
+      File checkFile = _FSYS.open("/" + httpServer.urlDecode(upload.filename), "r");
+      if (checkFile)
+      {
+        size_t actualSize = checkFile.size();
+        checkFile.close();
+        DebugTf("FileUpload Complete - Expected: %d, Actual: %d bytes\r\n", upload.totalSize, actualSize);
+        writeToSysLog("FileUpload Complete - Expected: %d, Actual: %d bytes", upload.totalSize, actualSize);
+        if (actualSize != upload.totalSize)
+        {
+          DebugTf("ERROR: File size mismatch!\r\n");
+          writeToSysLog("File upload size mismatch: %d != %d", actualSize, upload.totalSize);
+        }
+      }
+    }
     DebugTln("FileUpload Size: " + (String)upload.totalSize);
     httpServer.sendContent(Header);
   }

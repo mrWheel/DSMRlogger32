@@ -1,0 +1,10 @@
+{
+  "name": "DSMRlogger32",
+  "long_name_nl": "DSMRlogger32, een betere Slimme Meter uitlezer",
+  "long_name_en": "DSMRlogger32, a better smart meter reader",
+  "description_en": "A modern ESP32-based smart meter reader with improved reliability and expandability",
+  "description_nl": "Een moderne, op de ESP32 gebaseerde slimme-meter-uitlezer met verbeterde betrouwbaarheid en uitbreidbaarheid",
+  "github_url": "https://github.com/mrWheel/DSMRlogger32",
+  "post_url": "https://willem.aandewiel.nl/index.php/2022/11/15/crisis-what-crisis/",
+  "image": "DSMRlogger32.png"
+}

@@ -9,7 +9,7 @@ const char* PROG_VERSION = "v5.4.3 (25-02-2026)";
 **  TERMS OF USE: MIT License. See bottom of file.
 ***************************************************************************
 **
-**  platformio.ini for DSMR-logger32 Revision 5 (ESP32):
+**  platformio.ini for DSMR-logger32 Revision 5 (ESP32): 
 **
 **    [platformio]
 **    workspace_dir = .pio.nosync
